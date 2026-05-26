@@ -3939,6 +3939,14 @@ function fbSubscribeAll() {
     }));
     _fbApplyingRemote = false;
     rebuildJobFilter();
+    // Now that members are loaded, re-sanitize party slots — first listener
+    // run may have skipped because members weren't ready yet.
+    if (state.partiesLeague && sanitizeSlots(state.partiesLeague) && isAdmin()) {
+      _fbDB.ref("parties/league").set(state.partiesLeague);
+    }
+    if (state.partiesOverrun && sanitizeSlots(state.partiesOverrun) && isAdmin()) {
+      _fbDB.ref("parties/overrun").set(state.partiesOverrun);
+    }
     if (typeof render === "function") render();
   }, e => console.warn("[firebase] members listener error", e));
 
