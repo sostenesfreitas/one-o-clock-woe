@@ -1424,7 +1424,7 @@
   .map-wrap.sub-map .map-frame { border-color: var(--sub-bf); }
   .map-wrap.no-image .map-frame { border-color: var(--border); border-style: dashed; }
   .map-wrap.no-image::after {
-    content: "🗺️ ยังไม่มีรูปแมพ — กด 📷 Upload หรือวาง map1.png / map2.png ในโฟลเดอร์เดียวกับ HTML";
+    content: "🗺️ กำลังโหลดรูปแมพ…";
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     color: var(--muted); font-size: 11px; text-align: center; padding: 30px;
@@ -2932,43 +2932,8 @@ function attachMarkerDrag(el, wrap, idx, mapNum) {
 /* =====================================================================
  * Map backgrounds
  * ===================================================================== */
-function setMapBg(mapNum, input) {
-  const f = input.files[0];
-  if (!f) return;
-  // Show preview locally first (fast feedback), then upload to Storage if admin
-  const r = new FileReader();
-  r.onload = e => {
-    state.mapBg[mapNum] = e.target.result;
-    applyMapBg(mapNum);
-    save();
-  };
-  r.readAsDataURL(f);
-  // Upload to Firebase Storage so other users see this map too
-  if (isAdmin() && _fbStorage && _fbDB) {
-    uploadMapToStorage(mapNum, f);
-  } else if (!isAdmin()) {
-    toast("Login Admin เพื่ออัพภาพให้ทุกคนเห็น", "");
-  }
-}
-
-async function uploadMapToStorage(mapNum, file) {
-  try {
-    toast("⏳ กำลังอัพภาพแผนที่ #" + mapNum + " …", "");
-    const ext = (file.name.match(/\.(\w+)$/) || [,"png"])[1].toLowerCase();
-    const ref = _fbStorage.ref().child(`maps/${mapNum}.${ext}`);
-    await ref.put(file);
-    const url = await ref.getDownloadURL();
-    // Replace local dataUrl with public URL so all clients can fetch
-    state.mapBg[mapNum] = url;
-    applyMapBg(mapNum);
-    // Push URL only to Realtime DB (small string, not the bytes)
-    await _fbDB.ref(`map_urls/${mapNum}`).set(url);
-    toast("✅ ภาพแผนที่ #" + mapNum + " sync แล้ว", "success");
-  } catch (e) {
-    console.error("[storage] map upload failed", e);
-    toast("Upload ไม่สำเร็จ: " + e.message, "error");
-  }
-}
+// setMapBg + uploadMapToStorage retired — map images are now embedded as
+// static assets (./maps/*.png) and never change at runtime.
 function applyMapBg(mapNum) {
   const wrap = document.getElementById("mapWrap" + mapNum);
   if (!wrap) return;
@@ -3030,23 +2995,29 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// Embedded map images (don't change, so we ship them with the app).
+// 1 = Main Battlefield (cross), 2 = Sub Battlefield (rectangular hall),
+// 3 = Overrun world map. Markers/arrows on top of them STILL sync via Firebase.
+const EMBEDDED_MAPS = {
+  1: "maps/main.png",
+  2: "maps/sub.png",
+  3: "maps/overrun.png"
+};
+
 function tryAutoLoadMapImages() {
   for (let n = 1; n <= 3; n++) {
-    if (state.mapBg[n]) continue;
-    const candidates = [`map${n}.png`, `map${n}.jpg`, `map${n}.jpeg`, `map${n}.webp`];
-    let i = 0;
-    const tryNext = () => {
-      if (i >= candidates.length) return;
-      const img = new Image();
-      img.onload = () => {
-        state.mapBg[n] = candidates[i];
-        applyMapBg(n);
-        save();
-      };
-      img.onerror = () => { i++; tryNext(); };
-      img.src = candidates[i];
+    // Embedded path always wins — overwrite anything the user may have uploaded
+    // before so everyone sees the same baseline maps. Skip if Firebase Storage
+    // URL is set (admin chose to override via map_urls).
+    if (typeof state.mapBg[n] === "string" && state.mapBg[n].startsWith("https://")) continue;
+    if (!EMBEDDED_MAPS[n]) continue;
+    const img = new Image();
+    img.onload = () => {
+      state.mapBg[n] = EMBEDDED_MAPS[n];
+      applyMapBg(n);
     };
-    tryNext();
+    img.onerror = () => { console.warn("[maps] failed to load " + EMBEDDED_MAPS[n]); };
+    img.src = EMBEDDED_MAPS[n];
   }
 }
 
@@ -3264,7 +3235,7 @@ function buildOverrunMapHtml() {
         <span class="actions">
           <button onclick="toggleMapFullscreen(3)" class="btn-expand-3" title="ขยายเต็มจอ">⛶ Expand</button>
           <button onclick="clearArrows(3)" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>
-          <label class="btn">📷 Upload<input type="file" accept="image/*" style="display:none" onchange="setMapBg(3,this)" /></label>
+          <!-- Map image embedded as static asset; upload removed -->
         </span>
       </div>
       <div class="map-wrap overrun-wrap" id="mapWrap3">
@@ -3882,14 +3853,8 @@ function fbSubscribeAll() {
     if (typeof renderOverrunMarkers === "function" && state.mode === "overrun") renderOverrunMarkers();
   });
 
-  // map_urls (Firebase Storage URLs for the 3 background maps)
-  _fbDB.ref("map_urls").on("value", snap => {
-    const v = snap.val() || {};
-    _fbApplyingRemote = true;
-    state.mapBg = { ...state.mapBg, ...v };
-    _fbApplyingRemote = false;
-    [1,2,3].forEach(n => { if (typeof applyMapBg === "function") applyMapBg(n); });
-  });
+  // map_urls: NOT synced — map images are embedded as static assets so they
+  // never change. Only markers + arrows sync above.
 }
 
 /* ---------- Firebase writes (admin only) ---------- */
@@ -3909,14 +3874,7 @@ function fbPushAll() {
     _fbDB.ref("job_targets").set(state.jobTargets || {});
     _fbDB.ref("markers").set(state.markers || {});
     _fbDB.ref("overrun_markers").set(state.overrunMarkers || {});
-    // map_urls — only sync URLs (not base64 dataUrls; those are too big for RTDB)
-    const urlsOnly = {};
-    if (state.mapBg) {
-      Object.entries(state.mapBg).forEach(([k, v]) => {
-        if (typeof v === "string" && v.startsWith("https://")) urlsOnly[k] = v;
-      });
-    }
-    _fbDB.ref("map_urls").set(urlsOnly);
+    // map_urls intentionally not pushed — images are embedded as static assets
   } catch (e) {
     console.warn("[firebase] push failed", e);
   }
