@@ -1579,6 +1579,27 @@
     line-height: 1;
   }
   .hamburger-btn:hover { background: var(--panel-2); border-color: var(--accent); }
+
+  /* Mobile mode dropdown — replaces .mode-toggle below 700px */
+  .mode-select {
+    display: none;
+    background: var(--accent);
+    color: #fff;
+    border: 1px solid var(--accent);
+    padding: 5px 28px 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23fff' d='M0 0l5 6 5-6z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  .mode-select option { background: var(--bg-2); color: var(--text); }
   .sidebar-backdrop {
     display: none;
     position: fixed;
@@ -1616,21 +1637,9 @@
       max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
-    /* Mode toggle scrolls horizontally — fits all 6 tabs by sliding */
-    .mode-toggle {
-      flex: 1 1 auto;
-      min-width: 0;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: thin;
-      -webkit-overflow-scrolling: touch;
-      padding: 3px;
-    }
-    .mode-toggle::-webkit-scrollbar { height: 4px; }
-    .mode-toggle .seg { scroll-snap-align: start; font-size: 10px; padding: 4px 7px; }
-    .mode-toggle .seg-indicator { display: none; }     /* sliding indicator looks weird while scrolling */
-    .mode-toggle .seg.active { background: var(--accent); color: #fff; border-radius: 4px; }
+    /* On mobile, replace the 6-tab toggle with a compact <select> dropdown */
+    .mode-toggle { display: none; }
+    .mode-select { display: inline-block; flex: 1 1 auto; min-width: 0; max-width: 200px; }
 
     /* Sidebar becomes overlay: hidden by default, slides in on .sidebar-open */
     .layout { grid-template-columns: 1fr; }
@@ -1659,16 +1668,48 @@
     .auction-percent-btn { padding: 4px 10px; font-size: 11px; }
     .auction-input-card input { font-size: 18px; padding: 8px 10px; }
 
-    /* Roster table: shrink + horizontal scroll if needed */
-    .roster-table-wrap { overflow-x: auto; }
-    .roster-table { min-width: 480px; }
-    .roster-table th, .roster-table td { padding: 5px 6px; font-size: 11px; }
-    .roster-table input.r-input { font-size: 12px; padding: 4px 6px; }
-    .roster-toolbar { flex-direction: column; align-items: stretch; }
+    /* Roster table: card layout per row on mobile — each row stacks vertically
+       so all 4 fields are visible without horizontal scroll */
+    .roster-table-wrap { overflow: visible; }
+    .roster-table { min-width: 0; }
+    .roster-table thead { display: none; }   /* header redundant in card layout */
+    .roster-table tbody tr { display: block; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .roster-table tbody tr:hover td { background: transparent; }
+    .roster-table tbody td { display: block; padding: 3px 0; border: none; }
+    .roster-table td.r-rk {
+      display: inline-block; width: auto;
+      margin-right: 8px;
+      background: var(--panel); padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; color: var(--accent);
+    }
+    .roster-table td.r-actions {
+      display: inline-block; width: auto;
+      float: right;
+    }
+    /* Add a small "label" before each input via data-label on the cell */
+    .roster-table tbody td:not(.r-rk):not(.r-actions)::before {
+      content: attr(data-label);
+      display: inline-block;
+      width: 70px;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      vertical-align: middle;
+    }
+    .roster-table input.r-input { font-size: 12px; padding: 5px 7px; width: calc(100% - 80px); }
+    .roster-table input.r-input.r-cp { text-align: left; }
+    .roster-table .r-cell-static { display: inline-block; vertical-align: middle; }
+    .roster-toolbar { flex-direction: column; align-items: stretch; gap: 6px; }
     .roster-toolbar input.r-search { min-width: 0; }
-    .roster-hero { padding: 10px 12px; }
-    .roster-hero h2 { font-size: 14px; }
-    .roster-hero .roster-meta { font-size: 10px; gap: 6px; }
+    .roster-toolbar button { padding: 8px 10px; font-size: 12px; }
+
+    /* Compact hero: stack pills horizontally with smaller text */
+    .roster-hero { padding: 10px 12px; gap: 8px; }
+    .roster-hero h2 { font-size: 14px; margin: 0; }
+    .roster-hero > div[style*="flex:1"] { display: none; }   /* spacer */
+    .roster-hero .roster-meta { font-size: 10px; gap: 4px; width: 100%; }
+    .roster-hero .rate-pill { padding: 2px 7px; font-size: 10px; }
 
     /* Summary view (Members tab): single column */
     .summary-grid { grid-template-columns: 1fr !important; }
@@ -1742,6 +1783,14 @@
     <button class="seg" data-mode="auction-overrun" onclick="switchMode('auction-overrun')">🎴 Auction Overrun</button>
     <span class="seg-indicator"></span>
   </div>
+  <select class="mode-select" id="modeSelect" onchange="switchMode(this.value)">
+    <option value="league">⚔️ League</option>
+    <option value="overrun">🏆 Overrun</option>
+    <option value="roster">📋 Roster</option>
+    <option value="summary">📊 Members</option>
+    <option value="auction-gl">🎴 Auction GL</option>
+    <option value="auction-overrun">🎴 Auction Overrun</option>
+  </select>
   <span class="status" id="statusInfo">Loading…</span>
   <div class="spacer"></div>
   <span class="status sync-indicator" id="syncIndicator">🔵 Connecting…</span>
@@ -1929,6 +1978,10 @@ function switchMode(newMode) {
 }
 
 function updateModeToggleUI() {
+  // Mirror the active mode on the mobile <select> dropdown
+  const sel = document.getElementById("modeSelect");
+  if (sel && sel.value !== state.mode) sel.value = state.mode;
+
   const t = document.getElementById("modeToggle");
   if (!t) return;
   t.querySelectorAll(".seg").forEach(b => {
@@ -4133,16 +4186,16 @@ function buildRosterRowsHtml() {
   return filtered.map((m, i) => `
     <tr data-id="${m.id}">
       <td class="r-rk">${i + 1}</td>
-      <td>${admin
+      <td data-label="ชื่อ">${admin
         ? `<input class="r-input" value="${escapeHtml(m.name)}" onchange="rosterUpdate('${m.id}','name',this.value)" />`
         : `<div class="r-cell-static">${escapeHtml(m.name)}</div>`}</td>
-      <td>${admin
+      <td data-label="Job">${admin
         ? `<input class="r-input" value="${escapeHtml(m.job)}" onchange="rosterUpdate('${m.id}','job',this.value)" />`
         : `<div class="r-cell-static r-job">${escapeHtml(m.job)}</div>`}</td>
-      <td>${admin
+      <td data-label="Discord">${admin
         ? `<input class="r-input" value="${escapeHtml(m.discord || "")}" placeholder="@username" onchange="rosterUpdate('${m.id}','discord',this.value)" />`
         : `<div class="r-cell-static r-discord">${m.discord ? escapeHtml(m.discord) : '<span style="color:var(--muted)">—</span>'}</div>`}</td>
-      <td>
+      <td data-label="CP">
         <input class="r-input r-cp" type="text" inputmode="numeric" pattern="[0-9]*"
                value="${m.cp || 0}" onchange="rosterUpdate('${m.id}','cp',this.value)" />
       </td>
