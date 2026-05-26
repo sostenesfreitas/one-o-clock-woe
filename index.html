@@ -1609,10 +1609,6 @@
     header .brand { display: none; }                  /* hamburger replaces */
     header .spacer { display: none; }
     header .status { display: none; }                 /* member count — view in sidebar */
-    header button[onclick*="resetAll"] {
-      font-size: 0; padding: 4px; min-width: 30px;
-    }
-    header button[onclick*="resetAll"]::before { content: "🗑"; font-size: 13px; }
 
     header #btnSyncSettings { font-size: 11px; padding: 4px 8px; }
     header .sync-indicator {
@@ -1750,7 +1746,6 @@
   <div class="spacer"></div>
   <span class="status sync-indicator" id="syncIndicator">🔵 Connecting…</span>
   <button onclick="openSyncSettings()" id="btnSyncSettings" title="Sign in / Sign out">🔗 Login</button>
-  <button onclick="resetAll()" class="danger admin-only" title="ล้างข้อมูลใน browser (state ใน Firebase ยังอยู่)">🗑 Reset</button>
 </header>
 
 <div class="layout">
