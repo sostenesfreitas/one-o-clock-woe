@@ -938,6 +938,15 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
+    min-width: 0;
+  }
+  /* Wrap table in scroll container at <=600px so it never overflows the
+     viewport — falls back to native horizontal scroll if columns don't fit. */
+  .summary-grid > table.summary-table {
+    display: block; max-width: 100%; overflow-x: auto;
+  }
+  @media (min-width: 601px) {
+    .summary-grid > table.summary-table { display: table; }
   }
   .summary-table th,
   .summary-table td {
@@ -1867,7 +1876,7 @@
 
     /* On mobile, replace the 6-tab toggle with a compact <select> dropdown */
     .mode-toggle { display: none; }
-    .mode-select { display: inline-block; flex: 1 1 auto; min-width: 0; max-width: 200px; }
+    .mode-select { display: inline-block; flex: 1 1 auto; min-width: 0; max-width: 240px; }
 
     /* Sidebar becomes overlay: hidden by default, slides in on .sidebar-open */
     .layout { grid-template-columns: 1fr; }
@@ -2056,6 +2065,97 @@
     dialog { width: 92vw; max-width: 92vw; }
   }
 
+  /* ===== Mobile polish (≤700px) — Auction/GL/Leave page tweaks ====== */
+  /* This block consolidates per-section fixes for the auction view, GL stat
+     board, leave page, and tap-target sizing. Lives AFTER the major 700px
+     block so it takes precedence on overlapping selectors. */
+  @media (max-width: 700px) {
+    /* Header: tighter on small screens but keep mode-select usable */
+    header { padding: 0 6px; gap: 4px; }
+    header #statusInfo { display: none; }   /* member count is in sidebar */
+    .mode-select { font-size: 12px; padding: 4px 6px; }
+
+    /* Auction hero: stack title above meta pills, less padding */
+    .auction-hero { padding: 12px 14px; gap: 8px; }
+    .auction-hero h2 { font-size: 16px; }
+    .auction-hero .auction-meta { font-size: 11px; gap: 6px 10px; }
+    .auction-hero .rate-pill { padding: 2px 8px; font-size: 10px; }
+    .auction-section { padding: 12px 14px; }
+    .auction-section h3 { font-size: 14px; margin-bottom: 10px; }
+
+    /* Auction inputs (rates) */
+    .auction-input-card { padding: 10px 12px; }
+    .auction-input-card input { font-size: 18px; padding: 8px 10px; }
+
+    /* Auction sub-boxes (70/30 split for GL) — compact internal layout */
+    .auction-sub-box { padding: 10px 12px; }
+    .auction-sub-box .asb-icon { font-size: 22px; }
+    .auction-sub-box .asb-name { font-size: 12px; }
+    .auction-sub-box .asb-val  { font-size: 20px; }
+
+    /* Auction columns (drag-drop) — tighter chrome, taller drop area */
+    .auction-column .ac-head { padding: 8px 10px; font-size: 13px; }
+    .auction-column .ac-stats { padding: 6px 8px; gap: 2px; }
+    .auction-column .ac-stats .ac-stat-val { font-size: 12px; }
+    .auction-column .ac-stats .ac-stat-label { font-size: 8px; }
+    .auction-column .ac-droplist { min-height: 120px; max-height: 50vh; padding: 6px; }
+    .auction-column .ac-actions { padding: 6px; gap: 4px; }
+    .auction-column .ac-actions button { font-size: 11px; padding: 6px 4px; }
+
+    /* Assigned rows inside auction column */
+    .auction-assigned-row { padding: 6px 8px; }
+    .auction-assigned-row .aar-rk { width: 18px; font-size: 9px; }
+    .auction-assigned-row .aar-name { font-size: 12px; }
+    .auction-assigned-row .aar-job { font-size: 9px; }
+    .auction-assigned-row .aar-page { font-size: 9px; padding: 1px 5px; }
+    .auction-assigned-row .aar-del { padding: 4px 8px; font-size: 16px; }   /* bigger tap target */
+
+    /* Percent buttons: stretch to fit but keep tap target */
+    .auction-percent-row { gap: 6px; }
+    .auction-percent-btn { padding: 6px 12px; font-size: 12px; }
+
+    /* Search input full width */
+    .auction-search-input { max-width: 100%; padding: 8px 10px; font-size: 13px; }
+
+    /* Auction summary table: compact font, scroll horizontally if overflow */
+    .auction-summary-table { font-size: 11px; }
+    .auction-summary-table th, .auction-summary-table td { padding: 6px 4px; }
+
+    /* GL score board on League: stack us / vs / them vertically */
+    .gl-score-board { grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+    .gl-team { padding: 10px 12px; }
+    .gl-team-score { font-size: 28px; }
+    .gl-vs { display: none; }    /* vertical layout doesn't need separator */
+
+    /* GL section + stat cards */
+    .gl-section { padding: 12px 14px; }
+    .gl-section h3 { font-size: 14px; margin-bottom: 8px; }
+    .gl-stat-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .gl-stat-card { padding: 10px 12px; }
+    .gl-stat-row .us-v, .gl-stat-row .them-v { font-size: 14px; }
+    .gl-bar-row { grid-template-columns: 70px 1fr 50px; gap: 6px; }
+    .gl-bar-row .label { font-size: 10px; }
+    .gl-bar-row .value { font-size: 11px; }
+
+    /* GL player table (kills/deaths) — keep readable */
+    .gl-ptable { font-size: 10px; }
+    .gl-ptable th, .gl-ptable td { padding: 4px 5px; }
+
+    /* GL underperformance */
+    .gl-underperf { padding: 12px 14px; }
+
+    /* Pie chart + legend (in Roster job breakdown) */
+    .pie { max-width: 200px; }
+    .pie-legend { grid-template-columns: 1fr 1fr; font-size: 10px; padding: 6px 8px; }
+
+    /* AI comment compact */
+    .ai-comment { padding: 10px 12px; font-size: 11px; }
+    .ai-comment .ai-title { font-size: 12px; margin-bottom: 6px; }
+
+    /* Auction warning */
+    .auction-warning { padding: 8px 12px; font-size: 12px; }
+  }
+
   /* ===== Small mobile (≤480px) — extreme tweaks ===== */
   @media (max-width: 480px) {
     .mode-toggle .seg { padding: 3px 6px; font-size: 9px; }
@@ -2068,12 +2168,35 @@
     header #btnSyncSettings::before { content: "🔗"; font-size: 13px; }
     .auction-hero { padding: 10px 12px; }
     .auction-hero h2 { font-size: 14px; }
+    .auction-section { padding: 10px 12px; }
     .auction-section h3 { font-size: 13px; }
+    /* Auction inputs: even smaller font for the rate fields */
+    .auction-input-card { padding: 8px 10px; }
+    .auction-input-card input { font-size: 16px; padding: 7px 8px; }
+    .auction-input-card .ai-label { font-size: 10px; }
+    /* Auction columns: keep 3-col stats but smaller */
+    .auction-column .ac-head { font-size: 12px; padding: 7px 10px; }
+    .auction-column .ac-stats .ac-stat-val { font-size: 11px; }
     /* Make tap targets bigger */
     .auction-percent-btn { padding: 6px 12px; }
-    .auction-column .ac-actions button { padding: 7px 8px; font-size: 12px; }
+    .auction-column .ac-actions button { padding: 7px 8px; font-size: 11px; }
     .roster-table button.r-del { width: 34px; height: 34px; font-size: 16px; }
     .member-row { padding: 8px 10px; min-height: 40px; }
+    /* Roster hero: simpler */
+    .roster-hero h2 { font-size: 13px; }
+    .roster-hero .rate-pill { font-size: 9px; padding: 2px 6px; }
+    /* Leave page: tighter hero on micro screens */
+    .leave-hero { padding: 8px 10px; }
+    .leave-hero h2 { font-size: 14px; }
+    .leave-hero .leave-today { font-size: 10px; padding: 3px 8px; }
+    /* GL stat grid: single col on tiny screens */
+    .gl-stat-grid { grid-template-columns: 1fr; }
+    /* Sub-box label hide subtitle on micro */
+    .auction-sub-box .asb-sub { display: none; }
+    .auction-sub-box .asb-val { font-size: 18px; }
+    /* Pie chart: smaller */
+    .pie { max-width: 160px; }
+    .pie-legend { grid-template-columns: 1fr; }
   }
 </style>
 </head>
