@@ -4012,7 +4012,7 @@ function rosterImportFromSheet() {
   if (!_fbMembersRef) { toast("Firebase ยังไม่ตั้งค่า", "error"); return; }
   const sheetUrl = state.sheetUrl || DEFAULT_SHEET;
   if (!sheetUrl) { toast("ไม่มี Sheet URL", "error"); return; }
-  if (!confirm("Import จาก Google Sheet เข้า Roster?\n\nจะดึง 4 fields: ชื่อ / Job / Discord / CP\n• เพิ่มคนใหม่\n• อัพเดต Discord/CP ของคนที่มีอยู่แล้ว (match by name+job)")) return;
+  if (!confirm("Import จาก Google Sheet เข้า Roster?\n\nจะดึง 4 fields: ชื่อ / Job / Discord / CP\n• เพิ่มคนใหม่\n• อัพเดต Discord/CP ของคนที่มีอยู่แล้ว (match by name+job)\n\n* ระบบจะ dedupe อัตโนมัติหลัง import")) return;
   (async () => {
     try {
       toast("⏳ กำลังโหลดจาก Sheet…", "");
@@ -4020,9 +4020,16 @@ function rosterImportFromSheet() {
       const resp = await fetchSheetJSON(id, gid);
       const rows = gvizToRows(resp);
       const fetched = extractMembersFromRows(rows);
+      // Fetch latest snapshot first — guarantees dedup check sees current Firebase
+      // state (avoids race if listener hasn't fired yet on first load).
+      const snap = await _fbMembersRef.once("value");
+      const existing = [];
+      snap.forEach(child => {
+        existing.push({ id: child.key, ...child.val() });
+      });
       let added = 0, updated = 0;
       for (const m of fetched) {
-        const dup = rosterCache.find(r => r.name === m.name && r.job === m.job);
+        const dup = existing.find(r => r.name === m.name && r.job === m.job);
         const payload = {
           name:    m.name,
           job:     m.job,
@@ -4031,20 +4038,69 @@ function rosterImportFromSheet() {
           updatedAt: Date.now()
         };
         if (dup) {
-          // Update existing — refresh discord + cp (preserve manual edits to name/job-set already match)
           await _fbMembersRef.child(dup.id).update(payload);
           updated++;
         } else {
-          await _fbMembersRef.push(payload);
+          const ref = _fbMembersRef.push();
+          await ref.set(payload);
+          // Track so subsequent rows in this batch don't re-add the same name+job
+          existing.push({ id: ref.key, ...payload });
           added++;
         }
       }
-      toast(`✅ Import เสร็จ: เพิ่ม ${added} · อัพเดต ${updated}`, "success");
+      toast(`✅ Import เสร็จ: เพิ่ม ${added} · อัพเดต ${updated} — กำลัง dedupe…`, "success");
+      // Auto-dedupe any leftover duplicates from previous broken imports
+      await rosterDedupe(true);
     } catch (e) {
       console.error("[import] failed", e);
       toast("Import ไม่สำเร็จ: " + e.message, "error");
     }
   })();
+}
+
+/* Merge duplicates by name+job — keeps the best entry (has discord + higher cp). */
+async function rosterDedupe(silent) {
+  if (!isAdmin()) { toast("Admin only", "error"); return; }
+  if (!_fbMembersRef) { toast("Firebase ยังไม่พร้อม", "error"); return; }
+  if (!silent && !confirm("ล้างของซ้ำ?\nระบบจะ merge แถวที่ ชื่อ + Job ซ้ำกัน ให้เหลือแค่แถวเดียว (เลือกแถวที่มี Discord + CP สูงสุด).")) return;
+  // Pull latest snapshot — don't rely on local cache
+  const snap = await _fbMembersRef.once("value");
+  const all = [];
+  snap.forEach(child => { all.push({ id: child.key, ...child.val() }); });
+  const buckets = {};
+  for (const m of all) {
+    const key = (m.name || "") + "|" + (m.job || "");
+    if (!buckets[key]) buckets[key] = [];
+    buckets[key].push(m);
+  }
+  let removed = 0, merged = 0;
+  for (const key in buckets) {
+    const group = buckets[key];
+    if (group.length <= 1) continue;
+    // Pick "best" entry — has discord wins; tiebreaker: highest cp; tiebreaker: lowest id
+    const best = group.reduce((a, b) => {
+      const sa = (a.discord ? 1000000 : 0) + (a.cp || 0);
+      const sb = (b.discord ? 1000000 : 0) + (b.cp || 0);
+      return sb > sa ? b : a;
+    });
+    // Optionally merge any discord/cp into best if best is missing them
+    const mergedPayload = {
+      name:    best.name,
+      job:     best.job,
+      discord: best.discord || group.find(g => g.discord)?.discord || "",
+      cp:      Math.max(...group.map(g => g.cp || 0)),
+      updatedAt: Date.now()
+    };
+    await _fbMembersRef.child(best.id).update(mergedPayload);
+    merged++;
+    // Remove all others
+    for (const m of group) {
+      if (m.id === best.id) continue;
+      await _fbMembersRef.child(m.id).remove();
+      removed++;
+    }
+  }
+  toast(`✅ Dedupe เสร็จ: merge ${merged} กลุ่ม · ลบซ้ำ ${removed} entries`, "success");
 }
 
 /* ----- Roster page render ----- */
@@ -4129,6 +4185,7 @@ function buildRosterHtml() {
         ${admin ? `
           <button class="primary" onclick="rosterAdd()">➕ เพิ่มสมาชิก</button>
           <button onclick="rosterImportFromSheet()" title="Import ครั้งเดียวจาก Google Sheet เดิม">📥 Import จาก Sheet</button>
+          <button onclick="rosterDedupe()" title="ลบแถวที่ชื่อ+Job ซ้ำกัน">🔧 Merge ซ้ำ</button>
         ` : `<span style="color:var(--muted);font-size:12px">🔒 Read-only — เฉพาะ CP ที่แก้ได้</span>`}
       </div>
       <div class="roster-table-wrap">
