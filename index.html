@@ -278,6 +278,7 @@
     color: var(--text);
   }
   .roster-table .r-cell-static.r-job { color: var(--accent); font-weight: 600; }
+  .roster-table .r-cell-static.r-discord { color: #a78bfa; font-family: monospace; font-size: 12px; }
   .roster-table button.r-del {
     background: transparent;
     border: 1px solid var(--border);
@@ -2200,19 +2201,19 @@ function extractMembersFromRows(rows) {
   const seen = new Set();
   for (const r of rows) {
     if (!r || r.length < 5) continue;
-    const name = (r[2] || "").trim();
-    const job = (r[4] || "").trim();
+    const name    = (r[2]  || "").trim();   // col C — Guild Member
+    const job     = (r[4]  || "").trim();   // col E — Job
+    const discord = (r[5]  || "").trim();   // col F — Discord username
     if (!name || !job) continue;
     if (name === "Guild Member" || name.toLowerCase() === "name") continue;
     if (name === "#N/A" || job === "#N/A") continue;
     const key = name + "|" + job;
     if (seen.has(key)) continue;
     seen.add(key);
-    // CP value from column L (index 11)
-    const cp = parseNum(r[11]);
+    const cp = parseNum(r[11]);             // col L — CP
     members.push({
       id: "sheet_" + uid(),
-      name, job,
+      name, job, discord,
       cp,
       source: "sheet"
     });
@@ -3766,10 +3767,19 @@ function fbSubscribeAll() {
   _fbMembersRef.on("value", snap => {
     const v = snap.val() || {};
     rosterCache = Object.entries(v)
-      .map(([id, r]) => ({ id, name: r.name || "", job: r.job || "", cp: r.cp || 0, updatedAt: r.updatedAt || 0 }))
+      .map(([id, r]) => ({
+        id,
+        name:    r.name    || "",
+        job:     r.job     || "",
+        discord: r.discord || "",
+        cp:      r.cp      || 0,
+        updatedAt: r.updatedAt || 0
+      }))
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
     _fbApplyingRemote = true;
-    state.members = rosterCache.map(r => ({ id: r.id, name: r.name, job: r.job, cp: r.cp, source: "firebase" }));
+    state.members = rosterCache.map(r => ({
+      id: r.id, name: r.name, job: r.job, discord: r.discord, cp: r.cp, source: "firebase"
+    }));
     _fbApplyingRemote = false;
     rebuildJobFilter();
     if (typeof render === "function") render();
@@ -3967,23 +3977,24 @@ function migrateToFirebase() {
 function rosterAdd() {
   if (!isAdmin()) { toast("Admin only", "error"); return; }
   if (!_fbMembersRef) { toast("Firebase ยังไม่ตั้งค่า", "error"); return; }
-  const name = prompt("ชื่อตัวละคร:");
+  const name = prompt("ชื่อตัวละคร (Guild Member):");
   if (!name || !name.trim()) return;
-  const job  = prompt("Job:", "");
+  const job     = prompt("Job:", "") || "";
+  const discord = prompt("Discord username:", "") || "";
   _fbMembersRef.push({
-    name: name.trim(),
-    job:  (job || "").trim(),
-    cp:   0,
+    name:    name.trim(),
+    job:     job.trim(),
+    discord: discord.trim(),
+    cp:      0,
     updatedAt: Date.now()
   });
 }
 
 function rosterUpdate(id, field, value) {
   if (!_fbMembersRef) return;
-  // Frontend gating: name/job restricted to admin
-  if ((field === "name" || field === "job") && !isAdmin()) {
-    toast("เพิ่ม/แก้ ชื่อ + Job ทำได้เฉพาะ Admin", "error");
-    // Revert UI
+  // Frontend gating: name/job/discord restricted to admin; cp open to everyone
+  if ((field === "name" || field === "job" || field === "discord") && !isAdmin()) {
+    toast("เพิ่ม/แก้ ชื่อ + Job + Discord ทำได้เฉพาะ Admin", "error");
     renderBattlefields();
     return;
   }
@@ -4004,23 +4015,38 @@ function rosterDelete(id) {
 function rosterImportFromSheet() {
   if (!isAdmin()) { toast("Admin only", "error"); return; }
   if (!_fbMembersRef) { toast("Firebase ยังไม่ตั้งค่า", "error"); return; }
-  if (!state.sheetUrl) { toast("ตั้งค่า Sheet URL ก่อนที่ ⚙ Settings", "error"); return; }
-  if (!confirm("Import ทุกคนใน Sheet เข้า Roster?\n(ผู้ที่มีอยู่แล้ว — match name+job — จะข้าม)")) return;
+  const sheetUrl = state.sheetUrl || DEFAULT_SHEET;
+  if (!sheetUrl) { toast("ไม่มี Sheet URL", "error"); return; }
+  if (!confirm("Import จาก Google Sheet เข้า Roster?\n\nจะดึง 4 fields: ชื่อ / Job / Discord / CP\n• เพิ่มคนใหม่\n• อัพเดต Discord/CP ของคนที่มีอยู่แล้ว (match by name+job)")) return;
   (async () => {
     try {
-      const { id, gid } = parseSheetUrl(state.sheetUrl);
+      toast("⏳ กำลังโหลดจาก Sheet…", "");
+      const { id, gid } = parseSheetUrl(sheetUrl);
       const resp = await fetchSheetJSON(id, gid);
       const rows = gvizToRows(resp);
       const fetched = extractMembersFromRows(rows);
-      let added = 0, skipped = 0;
+      let added = 0, updated = 0;
       for (const m of fetched) {
         const dup = rosterCache.find(r => r.name === m.name && r.job === m.job);
-        if (dup) { skipped++; continue; }
-        await _fbMembersRef.push({ name: m.name, job: m.job, cp: m.cp || 0, updatedAt: Date.now() });
-        added++;
+        const payload = {
+          name:    m.name,
+          job:     m.job,
+          discord: m.discord || "",
+          cp:      m.cp || 0,
+          updatedAt: Date.now()
+        };
+        if (dup) {
+          // Update existing — refresh discord + cp (preserve manual edits to name/job-set already match)
+          await _fbMembersRef.child(dup.id).update(payload);
+          updated++;
+        } else {
+          await _fbMembersRef.push(payload);
+          added++;
+        }
       }
-      toast(`✅ Import เสร็จ: เพิ่ม ${added} · ข้าม ${skipped}`, "success");
+      toast(`✅ Import เสร็จ: เพิ่ม ${added} · อัพเดต ${updated}`, "success");
     } catch (e) {
+      console.error("[import] failed", e);
       toast("Import ไม่สำเร็จ: " + e.message, "error");
     }
   })();
@@ -4040,17 +4066,18 @@ function buildRosterRowsHtml() {
   const search = _rosterSearch;
   const filtered = !search ? rosterCache
     : rosterCache.filter(m =>
-        (m.name || "").toLowerCase().includes(search) ||
-        (m.job || "").toLowerCase().includes(search));
+        (m.name    || "").toLowerCase().includes(search) ||
+        (m.job     || "").toLowerCase().includes(search) ||
+        (m.discord || "").toLowerCase().includes(search));
   if (!filtered.length) {
     if (!rosterCache.length) {
-      return `<tr><td colspan="5" class="roster-empty">
+      return `<tr><td colspan="6" class="roster-empty">
         ยังไม่มีสมาชิกใน Roster<br>
         ${admin ? '<b>Admin:</b> กด <b>➕ เพิ่มสมาชิก</b> หรือ <b>📥 Import จาก Sheet</b>'
                 : 'รอ Admin เพิ่มสมาชิก'}
       </td></tr>`;
     }
-    return `<tr><td colspan="5" class="roster-empty">ไม่พบ "${escapeHtml(search)}"</td></tr>`;
+    return `<tr><td colspan="6" class="roster-empty">ไม่พบ "${escapeHtml(search)}"</td></tr>`;
   }
   return filtered.map((m, i) => `
     <tr data-id="${m.id}">
@@ -4061,6 +4088,9 @@ function buildRosterRowsHtml() {
       <td>${admin
         ? `<input class="r-input" value="${escapeHtml(m.job)}" onchange="rosterUpdate('${m.id}','job',this.value)" />`
         : `<div class="r-cell-static r-job">${escapeHtml(m.job)}</div>`}</td>
+      <td>${admin
+        ? `<input class="r-input" value="${escapeHtml(m.discord || "")}" placeholder="@username" onchange="rosterUpdate('${m.id}','discord',this.value)" />`
+        : `<div class="r-cell-static r-discord">${m.discord ? escapeHtml(m.discord) : '<span style="color:var(--muted)">—</span>'}</div>`}</td>
       <td>
         <input class="r-input r-cp" type="text" inputmode="numeric" pattern="[0-9]*"
                value="${m.cp || 0}" onchange="rosterUpdate('${m.id}','cp',this.value)" />
@@ -4113,6 +4143,7 @@ function buildRosterHtml() {
               <th style="width:36px">#</th>
               <th>ชื่อ${!admin ? '<span class="badge">admin only</span>' : ""}</th>
               <th>Job${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th>Discord${!admin ? '<span class="badge">admin only</span>' : ""}</th>
               <th style="width:140px;text-align:right">CP</th>
               <th style="width:50px"></th>
             </tr>
