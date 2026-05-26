@@ -1730,6 +1730,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <header>
   <button id="hamburgerBtn" class="hamburger-btn" onclick="toggleSidebar()" aria-label="เปิดเมนูรายชื่อ" title="รายชื่อสมาชิก">☰</button>
@@ -2934,6 +2935,7 @@ function attachMarkerDrag(el, wrap, idx, mapNum) {
 function setMapBg(mapNum, input) {
   const f = input.files[0];
   if (!f) return;
+  // Show preview locally first (fast feedback), then upload to Storage if admin
   const r = new FileReader();
   r.onload = e => {
     state.mapBg[mapNum] = e.target.result;
@@ -2941,6 +2943,31 @@ function setMapBg(mapNum, input) {
     save();
   };
   r.readAsDataURL(f);
+  // Upload to Firebase Storage so other users see this map too
+  if (isAdmin() && _fbStorage && _fbDB) {
+    uploadMapToStorage(mapNum, f);
+  } else if (!isAdmin()) {
+    toast("Login Admin เพื่ออัพภาพให้ทุกคนเห็น", "");
+  }
+}
+
+async function uploadMapToStorage(mapNum, file) {
+  try {
+    toast("⏳ กำลังอัพภาพแผนที่ #" + mapNum + " …", "");
+    const ext = (file.name.match(/\.(\w+)$/) || [,"png"])[1].toLowerCase();
+    const ref = _fbStorage.ref().child(`maps/${mapNum}.${ext}`);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    // Replace local dataUrl with public URL so all clients can fetch
+    state.mapBg[mapNum] = url;
+    applyMapBg(mapNum);
+    // Push URL only to Realtime DB (small string, not the bytes)
+    await _fbDB.ref(`map_urls/${mapNum}`).set(url);
+    toast("✅ ภาพแผนที่ #" + mapNum + " sync แล้ว", "success");
+  } catch (e) {
+    console.error("[storage] map upload failed", e);
+    toast("Upload ไม่สำเร็จ: " + e.message, "error");
+  }
 }
 function applyMapBg(mapNum) {
   const wrap = document.getElementById("mapWrap" + mapNum);
@@ -3710,7 +3737,7 @@ const ADMIN_EMAILS = [
   "blankkardor@gmail.com"
 ];
 
-let _fbApp = null, _fbDB = null, _fbAuth = null, _fbMembersRef = null;
+let _fbApp = null, _fbDB = null, _fbAuth = null, _fbStorage = null, _fbMembersRef = null;
 let _fbUser = null;            // Firebase auth user (anonymous or Google)
 let _fbReady = false;
 let _fbSubscribed = false;     // ensure we only attach listeners once
@@ -3733,10 +3760,11 @@ async function initFirebase() {
     return;
   }
   try {
-    _fbApp  = firebase.initializeApp(FIREBASE_CONFIG);
-    _fbAuth = firebase.auth();
-    _fbDB   = firebase.database();
-    _fbReady = true;
+    _fbApp     = firebase.initializeApp(FIREBASE_CONFIG);
+    _fbAuth    = firebase.auth();
+    _fbDB      = firebase.database();
+    _fbStorage = firebase.storage();
+    _fbReady   = true;
 
     // Track auth state. On first ever load, sign in anonymously so DB rules
     // (auth != null) pass. If user signs in with Google later, the anonymous
@@ -3835,6 +3863,33 @@ function fbSubscribeAll() {
     _fbApplyingRemote = false;
     if (typeof render === "function" && state.mode === "summary") render();
   });
+
+  // markers (League mode — party positions on map + movement arrows)
+  _fbDB.ref("markers").on("value", snap => {
+    const v = snap.val() || {};
+    _fbApplyingRemote = true;
+    state.markers = v;
+    _fbApplyingRemote = false;
+    if (typeof renderMarkers === "function" && state.mode === "league") renderMarkers();
+  });
+
+  // overrun_markers (Overrun mode — 4 big-party positions)
+  _fbDB.ref("overrun_markers").on("value", snap => {
+    const v = snap.val() || {};
+    _fbApplyingRemote = true;
+    state.overrunMarkers = v;
+    _fbApplyingRemote = false;
+    if (typeof renderOverrunMarkers === "function" && state.mode === "overrun") renderOverrunMarkers();
+  });
+
+  // map_urls (Firebase Storage URLs for the 3 background maps)
+  _fbDB.ref("map_urls").on("value", snap => {
+    const v = snap.val() || {};
+    _fbApplyingRemote = true;
+    state.mapBg = { ...state.mapBg, ...v };
+    _fbApplyingRemote = false;
+    [1,2,3].forEach(n => { if (typeof applyMapBg === "function") applyMapBg(n); });
+  });
 }
 
 /* ---------- Firebase writes (admin only) ---------- */
@@ -3852,6 +3907,16 @@ function fbPushAll() {
     _fbDB.ref("auction_gl").set(state.auctionGL);
     _fbDB.ref("auction_overrun").set(state.auctionOverrun);
     _fbDB.ref("job_targets").set(state.jobTargets || {});
+    _fbDB.ref("markers").set(state.markers || {});
+    _fbDB.ref("overrun_markers").set(state.overrunMarkers || {});
+    // map_urls — only sync URLs (not base64 dataUrls; those are too big for RTDB)
+    const urlsOnly = {};
+    if (state.mapBg) {
+      Object.entries(state.mapBg).forEach(([k, v]) => {
+        if (typeof v === "string" && v.startsWith("https://")) urlsOnly[k] = v;
+      });
+    }
+    _fbDB.ref("map_urls").set(urlsOnly);
   } catch (e) {
     console.warn("[firebase] push failed", e);
   }
