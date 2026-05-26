@@ -1949,10 +1949,96 @@
     .gl-stat-grid { grid-template-columns: 1fr; }
     .gl-grid-2, .gl-under-block { grid-template-columns: 1fr; }
 
-    /* Party layout (League/Overrun): party row stacks */
-    .party-row { grid-template-columns: 1fr 1fr; }    /* 5 slots → 2-col grid */
+    /* Party layout (League/Overrun): vertical card per party.
+       Header row = party-num + clear button side-by-side.
+       Below = 5 slots stacked full-width for easy reading + drag-drop. */
+    .party-row {
+      grid-template-columns: 1fr 36px;
+      grid-template-rows: 30px repeat(5, auto);
+      grid-template-areas:
+        "num  clear"
+        "s0   s0"
+        "s1   s1"
+        "s2   s2"
+        "s3   s3"
+        "s4   s4";
+      gap: 0;
+      border-top: 2px solid var(--border-2);
+    }
+    .party-row > .party-num      { grid-area: num; }
+    .party-row > .party-actions  { grid-area: clear; }
+    /* Slots are direct children in source order (party-num, slot1..5, clear).
+       Use :nth-child to map to grid-areas s0..s4. */
+    .party-row > .slot:nth-child(2) { grid-area: s0; }
+    .party-row > .slot:nth-child(3) { grid-area: s1; }
+    .party-row > .slot:nth-child(4) { grid-area: s2; }
+    .party-row > .slot:nth-child(5) { grid-area: s3; }
+    .party-row > .slot:nth-child(6) { grid-area: s4; }
+    .party-row > .party-num {
+      justify-content: flex-start;
+      padding: 0 12px;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--border);
+      border-right: 0;
+    }
+    .party-row > .party-num::before { content: "Party "; opacity: 0.55; font-weight: 500; margin-right: 4px; }
+    .party-row > .party-actions {
+      background: transparent;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      opacity: 0.6;
+    }
+    .party-row > .party-actions:hover { opacity: 1; }
+    .party-row > .slot {
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      min-height: 40px;
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .party-row > .slot.empty { padding: 6px 12px; min-height: 30px; justify-content: center; }
+    .party-row > .slot.filled .slot-job { flex-shrink: 0; }
+    .party-row > .slot.filled .slot-info {
+      flex-direction: row;
+      flex: 1;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+    }
+    .party-row > .slot.filled .slot-name { text-align: left; font-size: 13px; }
+    .party-row > .slot.filled .slot-cp { font-size: 11px; flex-shrink: 0; }
+    .party-row > .slot .slot-del {
+      opacity: 1;   /* always visible on mobile (no hover) */
+      font-size: 16px;
+      width: 24px; height: 24px;
+      line-height: 24px;
+      top: 50%; right: 8px;
+      transform: translateY(-50%);
+    }
+    .party-row > .slot .slot-leave-btn {
+      position: absolute;
+      top: 50%; left: 8px;
+      transform: translateY(-50%);
+      opacity: 1;   /* always visible on mobile */
+    }
+    .party-row > .slot.filled { padding-left: 48px; padding-right: 42px; }  /* room for leave + del buttons */
+    .party-row > .slot.filled:not(.slot-onleave) .slot-leave-btn { opacity: 0.7; }
+
     .bg-card { font-size: 11px; }
     .overrun { grid-template-columns: 1fr; }
+    /* Job summary pills below each party tighter on mobile */
+    .bf-summary, .bg-card .bf-summary { padding: 6px 10px; font-size: 10px; }
+    .bf-job-pill { font-size: 10px; padding: 1px 6px; }
+    /* Battlefield header (Main / Sub) — wrap if needed */
+    .bf-head, .bg-head { padding: 7px 10px; font-size: 12px; flex-wrap: wrap; }
+    .bf-head .count, .bg-head .count { font-size: 10px; }
+    .repair-slots-btn { font-size: 9px; padding: 2px 6px; }
 
     /* Auction assigned row: tighter */
     .auction-assigned-row { font-size: 11px; padding: 4px 6px; }
@@ -2037,7 +2123,7 @@
       <select id="jobFilter" onchange="renderMembers()">
         <option value="">All Jobs</option>
       </select>
-      <label class="toggle">
+      <label class="toggle" id="hideAssignedWrap">
         <input type="checkbox" id="hideAssigned" onchange="onSidebarFilterChange(this,'hideAssigned')" />
         <span>ซ่อนคนที่จัดตี้แล้ว</span>
       </label>
@@ -3450,21 +3536,22 @@ function renderMembers() {
   const search = document.getElementById("searchInput").value.trim().toLowerCase();
   const jobF = document.getElementById("jobFilter").value;
   const leaveOn = leaveEnabled();
+  // On auction pages we drag the SAME person into multiple buckets — neither
+  // "hide assigned" nor "hide on leave" makes sense there, so hide both
+  // filter chips entirely on those modes.
+  const isAuctionMode = state.mode === "auction-gl" || state.mode === "auction-overrun";
+  const hideAssignedWrap = document.getElementById("hideAssignedWrap");
   const hideLeaveWrap = document.getElementById("hideLeaveWrap");
-  if (hideLeaveWrap) hideLeaveWrap.style.display = leaveOn ? "" : "none";
+  if (hideAssignedWrap) hideAssignedWrap.style.display = isAuctionMode ? "none" : "";
+  if (hideLeaveWrap)    hideLeaveWrap.style.display    = (leaveOn && !isAuctionMode) ? "" : "none";
   // Restore per-page checkbox state on every render (mode may have changed)
   const hideAssignedEl = document.getElementById("hideAssigned");
   const hideLeaveEl    = document.getElementById("hideLeave");
-  const hideAssigned   = getPagePref("hideAssigned");
-  const hideLeave      = leaveOn && getPagePref("hideLeave");
+  const hideAssigned   = !isAuctionMode && getPagePref("hideAssigned");
+  const hideLeave      = leaveOn && !isAuctionMode && getPagePref("hideLeave");
   if (hideAssignedEl) hideAssignedEl.checked = hideAssigned;
   if (hideLeaveEl)    hideLeaveEl.checked    = hideLeave;
   const list = document.getElementById("memberList");
-
-  // In auction mode, one member can be in multiple buckets — count buckets so
-  // we can render a "×N" badge and skip the heavy 0.35-opacity fade that makes
-  // them look unavailable for additional drags.
-  const isAuctionMode = state.mode === "auction-gl" || state.mode === "auction-overrun";
   const auctionBucketCount = (mid) => {
     if (!isAuctionMode) return 0;
     const obj = state.mode === "auction-gl" ? state.auctionGL : state.auctionOverrun;
