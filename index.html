@@ -3284,12 +3284,24 @@ function toggleLeave(id) {
 }
 
 // Visible-text helper: a name or job is "blank" if, after stripping whitespace
-// AND zero-width characters (​-‍, ﻿), nothing remains. Catches
-// edge cases like names that were imported with invisible chars.
+// AND zero-width characters (U+200B..U+200D, U+FEFF), nothing remains.
+// Uses explicit \uXXXX escapes so the regex isn't dependent on the source file
+// being saved as a specific encoding.
 function isVisuallyBlank(s) {
-  return !((s || "").replace(/[\s​-‍﻿]/g, "").length);
+  return !((s || "").replace(/[\s​‌‍﻿]/g, "").length);
 }
+// "Ghost" for slot-display purposes: missing entirely, OR missing EITHER a
+// usable name OR a usable job. A slot member needs BOTH to be considered a
+// real party member — a row with just a name like "X" and no job renders as
+// a tiny lone character that visually looks like a stray delete icon.
 function isGhostMember(m) {
+  return !m || isVisuallyBlank(m.name) || isVisuallyBlank(m.job);
+}
+// Looser check, used only by the auto-sanitize that DELETES the slot reference.
+// We only auto-delete when BOTH are blank — incomplete-but-non-empty members
+// keep their slot assignment (rendered as Empty visually) so admin can fix the
+// roster without losing party assignments.
+function isFullyBlankMember(m) {
   return !m || (isVisuallyBlank(m.name) && isVisuallyBlank(m.job));
 }
 function buildPartyRowHtml(p) {
@@ -4016,13 +4028,17 @@ function fbSubscribeAll() {
   // or have no name/job (ghost rows from migration / dedupe etc).
   // SAFETY: skip if members haven't loaded yet — otherwise we'd wipe valid
   // slots just because their members haven't arrived from Firebase yet.
+  // Sanitize uses the LOOSER check (isFullyBlankMember) so we only DELETE the
+  // slot reference if there's nothing left to recover. A member with name "X"
+  // and no job is rendered as Empty visually but keeps its slot assignment,
+  // so admin can complete the roster without losing party data.
   const sanitizeSlots = (parties) => {
     if (!state.members || !state.members.length) return false;
     let dirty = false;
     parties.forEach(p => {
       p.slots = p.slots.map(id => {
         if (!id) return null;
-        if (isGhostMember(findMember(id))) { dirty = true; return null; }
+        if (isFullyBlankMember(findMember(id))) { dirty = true; return null; }
         return id;
       });
     });
@@ -4031,7 +4047,9 @@ function fbSubscribeAll() {
 
   // Diagnostic helpers — exposed on window so the user can call them from the
   // DevTools console when ghost-slot bug is suspected. Returns an array of
-  // {kind: 'league'|'overrun', party: number, slot: number, memId, member}.
+  // {kind, party, slot, memId, member, severity}.
+  // severity = 'fully-blank' (auto-deleted by sanitize) or 'incomplete' (kept
+  // in slot, rendered as Empty visually).
   window.diagGhostSlots = () => {
     const out = [];
     const scan = (kind, parties) => {
@@ -4041,14 +4059,18 @@ function fbSubscribeAll() {
         p.slots.forEach((id, si) => {
           if (!id) return;
           const m = findMember(id);
-          if (isGhostMember(m)) out.push({ kind, party: pi + 1, slot: si + 1, memId: id, member: m });
+          if (isGhostMember(m)) {
+            const severity = isFullyBlankMember(m) ? "fully-blank" : "incomplete";
+            out.push({ kind, party: pi + 1, slot: si + 1, memId: id,
+                       name: m && m.name, job: m && m.job, severity });
+          }
         });
       });
     };
     scan("league",  state.partiesLeague);
     scan("overrun", state.partiesOverrun);
     console.table(out);
-    console.log("Members loaded:", state.members.length, "Ghost slots found:", out.length);
+    console.log("Members loaded:", state.members.length, "Ghost slots:", out.length);
     return out;
   };
 
