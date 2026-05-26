@@ -1,0 +1,4053 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<title>ROO Party — Main/Sub Battlefield Organizer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-2: #161b22;
+    --panel: #1c2128;
+    --panel-2: #232a33;
+    --border: #30363d;
+    --border-2: #444c56;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-2: #ffb347;
+    --main-bf: #1f6feb;
+    --sub-bf: #b8703f;
+    --danger: #f85149;
+    --success: #3fb950;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "Segoe UI", "Sarabun", Tahoma, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    font-size: 13px;
+  }
+
+  /* ===== Header ===== */
+  header {
+    display: flex; align-items: center; gap: 10px;
+    height: 44px; padding: 0 14px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+  }
+  header .brand {
+    font-weight: 700; color: var(--accent);
+    font-size: 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  header .spacer { flex: 1; }
+  header button {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 5px 10px; border-radius: 5px;
+    font-size: 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  header button:hover { background: var(--panel-2); border-color: var(--accent); }
+  header button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+  header .status { font-size: 11px; color: var(--muted); padding: 0 10px; }
+
+  /* ===== Mode toggle (League / Overrun) ===== */
+  .mode-toggle {
+    position: relative;
+    display: flex;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px;
+    margin-left: 6px;
+  }
+  .mode-toggle .seg {
+    position: relative;
+    z-index: 2;
+    background: transparent;
+    border: 0;
+    padding: 5px 12px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .18s;
+    border-radius: 4px;
+  }
+  .mode-toggle .seg.active { color: #fff; }
+  .mode-toggle .seg:hover:not(.active) { color: var(--text); }
+  .mode-toggle .seg-indicator {
+    position: absolute;
+    top: 3px; bottom: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+    background: var(--accent);
+    border-radius: 4px;
+    z-index: 1;
+    transition: left .22s ease, background .22s, width .22s;
+  }
+  /* Indicator: left/width set dynamically by updateModeToggleUI() in JS,
+     so tabs can have variable widths (long labels like "Auction Overrun"
+     no longer overflow). CSS here only controls background color per mode. */
+  .mode-toggle.overrun-active .seg-indicator {
+    background: linear-gradient(90deg, #ef4444, #eab308 33%, #22c55e 66%, #3b82f6);
+  }
+  .mode-toggle.summary-active .seg-indicator {
+    background: var(--success);
+  }
+  .mode-toggle.auction-gl-active .seg-indicator {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  }
+  .mode-toggle.auction-overrun-active .seg-indicator {
+    background: linear-gradient(90deg, #d97706, #f97316);
+  }
+  .mode-toggle .seg { flex-shrink: 0; white-space: nowrap; }
+
+  /* ===== Auction view ===== */
+  .auction-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .auction-hero {
+    background: linear-gradient(135deg, #2a1a05 0%, #1c1108 100%);
+    border: 1px solid var(--border-2);
+    border-left: 4px solid #f59e0b;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap;
+  }
+  .auction-hero.overrun {
+    background: linear-gradient(135deg, #2a1505 0%, #1c0d05 100%);
+    border-left-color: #f97316;
+  }
+  .auction-hero h2 {
+    margin: 0; font-size: 18px; font-weight: 800;
+    color: #fbbf24;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .auction-hero.overrun h2 { color: #fb923c; }
+  .auction-hero .auction-meta {
+    color: var(--muted); font-size: 12px;
+    display: flex; gap: 14px; flex-wrap: wrap;
+  }
+  .auction-hero .auction-meta b { color: var(--text); }
+  .auction-hero .rate-pill {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    color: var(--text);
+  }
+  .auction-hero .rate-pill b { color: #fbbf24; }
+
+  .auction-section {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .auction-section h3 {
+    margin: 0 0 12px 0; font-size: 14px;
+    color: var(--accent);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .auction-section.bonus h3 { color: #fbbf24; }
+
+  .auction-inputs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 1100px) { .auction-inputs { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .auction-inputs { grid-template-columns: 1fr; } }
+  .auction-input-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .auction-input-card .ai-label {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .auction-input-card .ai-icon { font-size: 14px; }
+  .auction-input-card input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    width: 100%;
+    font-family: inherit;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .auction-input-card input::-webkit-outer-spin-button,
+  .auction-input-card input::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  .auction-input-card input:hover { border-color: var(--border-2); }
+  .auction-input-card input:focus {
+    border-color: #fbbf24;
+    outline: none;
+    background: #0a0f17;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15);
+  }
+  .auction-input-card input::selection { background: rgba(251, 191, 36, 0.35); color: #fff; }
+  .auction-input-card input::placeholder { color: #475569; font-weight: 400; }
+  .auction-input-card .ai-rate {
+    color: var(--muted); font-size: 11px; text-align: center;
+  }
+  .auction-input-card .ai-rate b { color: var(--text); }
+  .auction-input-card .ai-effective {
+    text-align: center;
+    font-size: 12px;
+    color: #fbbf24;
+    font-weight: 700;
+  }
+  .auction-input-card .ai-status {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding-top: 4px;
+    border-top: 1px dashed var(--border);
+  }
+  .auction-input-card .ai-status.ok { color: var(--success); }
+  .auction-input-card .ai-status.short { color: var(--danger); }
+  .auction-input-card .ai-status.over { color: var(--accent); }
+
+  .auction-percent-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .auction-percent-row .label {
+    color: var(--muted); font-size: 12px;
+  }
+  .auction-percent-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 14px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all .15s;
+  }
+  .auction-percent-btn:hover { border-color: #fbbf24; }
+  .auction-percent-btn.active {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #000;
+    border-color: #fbbf24;
+  }
+
+  .auction-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .auction-summary-table th,
+  .auction-summary-table td {
+    padding: 8px 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .auction-summary-table th {
+    background: var(--panel-2);
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .auction-summary-table td.item {
+    text-align: left;
+    font-weight: 600;
+  }
+  .auction-summary-table td.num { font-family: monospace; font-weight: 700; }
+  .auction-summary-table td.status-cell { font-weight: 700; font-size: 12px; }
+  .auction-summary-table td.status-cell.ok { color: var(--success); }
+  .auction-summary-table td.status-cell.short { color: var(--danger); }
+  .auction-summary-table td.status-cell.over { color: var(--accent); }
+  .auction-summary-table td.status-cell.none { color: var(--muted); font-weight: 400; }
+
+  .auction-warning {
+    background: linear-gradient(135deg, rgba(248,81,73,0.1), rgba(255,179,71,0.1));
+    border: 1px solid var(--danger);
+    border-left: 4px solid var(--danger);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .auction-warning b { color: var(--danger); }
+
+  /* ===== Sub-field info boxes (auto 30% split) ===== */
+  .auction-sub-boxes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 900px) { .auction-sub-boxes { grid-template-columns: 1fr; } }
+  .auction-sub-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--col, var(--accent));
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "icon label total"
+      "icon label total";
+    gap: 0 12px;
+    align-items: center;
+  }
+  .auction-sub-box .asb-icon {
+    grid-area: icon;
+    font-size: 26px;
+    line-height: 1;
+  }
+  .auction-sub-box .asb-label {
+    grid-area: label;
+    display: flex; flex-direction: column;
+  }
+  .auction-sub-box .asb-name {
+    font-size: 13px; font-weight: 700; color: var(--text);
+  }
+  .auction-sub-box .asb-sub {
+    font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .auction-sub-box .asb-val {
+    grid-area: total;
+    font-size: 24px; font-weight: 800;
+    color: var(--col, var(--accent));
+    text-align: right;
+    font-family: monospace;
+  }
+  .auction-sub-box .asb-unit {
+    font-size: 11px; font-weight: 400; color: var(--muted);
+    margin-left: 2px;
+  }
+
+  /* ===== Auction columns (drag-drop assignment) ===== */
+  .auction-columns {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 1200px) { .auction-columns { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .auction-columns { grid-template-columns: 1fr; } }
+
+  .auction-column {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--col, var(--accent-2));
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .auction-column .ac-head {
+    background: var(--panel-2);
+    padding: 9px 12px;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .auction-column .ac-head .ac-rate {
+    color: var(--muted); font-weight: 400; font-size: 11px;
+    background: var(--bg-2); padding: 2px 8px; border-radius: 10px;
+  }
+  .auction-column .ac-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+    padding: 8px 10px;
+    font-size: 11px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  .auction-column .ac-stats > div { display: flex; flex-direction: column; gap: 1px; }
+  .auction-column .ac-stats .ac-stat-label {
+    color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .auction-column .ac-stats .ac-stat-val { font-weight: 700; font-size: 14px; }
+  .auction-column .ac-status.short { color: var(--danger); }
+  .auction-column .ac-status.ok { color: var(--success); }
+  .auction-column .ac-status.over { color: var(--accent); }
+  .auction-column .ac-status.none { color: var(--muted); font-size: 11px; font-weight: 400; }
+
+  .auction-column .ac-droplist {
+    flex: 1;
+    padding: 8px;
+    min-height: 200px;
+    max-height: 55vh;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 4px;
+    transition: background .15s;
+  }
+  .auction-column .ac-droplist.drag-over {
+    background: rgba(251, 191, 36, 0.12);
+    outline: 2px dashed #fbbf24;
+    outline-offset: -4px;
+  }
+
+  .ac-empty {
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+    padding: 40px 10px;
+    border: 2px dashed var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+
+  .auction-assigned-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 5px 9px;
+    font-size: 12px;
+    transition: border-color .12s, background .12s;
+  }
+  .auction-assigned-row:hover {
+    border-color: var(--col, var(--accent));
+    background: var(--bg-2);
+  }
+  .auction-assigned-row .aar-rk {
+    color: var(--muted); font-size: 10px; font-weight: 700;
+    width: 22px; text-align: right; font-family: monospace;
+  }
+  .auction-assigned-row .aar-info {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+  }
+  .auction-assigned-row .aar-name {
+    font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .auction-assigned-row .aar-job {
+    color: var(--muted); font-size: 10px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .auction-assigned-row .aar-del {
+    color: var(--muted); cursor: pointer;
+    padding: 2px 6px; border-radius: 3px;
+    font-weight: 700; font-size: 14px; line-height: 1;
+  }
+  .auction-assigned-row .aar-del:hover {
+    color: var(--danger); background: rgba(248, 81, 73, 0.1);
+  }
+  .auction-assigned-row .aar-page {
+    display: inline-block;
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    padding: 1px 7px;
+    border-radius: 10px;
+    align-self: flex-start;
+    letter-spacing: 0.3px;
+  }
+  /* Multi-segment badges (person spans pages) stack vertically */
+  .auction-assigned-row .aar-page + .aar-page { margin-top: 2px; }
+
+  .auction-column .ac-actions {
+    padding: 7px 8px;
+    display: flex; gap: 6px; justify-content: stretch;
+    border-top: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+  .auction-column .ac-actions button {
+    flex: 1;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .12s;
+  }
+  .auction-column .ac-actions button:hover {
+    border-color: var(--col, var(--accent));
+    background: var(--bg);
+  }
+  .auction-column .ac-actions button.danger { color: var(--muted); }
+  .auction-column .ac-actions button.danger:hover {
+    border-color: var(--danger); color: var(--danger);
+  }
+
+  /* ===== Summary view ===== */
+  .summary-view {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    flex-shrink: 0;
+  }
+  .summary-total {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .summary-total .badges { display: flex; gap: 10px; }
+  .summary-total .badges span {
+    font-size: 12px; font-weight: 400;
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 3px 10px; border-radius: 10px;
+  }
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .summary-table th,
+  .summary-table td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-table th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--panel-2);
+  }
+  .summary-table td.count {
+    font-weight: 700;
+    color: var(--text);
+    width: 80px;
+    text-align: center;
+  }
+  .summary-table td.target { width: 110px; text-align: center; }
+  .summary-table td.status-cell { width: 130px; text-align: center; font-weight: 700; }
+  .summary-table tfoot tr { background: var(--panel-2); }
+  .summary-table tfoot td {
+    font-weight: 700; color: var(--accent);
+    border-top: 2px solid var(--border-2);
+    border-bottom: 0;
+    padding: 10px 12px;
+  }
+  .summary-table tfoot td.label { color: var(--text); }
+  .summary-table input[type="number"] {
+    width: 80px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 8px; border-radius: 4px;
+    font-size: 13px; text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .summary-table input[type="number"]::-webkit-outer-spin-button,
+  .summary-table input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .summary-table input[type="number"]:focus { border-color: var(--accent); outline: none; }
+  .status-too-many { color: var(--danger); }
+  .status-too-few { color: var(--accent-2); }
+  .status-balanced { color: var(--success); }
+  .status-none { color: var(--muted); font-weight: 400; }
+
+  /* ===== GL Summary Dashboard ===== */
+  .gl-dashboard { display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
+  .gl-hero {
+    background: linear-gradient(135deg, #0d2235 0%, #1a0f0f 100%);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 22px 26px;
+    position: relative; overflow: hidden;
+  }
+  .gl-hero::before {
+    content: "🏆"; position: absolute; right: 24px; top: 16px;
+    font-size: 72px; opacity: 0.15;
+  }
+  .gl-result-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #3fb950, #1d8d3a);
+    color: white; padding: 4px 12px; border-radius: 5px;
+    font-weight: 700; font-size: 11px; letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .gl-result-badge.lose { background: linear-gradient(135deg, #f85149, #d11b1b); }
+  .gl-hero h1 { margin: 0; font-size: 22px; font-weight: 800; }
+  .gl-hero .gl-sub { color: var(--muted); font-size: 12px; }
+  .gl-score-board {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    gap: 18px; align-items: center; margin-top: 18px;
+  }
+  .gl-team {
+    background: rgba(0,0,0,0.35);
+    border: 2px solid #1f6feb;
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .gl-team.them { border-color: #d11b1b; }
+  .gl-team-name { font-size: 15px; font-weight: 700; }
+  .gl-team.us .gl-team-name { color: #58a6ff; }
+  .gl-team.them .gl-team-name { color: #f85149; }
+  .gl-team-score { font-size: 36px; font-weight: 900; line-height: 1; margin: 2px 0; }
+  .gl-team-sub { color: var(--muted); font-size: 11px; }
+  .gl-vs { font-size: 24px; font-weight: 900; color: var(--muted); letter-spacing: 3px; }
+
+  .gl-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 1000px) { .gl-grid-2 { grid-template-columns: 1fr; } }
+
+  .gl-section {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .gl-section h3 {
+    margin: 0 0 12px 0; font-size: 15px; color: var(--accent);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .gl-stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .gl-stat-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .gl-stat-card .gl-stat-label {
+    color: var(--muted); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+  }
+  .gl-stat-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 3px 0;
+  }
+  .gl-stat-row .name { font-size: 12px; color: var(--muted); }
+  .gl-stat-row .us-v { color: #58a6ff; font-weight: 700; font-size: 17px; }
+  .gl-stat-row .them-v { color: #f85149; font-weight: 700; font-size: 17px; }
+  .gl-stat-bar {
+    height: 5px; background: var(--bg);
+    border-radius: 3px; overflow: hidden;
+    margin-top: 6px; display: flex;
+  }
+  .gl-stat-bar .us-bar { background: #58a6ff; }
+  .gl-stat-bar .them-bar { background: #f85149; }
+
+  /* Bar chart (CSS based) */
+  .gl-bar-row {
+    display: grid; grid-template-columns: 90px 1fr 60px; gap: 8px;
+    align-items: center; padding: 4px 0;
+  }
+  .gl-bar-row .label { font-size: 11px; color: var(--muted); }
+  .gl-bar-row .value { font-weight: 700; text-align: right; font-family: monospace; font-size: 12px; }
+  .gl-bar-row .bar {
+    height: 16px; background: var(--bg); border-radius: 3px;
+    position: relative; overflow: hidden;
+  }
+  .gl-bar-row .bar .fill {
+    height: 100%; transition: width .3s;
+  }
+  .gl-bar-row.us .bar .fill { background: #58a6ff; }
+  .gl-bar-row.them .bar .fill { background: #f85149; }
+
+  /* Player table */
+  .gl-ptable { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .gl-ptable th, .gl-ptable td {
+    padding: 5px 8px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .gl-ptable th {
+    background: var(--panel-2); color: var(--muted);
+    font-size: 10px; text-transform: uppercase; font-weight: 600;
+  }
+  .gl-ptable .rk { width: 26px; color: var(--muted); font-weight: 700; }
+  .gl-ptable .rk.r1 { color: #f1c40f; }
+  .gl-ptable .rk.r2 { color: #c0c0c0; }
+  .gl-ptable .rk.r3 { color: #cd7f32; }
+  .gl-ptable td.score { text-align: right; font-weight: 700; font-family: monospace; }
+  .gl-ptable.us td.score { color: #58a6ff; }
+  .gl-ptable.them td.score { color: #f85149; }
+  .gl-ptable .kad, .gl-ptable .fm {
+    font-family: monospace; font-size: 10px; color: var(--muted);
+  }
+  .gl-ptable tr.under { background: rgba(248,81,73,0.08); }
+  .gl-ptable tr.under .pname::after {
+    content: " ⚠️"; color: var(--danger);
+  }
+
+  /* Under performance */
+  .gl-underperf {
+    background: linear-gradient(135deg, rgba(248,81,73,0.06), rgba(255,179,71,0.06));
+    border: 1px solid var(--accent);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .gl-underperf h3 { margin: 0 0 10px 0; color: var(--accent); font-size: 15px; }
+  .gl-under-list { list-style: none; padding: 0; margin: 6px 0; font-size: 12px; }
+  .gl-under-list li {
+    padding: 4px 0; border-bottom: 1px dashed var(--border);
+  }
+  .gl-under-list li:last-child { border-bottom: 0; }
+  .gl-under-list .uname { font-weight: 700; }
+  .gl-under-list .reason { color: var(--muted); font-size: 11px; }
+  .gl-under-block { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+  @media (max-width: 900px) { .gl-under-block { grid-template-columns: 1fr; } }
+  .gl-under-side h4 {
+    margin: 0 0 6px 0; font-size: 13px;
+  }
+  .gl-under-side.us h4 { color: #58a6ff; }
+  .gl-under-side.them h4 { color: #f85149; }
+
+  /* Summary 2-column grid: table left, pie/AI right */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 1000px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary-grid .summary-table { font-size: 12px; }
+  .summary-grid .summary-table th,
+  .summary-grid .summary-table td { padding: 6px 8px; }
+  .summary-grid .summary-table td.count { width: 56px; }
+  .summary-grid .summary-table td.target { width: 70px; }
+  .summary-grid .summary-table td.status-cell { width: 100px; font-size: 12px; }
+  .summary-grid .summary-table input[type="number"] { width: 56px; padding: 3px 4px; font-size: 12px; }
+  .summary-side { display: flex; flex-direction: column; gap: 14px; }
+  .pie {
+    display: block;
+    width: 100%;
+    max-width: 260px;
+    margin: 0 auto;
+  }
+  .pie path { transition: opacity .15s; }
+  .pie path:hover { opacity: 0.8; }
+  .pie-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 4px 10px;
+    font-size: 11px;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .pie-legend span {
+    display: flex; align-items: center; gap: 6px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .pie-legend span::before {
+    content: ""; flex: 0 0 10px;
+    width: 10px; height: 10px;
+    background: var(--c, var(--muted));
+    border-radius: 2px;
+  }
+  .ai-comment {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .ai-comment .ai-title {
+    font-weight: 700; color: var(--accent);
+    margin-bottom: 8px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ai-comment .ai-line { margin-bottom: 2px; }
+  .ai-comment .ai-sub { color: var(--muted); padding-left: 16px; font-size: 11px; }
+  .ai-comment b.too-many { color: var(--danger); }
+  .ai-comment b.too-few { color: var(--accent-2); }
+  .ai-comment b.balanced { color: var(--success); }
+
+  /* ===== Overrun layout ===== */
+  .overrun {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  @media (max-width: 1100px) {
+    .overrun { grid-template-columns: 1fr; }
+  }
+  .bg-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--gc, var(--accent));
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .bg-head {
+    padding: 8px 12px;
+    background: var(--gc, var(--main-bf));
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .bg-head .count {
+    font-size: 11px; background: rgba(0,0,0,0.3);
+    padding: 2px 8px; border-radius: 10px; font-weight: 400;
+  }
+
+  /* ===== Main grid ===== */
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    height: calc(100vh - 44px);
+    overflow: hidden;
+  }
+  @media (max-width: 1400px) {
+    .layout { grid-template-columns: 220px 1fr; }
+  }
+
+  /* ===== Sidebar ===== */
+  .sidebar {
+    background: var(--bg-2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar h3 {
+    margin: 0; padding: 10px 12px;
+    font-size: 13px; color: var(--text);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sidebar .filters {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .sidebar select, .sidebar input {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 5px 8px; border-radius: 4px;
+    font-size: 12px; width: 100%;
+  }
+  .sidebar .filters label.toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 2px;
+    line-height: 1.3;
+    user-select: none;
+    transition: color .12s;
+  }
+  .sidebar .filters label.toggle:hover { color: var(--text); }
+  .sidebar .filters label.toggle input[type="checkbox"] {
+    flex: 0 0 14px;
+    width: 14px; height: 14px;
+    margin: 0; padding: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .sidebar .filters label.toggle span {
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .member-list {
+    flex: 1; overflow-y: auto;
+    padding: 4px;
+  }
+  .member-row {
+    display: grid; grid-template-columns: 80px 1fr auto;
+    align-items: center;
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--border);
+    cursor: grab; font-size: 12px;
+    transition: background .1s;
+  }
+  .member-row:hover { background: var(--panel); }
+  .member-row.assigned { opacity: 0.35; }
+  /* In auction mode, the same person CAN be in multiple buckets — so the
+     row stays full opacity (so they look draggable) and a gold count badge
+     shows how many buckets they're in. */
+  .member-row.in-auction { border-left: 3px solid #fbbf24; }
+  .member-row .auction-count {
+    display: inline-block;
+    background: #fbbf24; color: #0d1117;
+    font-size: 9px; font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: 4px;
+    line-height: 1.3;
+  }
+  .member-row.dragging { opacity: 0.4; }
+  .member-row .mjob {
+    color: var(--accent);
+    font-size: 11px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .member-row .mname {
+    color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .member-list::-webkit-scrollbar { width: 8px; }
+  .member-list::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+  /* --- on-leave (League + Overrun) --- */
+  .member-row.on-leave { opacity: 0.55; cursor: grab; }
+  .member-row.on-leave .mname { text-decoration: line-through; }
+  .leave-badge {
+    display: inline-block; font-size: 10px; font-weight: 700; color: #fff;
+    background: #f59e0b; padding: 1px 6px; border-radius: 999px; margin-left: 6px;
+  }
+  .slot.filled.slot-onleave {
+    outline: 2px solid #ef4444; outline-offset: -2px; background: rgba(239,68,68,0.15);
+  }
+  .slot .slot-leave-btn {
+    position: absolute; top: 2px; left: 2px; z-index: 3;
+    font-size: 9px; font-weight: 700; line-height: 1.4;
+    color: var(--muted); background: var(--bg-2);
+    border: 1px solid var(--border); padding: 1px 5px; border-radius: 3px;
+    cursor: pointer; opacity: 0; transition: opacity .1s;
+  }
+  .slot.filled:hover .slot-leave-btn { opacity: 0.92; }
+  .slot.filled.slot-onleave .slot-leave-btn {
+    opacity: 1; color: #fff; background: #ef4444; border-color: #ef4444;
+  }
+
+  /* ===== Center battlefields ===== */
+  .center {
+    overflow-y: auto;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .center::-webkit-scrollbar { width: 10px; }
+  .center::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+
+  .bf {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;                /* don't squish – show all rows */
+  }
+  .bf-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: var(--main-bf);
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .bf.sub .bf-head { background: var(--sub-bf); }
+  .bf-head .count {
+    font-size: 11px; background: rgba(0,0,0,0.25);
+    padding: 2px 8px; border-radius: 10px;
+    font-weight: 400;
+  }
+  .bf-head .spacer { flex: 1; }
+  .bf-summary {
+    padding: 8px 12px;
+    border-top: 1px dashed var(--border);
+    background: var(--panel-2);
+    display: flex; flex-wrap: wrap; gap: 6px;
+    align-items: center;
+    font-size: 11px;
+  }
+  .bf-job-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .bf-job-pill b { color: var(--accent); font-weight: 700; }
+  .bf-job-total {
+    margin-left: auto;
+    color: var(--text); font-weight: 700;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    padding: 3px 10px; border-radius: 12px;
+  }
+  .bf-summary.empty {
+    color: var(--muted); font-style: italic; justify-content: center;
+  }
+
+  .party-row {
+    display: grid;
+    grid-template-columns: 40px repeat(5, 1fr) 28px;
+    border-top: 1px solid var(--border);
+    min-height: 44px;
+  }
+  .party-num {
+    background: var(--panel-2);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    border-right: 1px solid var(--border);
+    cursor: grab;
+    color: var(--accent-2);
+    user-select: none;
+  }
+  .party-num.dragging { background: var(--accent-2); color: #000; }
+  .bf.sub .party-num { color: var(--sub-bf); }
+  .slot {
+    border-right: 1px solid var(--border);
+    padding: 5px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 56px;
+    background: var(--panel);
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+  }
+  .slot.empty { background: var(--bg-2); color: var(--muted); font-style: italic; font-size: 11px; justify-content: center; }
+  .slot.drag-over { background: rgba(88, 166, 255, 0.2); outline: 2px dashed var(--accent); outline-offset: -2px; }
+  .slot .slot-job {
+    font-size: 10px; color: var(--accent);
+    background: rgba(88,166,255,0.12);
+    padding: 1px 6px; border-radius: 3px;
+    white-space: nowrap;
+  }
+  .slot .slot-info {
+    display: flex; flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: 1px;
+    line-height: 1.15;
+  }
+  .slot .slot-name {
+    font-size: 12px;
+    font-weight: 600;
+    max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-align: center;
+  }
+  .slot .slot-cp {
+    font-size: 10px;
+    color: var(--accent-2);
+    font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    letter-spacing: 0.3px;
+    text-align: center;
+  }
+  .slot.filled { cursor: grab; }
+  .slot.filled.dragging { opacity: 0.4; }
+  .slot .slot-del {
+    position: absolute; top: 2px; right: 2px;
+    color: var(--danger);
+    opacity: 0;
+    font-size: 14px; cursor: pointer;
+    width: 18px; height: 18px;
+    line-height: 18px; text-align: center;
+    border-radius: 3px;
+  }
+  .slot:hover .slot-del { opacity: 1; }
+  .slot .slot-del:hover { background: rgba(248,81,73,0.2); }
+  .party-actions {
+    background: var(--panel-2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted);
+    font-size: 13px;
+  }
+  .party-actions:hover { color: var(--danger); background: rgba(248,81,73,0.15); }
+
+  /* ===== Maps (inline in scrolling center) ===== */
+  .maps-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .maps-row > .map-card { min-width: 0; }
+  .maps-row .map-wrap {
+    /* override per-card cap so each map fills its column */
+    max-width: 100%;
+    max-height: 65vh;
+    min-height: 280px;
+  }
+  @media (max-width: 1100px) {
+    .maps-row { grid-template-columns: 1fr; }
+  }
+  .map-card {
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    overflow: hidden;
+    flex-shrink: 0;                /* don't squish – natural size */
+  }
+  .map-card .map-title {
+    padding: 8px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 600;
+    gap: 6px;
+  }
+  .map-card .map-title.main { color: var(--main-bf); }
+  .map-card .map-title.sub { color: var(--sub-bf); }
+  .map-card .map-title.overrun-map {
+    color: #fff;
+    background: linear-gradient(90deg, #ef4444, #eab308 33%, #22c55e 66%, #3b82f6);
+  }
+  .map-card .map-title .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .map-card .map-title button,
+  .map-card .map-title label.btn {
+    background: var(--bg-2); padding: 3px 8px; border-radius: 4px;
+    border: 1px solid var(--border); cursor: pointer; font-size: 11px;
+    color: var(--text); font-weight: 400;
+  }
+  .map-card .map-title button:hover,
+  .map-card .map-title label.btn:hover { border-color: var(--accent); }
+
+  /* Fullscreen map modal */
+  .map-card-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.78);
+    z-index: 1999;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
+  .map-card.fullscreen {
+    position: fixed !important;
+    inset: 20px !important;
+    z-index: 2000 !important;
+    background: var(--bg-2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    display: flex; flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.8);
+    overflow: hidden;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+  .map-card.fullscreen .map-title { flex-shrink: 0; }
+  .map-card.fullscreen .map-wrap {
+    width: min(calc(100vw - 60px), calc(100vh - 110px)) !important;
+    height: min(calc(100vw - 60px), calc(100vh - 110px)) !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: auto !important;
+    flex: 0 0 auto;
+  }
+  /* Overrun map in fullscreen — fit modal preserving aspect */
+  .map-card.fullscreen .map-wrap.overrun-wrap {
+    width: calc(100vw - 60px) !important;
+    height: auto !important;
+    max-height: calc(100vh - 110px) !important;
+    aspect-ratio: var(--map-ar, 16/9) !important;
+    max-width: calc((100vh - 110px) * var(--map-ar, 1.78)) !important;
+    margin: auto !important;
+  }
+
+  .map-wrap {
+    position: relative;
+    background-color: #0a0e13;
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    user-select: none;
+    overflow: hidden;
+    /* League maps: locked 1:1 square, capped at viewport */
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 65vh;
+    max-height: 65vh;
+    min-height: 320px;
+    margin: 0 auto;
+  }
+  /* Overrun map: single image, follows natural aspect-ratio */
+  .map-wrap.overrun-wrap {
+    aspect-ratio: var(--map-ar, 16/9);
+    max-width: 100%;
+    max-height: 70vh;
+    min-height: 400px;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 180px 1fr !important; }
+    .party-row { grid-template-columns: 32px repeat(5, minmax(0,1fr)) 24px; font-size: 11px; }
+    .slot { padding: 3px 4px; min-height: 38px; }
+    .slot .slot-name { font-size: 11px; }
+    .map-wrap { min-height: 220px; max-width: 60vh; max-height: 60vh; }
+  }
+  .map-frame {
+    position: absolute; inset: 0;
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .map-wrap.sub-map .map-frame { border-color: var(--sub-bf); }
+  .map-wrap.no-image .map-frame { border-color: var(--border); border-style: dashed; }
+  .map-wrap.no-image::after {
+    content: "🗺️ ยังไม่มีรูปแมพ — กด 📷 Upload หรือวาง map1.png / map2.png ในโฟลเดอร์เดียวกับ HTML";
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 11px; text-align: center; padding: 30px;
+  }
+  /* SVG arrow overlay */
+  .map-arrows {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    width: 100%; height: 100%;
+  }
+  .map-arrows line {
+    stroke-width: 2.5;
+    stroke-dasharray: 6 4;
+    stroke-linecap: round;
+    opacity: 0.95;
+    animation: dashflow 0.8s linear infinite;
+  }
+  @keyframes dashflow {
+    to { stroke-dashoffset: -10; }
+  }
+  .map-arrows .anchor-dot {
+    fill: rgba(0,0,0,0.4);
+    stroke-width: 2;
+  }
+  .marker {
+    position: absolute;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--main-bf);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    border: 2px solid rgba(255,255,255,0.7);
+    user-select: none;
+    transition: transform .08s;
+    z-index: 2;
+  }
+  .marker.sub { background: var(--sub-bf); }
+  .marker:hover { transform: translate(-50%, -50%) scale(1.1); }
+  .marker.dragging { cursor: grabbing; transform: translate(-50%, -50%) scale(1.18); z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,0.8); }
+  .marker.empty { opacity: 0.55; }
+  .marker.has-anchor::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.5);
+    animation: pulse 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.18); opacity: 0.25; }
+  }
+
+  /* ===== Dialog ===== */
+  dialog {
+    background: var(--bg-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    min-width: 360px;
+    max-width: 90vw;
+  }
+  dialog::backdrop { background: rgba(0,0,0,0.7); }
+  dialog h3 { margin: 0 0 12px 0; color: var(--accent); }
+  dialog textarea, dialog input {
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 12px;
+    width: 100%;
+  }
+  dialog textarea { height: 220px; resize: vertical; }
+  dialog .row { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+  dialog button {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 12px;
+  }
+  dialog button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* ===== Custom tooltip (persists during drag) ===== */
+  .gtooltip {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    background: rgba(28, 33, 40, 0.97);
+    color: var(--text);
+    border: 1px solid var(--border-2);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    white-space: pre-line;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+    opacity: 0;
+    transition: opacity .1s;
+    max-width: 280px;
+    line-height: 1.55;
+    min-width: 160px;
+  }
+  .gtooltip.show { opacity: 1; }
+  .gtooltip .tip-title {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .gtooltip .tip-row { font-size: 11px; color: var(--muted); padding: 1px 0; }
+  .gtooltip .tip-row b { color: var(--text); font-weight: 600; }
+  .gtooltip .tip-empty { color: var(--muted); font-style: italic; font-size: 11px; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 10px 18px; border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    z-index: 1000;
+    font-size: 13px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+  .toast.success { border-color: var(--success); color: var(--success); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">⚔️ ROO Party</div>
+  <div class="mode-toggle cols-5" id="modeToggle">
+    <button class="seg active" data-mode="league" onclick="switchMode('league')">⚔️ League</button>
+    <button class="seg" data-mode="overrun" onclick="switchMode('overrun')">🏆 Overrun</button>
+    <button class="seg" data-mode="summary" onclick="switchMode('summary')">📊 Members</button>
+    <button class="seg" data-mode="auction-gl" onclick="switchMode('auction-gl')">🎴 Auction GL</button>
+    <button class="seg" data-mode="auction-overrun" onclick="switchMode('auction-overrun')">🎴 Auction Overrun</button>
+    <span class="seg-indicator"></span>
+  </div>
+  <span class="status" id="statusInfo">Loading…</span>
+  <div class="spacer"></div>
+  <button onclick="refreshFromSheet()" id="btnRefresh">🔄 Refresh จาก Sheet</button>
+  <button onclick="openSheetSettings()">⚙ Settings</button>
+  <button onclick="saveTeam()">💾 Save team</button>
+  <button onclick="resetAll()" class="danger">🗑 Reset</button>
+</header>
+
+<div class="layout">
+  <!-- Sidebar: members -->
+  <aside class="sidebar">
+    <h3>
+      <span>👥 Members <span id="memberCount" style="color:var(--muted);font-weight:400;font-size:11px"></span></span>
+      <button onclick="addManualMember()" style="background:var(--panel);color:var(--text);border:1px solid var(--border);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">+ เพิ่ม</button>
+    </h3>
+    <div class="filters">
+      <input id="searchInput" placeholder="🔎 ค้นหาชื่อ..." oninput="renderMembers()" />
+      <select id="jobFilter" onchange="renderMembers()">
+        <option value="">All Jobs</option>
+      </select>
+      <label class="toggle">
+        <input type="checkbox" id="hideAssigned" onchange="renderMembers()" />
+        <span>ซ่อนคนที่จัดตี้แล้ว</span>
+      </label>
+      <label class="toggle" id="hideLeaveWrap" style="display:none">
+        <input type="checkbox" id="hideLeave" onchange="renderMembers()" />
+        <span>ซ่อนคนลา</span>
+      </label>
+    </div>
+    <div class="member-list" id="memberList"></div>
+  </aside>
+
+  <!-- Center: battlefields -->
+  <main class="center" id="center"></main>
+
+</div>
+
+<!-- Dialogs -->
+<dialog id="sheetDialog">
+  <h3>⚙ Google Sheets Settings</h3>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
+    URL ของ Google Sheet (ต้องตั้งเป็น Anyone with link – Viewer)
+  </div>
+  <input id="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit#gid=..." />
+  <div style="font-size:11px;color:var(--muted);margin-top:6px">
+    ระบบจะดึง: ชื่อ (column C), Job (column E)
+  </div>
+  <div class="row">
+    <button onclick="document.getElementById('sheetDialog').close()">ยกเลิก</button>
+    <button class="primary" onclick="saveSheetSettings()">บันทึก & โหลด</button>
+  </div>
+</dialog>
+
+<dialog id="ioDialog">
+  <h3 id="ioTitle">Export / Import</h3>
+  <textarea id="ioText"></textarea>
+  <div class="row">
+    <button onclick="document.getElementById('ioDialog').close()">ปิด</button>
+    <button class="primary" id="ioConfirm">Copy</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+ * State
+ * ===================================================================== */
+const STORAGE_KEY = "roo_party_v2";
+
+/* 16 distinct team colors (rainbow spectrum) — League mode */
+const TEAM_COLORS = [
+  "#ef4444", "#f97316", "#f59e0b", "#eab308",
+  "#84cc16", "#22c55e", "#10b981", "#14b8a6",
+  "#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1",
+  "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"
+];
+
+/* Overrun: 4 big parties × 4 sub-parties — colors by big group */
+const OVERRUN_GROUPS = [
+  { name: "Red",    color: "#ef4444", ids: [1,2,3,4] },
+  { name: "Yellow", color: "#eab308", ids: [5,6,7,8] },
+  { name: "Green",  color: "#22c55e", ids: [9,10,11,12] },
+  { name: "Blue",   color: "#3b82f6", ids: [13,14,15,16] }
+];
+const TEAM_COLORS_OVERRUN = (() => {
+  const out = new Array(16);
+  for (const g of OVERRUN_GROUPS) for (const id of g.ids) out[id-1] = g.color;
+  return out;
+})();
+
+function teamColor(id) {
+  const palette = state.mode === "overrun" ? TEAM_COLORS_OVERRUN : TEAM_COLORS;
+  return palette[id - 1] || "#888";
+}
+const DEFAULT_SHEET = "https://docs.google.com/spreadsheets/d/1Qxw4M9WAy7JVwOGF8kTQlNpQsiE_PNqTaypEa59B0v8/edit?gid=499171245";
+
+/* === SAVED TEAM (DO NOT EDIT BY HAND — use the "Save team" button) === */
+const SAVED_TEAM_DATA = null; /* savedteam-end */
+
+const PARTY_SLOTS = 5;
+const PARTIES = 16;
+
+function makeEmptyParties() {
+  return Array.from({length: PARTIES}, (_, i) => ({
+    id: i + 1,
+    name: "ตี้ " + (i+1),
+    slots: Array(PARTY_SLOTS).fill(null)
+  }));
+}
+
+let state = {
+  sheetUrl: DEFAULT_SHEET,
+  members: [],
+  mode: "league",                // "league" | "overrun" | "summary" | "auction-gl" | "auction-overrun"
+  parties: makeEmptyParties(),
+  partiesLeague: null,
+  partiesOverrun: null,
+  markers: {},
+  mapBg: { 1: null, 2: null, 3: null },
+  overrunMarkers: {},
+  jobTargets: {},
+  auctionGL: { cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0,
+    assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } },
+  auctionOverrun: { cards: 0, illusion: 0, white: 0, black: 0,
+    assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } }
+};
+
+/** Switch between League / Overrun / Summary. */
+function switchMode(newMode) {
+  if (state.mode === newMode) return;
+  // Snapshot active mode's parties (league / overrun)
+  if (state.mode === "league") state.partiesLeague = state.parties;
+  else if (state.mode === "overrun") state.partiesOverrun = state.parties;
+
+  state.mode = newMode;
+
+  if (newMode === "league" || newMode === "overrun") {
+    let next = newMode === "league" ? state.partiesLeague : state.partiesOverrun;
+    if (!Array.isArray(next) || next.length !== PARTIES) next = makeEmptyParties();
+    next.forEach((p, i) => {
+      if (!p) next[i] = { id: i+1, name: "ตี้ "+(i+1), slots: Array(PARTY_SLOTS).fill(null) };
+      while (p && p.slots.length < PARTY_SLOTS) p.slots.push(null);
+      if (p) p.slots = p.slots.slice(0, PARTY_SLOTS);
+    });
+    state.parties = next;
+  }
+
+  updateModeToggleUI();
+  save();
+  render();
+}
+
+function updateModeToggleUI() {
+  const t = document.getElementById("modeToggle");
+  if (!t) return;
+  t.querySelectorAll(".seg").forEach(b => {
+    b.classList.toggle("active", b.dataset.mode === state.mode);
+  });
+  t.classList.toggle("overrun-active", state.mode === "overrun");
+  t.classList.toggle("summary-active", state.mode === "summary");
+  t.classList.toggle("auction-gl-active", state.mode === "auction-gl");
+  t.classList.toggle("auction-overrun-active", state.mode === "auction-overrun");
+  positionModeIndicator();
+}
+
+// Position the active-tab indicator over the actual button — handles
+// variable-width labels (e.g., "Auction Overrun" is wider than "League"),
+// which fixed-percentage CSS positioning could not.
+function positionModeIndicator() {
+  const t = document.getElementById("modeToggle");
+  if (!t) return;
+  const active = t.querySelector(".seg.active");
+  const indicator = t.querySelector(".seg-indicator");
+  if (!active || !indicator) return;
+  // offsetLeft/Width is relative to the offsetParent — which is the toggle
+  // itself (position: relative). No need for getBoundingClientRect.
+  indicator.style.left = active.offsetLeft + "px";
+  indicator.style.width = active.offsetWidth + "px";
+}
+window.addEventListener("resize", positionModeIndicator);
+
+let drag = { type: null, payload: null };
+
+/* =====================================================================
+ * Persistence
+ * ===================================================================== */
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  updateStatusInfo();
+}
+function load() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try {
+      const loaded = JSON.parse(raw);
+      state = {...state, ...loaded};
+      if (!Array.isArray(state.parties) || state.parties.length !== PARTIES) {
+        state.parties = Array.from({length: PARTIES}, (_, i) => ({
+          id: i+1, name: "ตี้ "+(i+1), slots: Array(PARTY_SLOTS).fill(null)
+        }));
+      }
+      state.parties.forEach(p => {
+        while (p.slots.length < PARTY_SLOTS) p.slots.push(null);
+        p.slots = p.slots.slice(0, PARTY_SLOTS);
+      });
+    } catch(e) { console.warn("load failed", e); }
+  }
+}
+
+/* =====================================================================
+ * Toast / helpers
+ * ===================================================================== */
+const toastEl = document.getElementById("toast");
+let toastTimer = null;
+function toast(msg, type="") {
+  toastEl.textContent = msg;
+  toastEl.className = "toast show " + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 3000);
+}
+function uid() { return "m" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+/* Tooltip system disabled (user opted out) — all tooltip helpers are no-ops. */
+let _gtooltip = null;
+let _tipPinned = false;
+function ensureTooltip() { return null; }
+
+function buildPartyTipHtml(p) {
+  if (!p) return "";
+  const members = (p.slots || []).map(memId => {
+    if (!memId) return null;
+    const m = findMember(memId);
+    if (!m) return null;
+    return `<div class="tip-row"><b>${escapeHtml(m.job)}</b> · ${escapeHtml(m.name)}</div>`;
+  }).filter(Boolean);
+  const title = `<div class="tip-title">${escapeHtml(p.name)} · ${members.length} คน</div>`;
+  return title + (members.length ? members.join("") : `<div class="tip-empty">(ยังว่าง)</div>`);
+}
+
+function showTooltipFor(target) { return; /* disabled */
+  ensureTooltip();
+  const partyId = target.dataset.tipParty;
+  if (partyId) {
+    const p = state.parties.find(p => p.id === parseInt(partyId, 10));
+    if (!p) return;
+    _gtooltip.innerHTML = buildPartyTipHtml(p);
+  } else if (target.dataset.tip) {
+    const parts = target.dataset.tip.split("\n");
+    let html = `<div class="tip-title">${escapeHtml(parts[0])}</div>`;
+    html += parts.slice(1).map(l =>
+      l.trim() === "(ยังว่าง)"
+        ? `<div class="tip-empty">${escapeHtml(l)}</div>`
+        : `<div class="tip-row">${escapeHtml(l)}</div>`
+    ).join("");
+    _gtooltip.innerHTML = html;
+  } else return;
+
+  _gtooltip.classList.add("show");
+  // Position above target (or below if no room)
+  requestAnimationFrame(() => {
+    const r = target.getBoundingClientRect();
+    const tr = _gtooltip.getBoundingClientRect();
+    let top = r.top - tr.height - 8;
+    if (top < 4) top = r.bottom + 8;
+    let left = r.left + r.width / 2 - tr.width / 2;
+    left = Math.max(8, Math.min(window.innerWidth - tr.width - 8, left));
+    _gtooltip.style.top = top + "px";
+    _gtooltip.style.left = left + "px";
+  });
+}
+
+function hideTooltip(force) {
+  if (_tipPinned && !force) return;
+  if (_gtooltip) _gtooltip.classList.remove("show");
+}
+
+function pinTooltipFor() { /* disabled */ }
+function unpinTooltip() { /* disabled */ }
+
+function setupTooltip() { return; /* disabled */
+  ensureTooltip();
+  document.addEventListener("mouseover", (e) => {
+    if (_tipPinned) return;
+    const t = e.target && e.target.closest && e.target.closest("[data-tip-party],[data-tip]");
+    if (t) showTooltipFor(t);
+  });
+  document.addEventListener("mouseout", (e) => {
+    if (_tipPinned) return;
+    const t = e.target && e.target.closest && e.target.closest("[data-tip-party],[data-tip]");
+    if (t && !t.contains(e.relatedTarget)) hideTooltip();
+  });
+  // Pin during HTML5 drag (party number drag)
+  document.addEventListener("dragstart", (e) => {
+    const t = e.target && e.target.closest && e.target.closest("[data-tip-party],[data-tip]");
+    if (t) { showTooltipFor(t); _tipPinned = true; }
+  });
+  document.addEventListener("dragend", () => {
+    _tipPinned = false;
+    hideTooltip(true);
+  });
+  // Pin during marker drag (mousedown on .marker)
+  document.addEventListener("mousedown", (e) => {
+    const t = e.target && e.target.closest && e.target.closest(".marker[data-tip-party]");
+    if (t) { showTooltipFor(t); _tipPinned = true; }
+  });
+  document.addEventListener("mouseup", () => {
+    if (_tipPinned) {
+      _tipPinned = false;
+      hideTooltip(true);
+    }
+  });
+}
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function findMember(id) { return state.members.find(m => m.id === id); }
+// "Assigned" is per-page: each mode tracks its own assignments so the
+// sidebar's "ซ่อนคนที่จัดตี้แล้ว" + .assigned styling reflect THIS page only.
+// - League/Overrun: in any party slot of the active mode
+// - Auction GL/Overrun: in any of the 3 drop columns of the matching auction
+// - Members (summary): never marked assigned
+function isAssigned(memberId) {
+  const inAuctionBuckets = (a) => {
+    if (!a || !a.main || !a.sub) return false;
+    return a.main.cards.includes(memberId) || a.main.white.includes(memberId) || a.main.black.includes(memberId)
+        || a.sub.cards.includes(memberId)  || a.sub.white.includes(memberId)  || a.sub.black.includes(memberId);
+  };
+  if (state.mode === "auction-gl")      return inAuctionBuckets(state.auctionGL && state.auctionGL.assignments);
+  if (state.mode === "auction-overrun") return inAuctionBuckets(state.auctionOverrun && state.auctionOverrun.assignments);
+  if (state.mode === "summary")         return false;
+  return state.parties.some(p => p.slots.includes(memberId));
+}
+function uniqueJobs() {
+  const set = new Set();
+  state.members.forEach(m => m.job && set.add(m.job));
+  return Array.from(set).sort();
+}
+
+/* =====================================================================
+ * Google Sheets (JSONP via <script>)
+ * ===================================================================== */
+function parseSheetUrl(url) {
+  const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (!idMatch) throw new Error("URL ไม่มี Sheet ID");
+  const id = idMatch[1];
+  const gidMatch = url.match(/[#&?]gid=(\d+)/);
+  const gid = gidMatch ? gidMatch[1] : "0";
+  return { id, gid };
+}
+
+function fetchSheetJSON(id, gid) {
+  return new Promise((resolve, reject) => {
+    // cache-buster — force fresh fetch every time (browser caches <script src>)
+    const cb = Date.now();
+    const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&gid=${gid}&headers=0&_=${cb}`;
+    const prev = window.google;
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+    let resolved = false;
+    window.google.visualization.Query.setResponse = (resp) => {
+      if (resolved) return;
+      resolved = true;
+      window.google = prev;
+      if (resp.status === "error") {
+        reject(new Error(resp.errors?.[0]?.detailed_message || "Sheet error"));
+      } else {
+        resolve(resp);
+      }
+    };
+    const script = document.createElement("script");
+    script.src = url;
+    script.onerror = () => {
+      if (resolved) return;
+      resolved = true;
+      window.google = prev;
+      reject(new Error("โหลด script ไม่สำเร็จ (Sheet ต้องตั้งเป็น Anyone with link)"));
+    };
+    document.head.appendChild(script);
+    setTimeout(() => { script.remove(); }, 30000);
+    setTimeout(() => {
+      if (resolved) return;
+      resolved = true;
+      window.google = prev;
+      reject(new Error("Timeout (30s)"));
+    }, 30000);
+  });
+}
+
+function gvizToRows(resp) {
+  const rows = [];
+  const tbl = resp.table;
+  if (!tbl) return rows;
+  for (const r of tbl.rows || []) {
+    const cells = (r.c || []).map(c => {
+      if (!c) return "";
+      if (c.f !== undefined && c.f !== null) return String(c.f);
+      if (c.v === null || c.v === undefined) return "";
+      return String(c.v);
+    });
+    rows.push(cells);
+  }
+  return rows;
+}
+
+function parseNum(v) {
+  if (v == null) return 0;
+  const n = parseInt(String(v).replace(/[^0-9.-]/g, ""), 10);
+  return isNaN(n) ? 0 : n;
+}
+
+function extractMembersFromRows(rows) {
+  const members = [];
+  const seen = new Set();
+  for (const r of rows) {
+    if (!r || r.length < 5) continue;
+    const name = (r[2] || "").trim();
+    const job = (r[4] || "").trim();
+    if (!name || !job) continue;
+    if (name === "Guild Member" || name.toLowerCase() === "name") continue;
+    if (name === "#N/A" || job === "#N/A") continue;
+    const key = name + "|" + job;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    // CP value from column L (index 11)
+    const cp = parseNum(r[11]);
+    members.push({
+      id: "sheet_" + uid(),
+      name, job,
+      cp,
+      source: "sheet"
+    });
+  }
+  return members;
+}
+
+async function refreshFromSheet() {
+  const btn = document.getElementById("btnRefresh");
+  btn.disabled = true; btn.textContent = "⏳ Loading...";
+  try {
+    const { id, gid } = parseSheetUrl(state.sheetUrl);
+    const resp = await fetchSheetJSON(id, gid);
+    const rows = gvizToRows(resp);
+    const fetched = extractMembersFromRows(rows);
+    if (!fetched.length) throw new Error("ไม่พบสมาชิกในชีท");
+
+    const manualOnly = state.members.filter(m => m.source !== "sheet");
+    // Preserve on-leave flags (League + Overrun, independent) across refresh.
+    // Keyed by NAME (stable identity) so a job change does not lose the ลา mark.
+    const leaveByName = {};
+    state.members.forEach(m => {
+      if (m.onLeaveLeague || m.onLeaveOverrun)
+        leaveByName[m.name] = { l: !!m.onLeaveLeague, o: !!m.onLeaveOverrun };
+    });
+    // Build maps: oldId → "name|job" AND oldId → "name". name = stable identity;
+    // job can change in the sheet — name-only fallback keeps them in their slot.
+    const oldIdToKey = {};
+    const oldIdToName = {};
+    state.members.filter(m => m.source === "sheet").forEach(m => {
+      oldIdToKey[m.id] = m.name + "|" + m.job; oldIdToName[m.id] = m.name;
+    });
+    // Manual members keep their original (always-unique) ids
+    manualOnly.forEach(m => { oldIdToKey[m.id] = m.name + "|" + m.job; oldIdToName[m.id] = m.name; });
+
+    // All fetched members get fresh UNIQUE random ids (from extractMembersFromRows)
+    // — no more index-based collisions
+    state.members = [...fetched, ...manualOnly];
+    // Re-apply preserved on-leave flags (independent per mode), matched by name
+    state.members.forEach(m => {
+      const lk = leaveByName[m.name];
+      if (lk) { if (lk.l) m.onLeaveLeague = true; if (lk.o) m.onLeaveOverrun = true; }
+    });
+
+    // Build maps: "name|job" → newId  AND  "name" → newId (name-only fallback)
+    const newKeyToId = {};
+    const newNameToId = {};
+    state.members.forEach(m => {
+      newKeyToId[m.name + "|" + m.job] = m.id;
+      if (!(m.name in newNameToId)) newNameToId[m.name] = m.id;
+    });
+
+    // Remap party slot refs old id → new id: exact name|job first, else
+    // name-only — so a member who changed job in the sheet stays in their slot
+    const remapSlots = (arr) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach(p => {
+        if (!p || !Array.isArray(p.slots)) return;
+        p.slots = p.slots.map(oldId => {
+          if (!oldId) return null;
+          const key = oldIdToKey[oldId];
+          if (key && newKeyToId[key]) return newKeyToId[key];
+          const nm = oldIdToName[oldId];
+          return (nm && newNameToId[nm]) ? newNameToId[nm] : null;
+        });
+      });
+    };
+    remapSlots(state.parties);
+    remapSlots(state.partiesLeague);
+    remapSlots(state.partiesOverrun);
+
+    // Same id-remap for auction assignments — drop dead IDs after the remap
+    // so counts stay in sync with the rendered droplist rows.
+    const remapAuctionIds = (assignments) => {
+      if (!assignments) return;
+      ["main", "sub"].forEach(field => {
+        if (!assignments[field]) return;
+        ["cards", "white", "black"].forEach(key => {
+          if (!Array.isArray(assignments[field][key])) return;
+          assignments[field][key] = assignments[field][key].map(oldId => {
+            if (!oldId) return null;
+            const k = oldIdToKey[oldId];
+            if (k && newKeyToId[k]) return newKeyToId[k];
+            const nm = oldIdToName[oldId];
+            return (nm && newNameToId[nm]) ? newNameToId[nm] : null;
+          }).filter(Boolean);
+        });
+      });
+    };
+    remapAuctionIds(state.auctionGL && state.auctionGL.assignments);
+    remapAuctionIds(state.auctionOverrun && state.auctionOverrun.assignments);
+
+    // After refreshing members, re-apply any saved team baked into HTML.
+    // This way assignments survive sheet refreshes; names removed from the
+    // sheet simply drop out of their slots.
+    // Apply saved team from localStorage (matches by name+job).
+    // Missing names from sheet → those slots become null automatically.
+    const savedTeam = loadSavedTeam();
+    if (savedTeam) applySavedTeam(savedTeam);
+
+    save();
+    rebuildJobFilter();
+    render();
+    toast(`โหลดสำเร็จ — ${fetched.length} คน`, "success");
+  } catch (e) {
+    console.error(e);
+    toast("โหลดไม่สำเร็จ: " + e.message, "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "🔄 Refresh จาก Sheet";
+  }
+}
+
+function openSheetSettings() {
+  document.getElementById("sheetUrlInput").value = state.sheetUrl;
+  document.getElementById("sheetDialog").showModal();
+}
+function saveSheetSettings() {
+  state.sheetUrl = document.getElementById("sheetUrlInput").value.trim();
+  save();
+  document.getElementById("sheetDialog").close();
+  refreshFromSheet();
+}
+
+/* =====================================================================
+ * Member CRUD
+ * ===================================================================== */
+function addManualMember() {
+  const name = prompt("ชื่อตัวละคร:");
+  if (!name || !name.trim()) return;
+  const job = prompt("Job:", "Lord Knight") || "Other";
+  state.members.push({ id: uid(), name: name.trim(), job: job.trim(), source: "manual" });
+  save(); rebuildJobFilter(); render();
+}
+function deleteMember(id) {
+  if (!confirm("ลบสมาชิกนี้?")) return;
+  state.members = state.members.filter(m => m.id !== id);
+  state.parties.forEach(p => p.slots = p.slots.map(s => s === id ? null : s));
+  save(); render();
+}
+
+/* =====================================================================
+ * Slot / Party ops
+ * ===================================================================== */
+function placeAtSlot(memberId, partyId, slotIdx) {
+  const target = state.parties.find(p => p.id === partyId);
+  if (!target) return;
+  const existing = target.slots[slotIdx];
+
+  // Find current location of the dragged member
+  let sourceParty = null, sourceSlot = -1;
+  for (const p of state.parties) {
+    const idx = p.slots.indexOf(memberId);
+    if (idx >= 0) { sourceParty = p; sourceSlot = idx; break; }
+  }
+
+  // Same slot – no-op
+  if (sourceParty && sourceParty.id === partyId && sourceSlot === slotIdx) return;
+
+  if (existing && existing !== memberId) {
+    // SWAP: move existing into the dragged member's old slot
+    target.slots[slotIdx] = memberId;
+    if (sourceParty) {
+      sourceParty.slots[sourceSlot] = existing;
+    }
+    // if dragged came from sidebar (no sourceParty), `existing` is unassigned
+  } else {
+    // Empty target – move
+    if (sourceParty) sourceParty.slots[sourceSlot] = null;
+    target.slots[slotIdx] = memberId;
+  }
+}
+function removeFromSlot(partyId, slotIdx) {
+  const p = state.parties.find(p => p.id === partyId);
+  if (p) p.slots[slotIdx] = null;
+}
+function swapParties(idA, idB) {
+  const a = state.parties.find(p => p.id === idA);
+  const b = state.parties.find(p => p.id === idB);
+  if (!a || !b) return;
+  [a.name, b.name] = [b.name, a.name];
+  [a.slots, b.slots] = [b.slots, a.slots];
+}
+function clearParty(partyId) {
+  if (!confirm("เคลียร์สมาชิกทั้งหมดในตี้นี้?")) return;
+  const p = state.parties.find(p => p.id === partyId);
+  p.slots = Array(PARTY_SLOTS).fill(null);
+  save(); render();
+}
+function renameParty(partyId) {
+  const p = state.parties.find(p => p.id === partyId);
+  const v = prompt("เปลี่ยนชื่อตี้:", p.name);
+  if (v !== null && v.trim()) { p.name = v.trim(); save(); render(); }
+}
+
+/* =====================================================================
+ * Drag & Drop (members, parties)
+ * ===================================================================== */
+function dragMemberStart(e, memberId) {
+  drag = { type: "member", payload: { memberId, from: "sidebar" } };
+  e.dataTransfer.effectAllowed = "move";
+  e.currentTarget.classList.add("dragging");
+}
+function dragMemberEnd(e) { e.currentTarget.classList.remove("dragging"); }
+
+function dragSlotStart(e, partyId, slotIdx) {
+  const p = state.parties.find(p => p.id === partyId);
+  const memberId = p.slots[slotIdx];
+  if (!memberId) return;
+  drag = { type: "member", payload: { memberId, from: "slot", partyId, slotIdx } };
+  e.dataTransfer.effectAllowed = "move";
+  e.currentTarget.classList.add("dragging");
+}
+function dragSlotEnd(e) { e.currentTarget.classList.remove("dragging"); }
+
+function dragPartyNumStart(e, partyId) {
+  drag = { type: "party", payload: { partyId } };
+  e.dataTransfer.effectAllowed = "move";
+  e.currentTarget.classList.add("dragging");
+  e.stopPropagation();
+}
+function dragPartyNumEnd(e) { e.currentTarget.classList.remove("dragging"); }
+
+function dragOverEl(e) { e.preventDefault(); e.currentTarget.classList.add("drag-over"); }
+function dragLeaveEl(e) { e.currentTarget.classList.remove("drag-over"); }
+
+function dropSlot(e, partyId, slotIdx) {
+  e.preventDefault();
+  e.currentTarget.classList.remove("drag-over");
+  if (drag.type === "member") {
+    placeAtSlot(drag.payload.memberId, partyId, slotIdx);
+  }
+  save(); render();
+}
+function dropPartyNum(e, partyId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove("drag-over");
+  if (drag.type === "party") {
+    swapParties(drag.payload.partyId, partyId);
+  } else if (drag.type === "member") {
+    const memId = drag.payload.memberId;
+    state.parties.forEach(p => {
+      p.slots = p.slots.map(s => s === memId ? null : s);
+    });
+    const target = state.parties.find(p => p.id === partyId);
+    const emptyIdx = target.slots.indexOf(null);
+    if (emptyIdx >= 0) target.slots[emptyIdx] = memId;
+    else toast("ตี้ " + partyId + " เต็มแล้ว", "error");
+  }
+  save(); render();
+}
+
+function setupSidebarDrop() {
+  const el = document.getElementById("memberList");
+  el.addEventListener("dragover", e => e.preventDefault());
+  el.addEventListener("drop", e => {
+    e.preventDefault();
+    if (drag.type === "member" && drag.payload.from === "slot") {
+      removeFromSlot(drag.payload.partyId, drag.payload.slotIdx);
+      save(); render();
+    }
+  });
+}
+
+/* =====================================================================
+ * Map markers — bound to frame + movement arrows
+ * ===================================================================== */
+function initMarkers() {
+  for (let i = 1; i <= PARTIES; i++) {
+    if (!state.markers[i]) {
+      const isMain = i <= 8;
+      const localIdx = isMain ? i - 1 : i - 9;
+      const col = localIdx % 4;
+      const row = Math.floor(localIdx / 4);
+      state.markers[i] = { x: 20 + col * 20, y: 30 + row * 30, path: [] };
+    }
+    // Migrate old anchorX/anchorY → path
+    const m = state.markers[i];
+    if (!Array.isArray(m.path)) m.path = [];
+    if (m.anchorX != null && m.anchorY != null && m.path.length === 0) {
+      m.path = [{ x: m.anchorX, y: m.anchorY }];
+    }
+    delete m.anchorX;
+    delete m.anchorY;
+  }
+}
+
+function renderMarkers() {
+  if (state.mode === "overrun") {
+    renderOverrunMarkers();
+    return;
+  }
+  for (let mapNum = 1; mapNum <= 2; mapNum++) {
+    const wrap = document.getElementById("mapWrap" + mapNum);
+    if (!wrap) continue;
+    wrap.querySelectorAll(".marker").forEach(n => n.remove());
+    const range = mapNum === 1 ? [1,2,3,4,5,6,7,8] : [9,10,11,12,13,14,15,16];
+    for (const i of range) {
+      const pos = state.markers[i] || { x: 50, y: 50, path: [] };
+      const p = state.parties.find(p => p.id === i);
+      const filled = p && p.slots.some(s => s);
+      const pathLen = (pos.path && pos.path.length) || 0;
+      const color = teamColor(i);
+      const div = document.createElement("div");
+      div.className = "marker" +
+        (filled ? "" : " empty") +
+        (pathLen ? " has-anchor" : "");
+      div.textContent = i;
+      div.style.left = pos.x + "%";
+      div.style.top = pos.y + "%";
+      div.style.background = color;
+      div.setAttribute("data-tip-party", String(i));
+      attachMarkerDrag(div, wrap, i, mapNum);
+      wrap.appendChild(div);
+    }
+    renderArrows(mapNum);
+  }
+}
+
+function renderArrows(mapNum) {
+  const svg = document.getElementById("mapArrows" + mapNum);
+  if (!svg) return;
+  svg.innerHTML = "";
+  const ns = "http://www.w3.org/2000/svg";
+  const range = mapNum === 1 ? [1,2,3,4,5,6,7,8] : [9,10,11,12,13,14,15,16];
+
+  // One arrowhead definition per team color (so each team's arrowhead is colored)
+  const defs = document.createElementNS(ns, "defs");
+  let defsHtml = "";
+  for (const i of range) {
+    const c = teamColor(i);
+    defsHtml +=
+      `<marker id="arrowhead-${i}" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">` +
+      `<path d="M0,0 L10,4 L0,8 Z" fill="${c}" /></marker>`;
+  }
+  defs.innerHTML = defsHtml;
+  svg.appendChild(defs);
+
+  for (const i of range) {
+    const m = state.markers[i];
+    if (!m || !m.path || m.path.length === 0) continue;
+    const color = teamColor(i);
+
+    const pts = [...m.path, { x: m.x, y: m.y }];
+
+    for (let j = 0; j < pts.length - 1; j++) {
+      const a = pts[j], b = pts[j + 1];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 1) continue;
+      const isLast = j === pts.length - 2;
+      const shortenPct = isLast ? Math.min(2.5, len * 0.18) : 0;
+      const endX = b.x - (dx / len) * shortenPct;
+      const endY = b.y - (dy / len) * shortenPct;
+      const line = document.createElementNS(ns, "line");
+      line.setAttribute("x1", a.x + "%");
+      line.setAttribute("y1", a.y + "%");
+      line.setAttribute("x2", endX + "%");
+      line.setAttribute("y2", endY + "%");
+      line.setAttribute("stroke", color);
+      line.setAttribute("marker-end", `url(#arrowhead-${i})`);
+      svg.appendChild(line);
+    }
+
+    m.path.forEach((p, idx) => {
+      const g = document.createElementNS(ns, "g");
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", p.x + "%");
+      dot.setAttribute("cy", p.y + "%");
+      dot.setAttribute("r", "9");
+      dot.setAttribute("fill", color);
+      dot.setAttribute("opacity", "0.85");
+      dot.setAttribute("stroke", "rgba(255,255,255,0.6)");
+      dot.setAttribute("stroke-width", "1.5");
+      g.appendChild(dot);
+      const txt = document.createElementNS(ns, "text");
+      txt.setAttribute("x", p.x + "%");
+      txt.setAttribute("y", p.y + "%");
+      txt.setAttribute("text-anchor", "middle");
+      txt.setAttribute("dominant-baseline", "central");
+      txt.setAttribute("font-size", "10");
+      txt.setAttribute("font-weight", "700");
+      txt.setAttribute("fill", "#fff");
+      txt.textContent = String(idx + 1);
+      g.appendChild(txt);
+      svg.appendChild(g);
+    });
+  }
+}
+
+function clearArrows(mapNum) {
+  if (mapNum === 3) {
+    if (!state.overrunMarkers) state.overrunMarkers = {};
+    for (let i = 1; i <= 4; i++) {
+      if (state.overrunMarkers[i]) state.overrunMarkers[i].path = [];
+    }
+    save();
+    renderOverrunMarkers();
+    toast("ล้างลูกศรของ Overrun Map แล้ว", "success");
+    return;
+  }
+  const range = mapNum === 1 ? [1,2,3,4,5,6,7,8] : [9,10,11,12,13,14,15,16];
+  for (const i of range) {
+    if (state.markers[i]) {
+      state.markers[i].path = [];
+      delete state.markers[i].anchorX;
+      delete state.markers[i].anchorY;
+    }
+  }
+  save();
+  renderMarkers();
+  toast(`ล้างลูกศรของ Map ${mapNum} แล้ว`, "success");
+}
+
+function undoLastSegment(idx, store) {
+  const m = (store || state.markers)[idx];
+  if (!m || !m.path || m.path.length === 0) return false;
+  const last = m.path.pop();
+  m.x = last.x;
+  m.y = last.y;
+  return true;
+}
+
+/* ===== Overrun Map markers (4 big parties) ===== */
+
+function renderOverrunMarkers() {
+  const wrap = document.getElementById("mapWrap3");
+  if (!wrap) return;
+  wrap.querySelectorAll(".marker").forEach(n => n.remove());
+  if (!state.overrunMarkers) state.overrunMarkers = {};
+
+  for (let i = 1; i <= 4; i++) {
+    if (!state.overrunMarkers[i]) {
+      const col = (i - 1) % 2;
+      const row = Math.floor((i - 1) / 2);
+      state.overrunMarkers[i] = { x: 25 + col * 50, y: 35 + row * 35, path: [] };
+    }
+    const pos = state.overrunMarkers[i];
+    const g = OVERRUN_GROUPS[i - 1];
+    const total = g.ids.reduce((s, id) => {
+      const p = state.parties.find(p => p.id === id);
+      return s + (p ? p.slots.filter(Boolean).length : 0);
+    }, 0);
+    const pathLen = (pos.path && pos.path.length) || 0;
+    const div = document.createElement("div");
+    div.className = "marker ov-marker" + (total ? "" : " empty") + (pathLen ? " has-anchor" : "");
+    div.textContent = i;
+    div.style.left = pos.x + "%";
+    div.style.top = pos.y + "%";
+    div.style.background = g.color;
+    div.style.width = "44px";
+    div.style.height = "44px";
+    div.style.fontSize = "16px";
+    // Build combined member list for all sub-parties in this big party
+    const memLines = [];
+    for (const id of g.ids) {
+      const p = state.parties.find(p => p.id === id);
+      if (!p) continue;
+      const subMembers = p.slots.filter(Boolean).map(memId => {
+        const m = findMember(memId);
+        return m ? `${m.job} · ${m.name}` : null;
+      }).filter(Boolean);
+      if (subMembers.length) memLines.push(`[ตี้ ${id}] ${subMembers.join(", ")}`);
+    }
+    div.setAttribute("data-tip", `${g.name} Party · ${total} คน` + (memLines.length ? "\n" + memLines.join("\n") : "\n(ยังว่าง)"));
+    attachMarkerDragOverrun(div, wrap, i);
+    wrap.appendChild(div);
+  }
+  renderOverrunArrows();
+}
+
+function renderOverrunArrows() {
+  const svg = document.getElementById("mapArrows3");
+  if (!svg) return;
+  svg.innerHTML = "";
+  const ns = "http://www.w3.org/2000/svg";
+  const defs = document.createElementNS(ns, "defs");
+  let defsHtml = "";
+  for (let i = 1; i <= 4; i++) {
+    const c = OVERRUN_GROUPS[i - 1].color;
+    defsHtml +=
+      `<marker id="ov-arrow-${i}" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">` +
+      `<path d="M0,0 L10,4 L0,8 Z" fill="${c}" /></marker>`;
+  }
+  defs.innerHTML = defsHtml;
+  svg.appendChild(defs);
+
+  if (!state.overrunMarkers) return;
+  for (let i = 1; i <= 4; i++) {
+    const m = state.overrunMarkers[i];
+    if (!m || !m.path || m.path.length === 0) continue;
+    const color = OVERRUN_GROUPS[i - 1].color;
+    const pts = [...m.path, { x: m.x, y: m.y }];
+    for (let j = 0; j < pts.length - 1; j++) {
+      const a = pts[j], b = pts[j + 1];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 1) continue;
+      const isLast = j === pts.length - 2;
+      const shortenPct = isLast ? Math.min(3, len * 0.2) : 0;
+      const endX = b.x - (dx / len) * shortenPct;
+      const endY = b.y - (dy / len) * shortenPct;
+      const line = document.createElementNS(ns, "line");
+      line.setAttribute("x1", a.x + "%");
+      line.setAttribute("y1", a.y + "%");
+      line.setAttribute("x2", endX + "%");
+      line.setAttribute("y2", endY + "%");
+      line.setAttribute("stroke", color);
+      line.setAttribute("marker-end", `url(#ov-arrow-${i})`);
+      svg.appendChild(line);
+    }
+    m.path.forEach((p, idx) => {
+      const g = document.createElementNS(ns, "g");
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", p.x + "%"); dot.setAttribute("cy", p.y + "%");
+      dot.setAttribute("r", "10");
+      dot.setAttribute("fill", color);
+      dot.setAttribute("opacity", "0.9");
+      dot.setAttribute("stroke", "rgba(255,255,255,0.7)");
+      dot.setAttribute("stroke-width", "1.5");
+      g.appendChild(dot);
+      const txt = document.createElementNS(ns, "text");
+      txt.setAttribute("x", p.x + "%"); txt.setAttribute("y", p.y + "%");
+      txt.setAttribute("text-anchor", "middle");
+      txt.setAttribute("dominant-baseline", "central");
+      txt.setAttribute("font-size", "11");
+      txt.setAttribute("font-weight", "700");
+      txt.setAttribute("fill", "#fff");
+      txt.textContent = String(idx + 1);
+      g.appendChild(txt);
+      svg.appendChild(g);
+    });
+  }
+}
+
+function attachMarkerDragOverrun(el, wrap, idx) {
+  let dragging = false, moved = false, shiftHeld = false;
+  let startX, startY, startLeft, startTop, startPosX, startPosY;
+
+  const onDown = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dragging = true; moved = false;
+    shiftHeld = !!e.shiftKey;
+    el.classList.add("dragging");
+    pinTooltipFor(el);
+    const ev = e.touches ? e.touches[0] : e;
+    startX = ev.clientX; startY = ev.clientY;
+    const rect = wrap.getBoundingClientRect();
+    startPosX = parseFloat(el.style.left);
+    startPosY = parseFloat(el.style.top);
+    startLeft = (startPosX / 100) * rect.width;
+    startTop  = (startPosY / 100) * rect.height;
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    document.addEventListener("touchmove", onMove, {passive:false});
+    document.addEventListener("touchend", onUp);
+  };
+  const onMove = (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    const ev = e.touches ? e.touches[0] : e;
+    const rect = wrap.getBoundingClientRect();
+    const dx = ev.clientX - startX, dy = ev.clientY - startY;
+    if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) moved = true;
+    const nx = startLeft + dx, ny = startTop + dy;
+    const halfW = (el.offsetWidth / 2) / rect.width * 100;
+    const halfH = (el.offsetHeight / 2) / rect.height * 100;
+    const xPct = Math.max(halfW, Math.min(100 - halfW, (nx / rect.width) * 100));
+    const yPct = Math.max(halfH, Math.min(100 - halfH, (ny / rect.height) * 100));
+    el.style.left = xPct + "%";
+    el.style.top  = yPct + "%";
+  };
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    el.classList.remove("dragging");
+    unpinTooltip();
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+    document.removeEventListener("touchmove", onMove);
+    document.removeEventListener("touchend", onUp);
+    const newX = parseFloat(el.style.left);
+    const newY = parseFloat(el.style.top);
+    if (!state.overrunMarkers[idx]) state.overrunMarkers[idx] = { x: newX, y: newY, path: [] };
+    const m = state.overrunMarkers[idx];
+    if (!Array.isArray(m.path)) m.path = [];
+    if (!moved) {
+      if (m.path.length > 0) {
+        m.path = [];
+        save(); renderOverrunMarkers();
+        toast(`ล้างเส้นทางของ ${OVERRUN_GROUPS[idx-1].name} Party`, "");
+      }
+      return;
+    }
+    if (shiftHeld) {
+      m.x = newX; m.y = newY;
+    } else {
+      m.path.push({ x: startPosX, y: startPosY });
+      m.x = newX; m.y = newY;
+    }
+    save();
+    renderOverrunMarkers();
+  };
+  el.addEventListener("contextmenu", (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (undoLastSegment(idx, state.overrunMarkers)) {
+      save();
+      renderOverrunMarkers();
+      toast(`Undo segment ของ ${OVERRUN_GROUPS[idx-1].name}`, "");
+    }
+  });
+  el.addEventListener("mousedown", onDown);
+  el.addEventListener("touchstart", onDown, {passive:false});
+}
+
+function attachMarkerDrag(el, wrap, idx, mapNum) {
+  let dragging = false;
+  let moved = false;
+  let shiftHeld = false;
+  let startX, startY, startLeft, startTop;
+  let startPosX, startPosY;
+
+  const onDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragging = true; moved = false;
+    shiftHeld = !!e.shiftKey;
+    el.classList.add("dragging");
+    pinTooltipFor(el);    // keep tooltip visible during drag
+    const ev = e.touches ? e.touches[0] : e;
+    startX = ev.clientX; startY = ev.clientY;
+    const rect = wrap.getBoundingClientRect();
+    startPosX = parseFloat(el.style.left);
+    startPosY = parseFloat(el.style.top);
+    startLeft = (startPosX / 100) * rect.width;
+    startTop  = (startPosY / 100) * rect.height;
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    document.addEventListener("touchmove", onMove, {passive:false});
+    document.addEventListener("touchend", onUp);
+  };
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    const ev = e.touches ? e.touches[0] : e;
+    const rect = wrap.getBoundingClientRect();
+    const dx = ev.clientX - startX, dy = ev.clientY - startY;
+    if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) moved = true;
+    const nx = startLeft + dx;
+    const ny = startTop + dy;
+    const halfW = (el.offsetWidth / 2) / rect.width * 100;
+    const halfH = (el.offsetHeight / 2) / rect.height * 100;
+    const xPct = Math.max(halfW, Math.min(100 - halfW, (nx / rect.width) * 100));
+    const yPct = Math.max(halfH, Math.min(100 - halfH, (ny / rect.height) * 100));
+    el.style.left = xPct + "%";
+    el.style.top  = yPct + "%";
+  };
+
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    el.classList.remove("dragging");
+    unpinTooltip();
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+    document.removeEventListener("touchmove", onMove);
+    document.removeEventListener("touchend", onUp);
+
+    const newX = parseFloat(el.style.left);
+    const newY = parseFloat(el.style.top);
+
+    // Ensure marker state exists with path array
+    if (!state.markers[idx]) state.markers[idx] = { x: newX, y: newY, path: [] };
+    const m = state.markers[idx];
+    if (!Array.isArray(m.path)) m.path = [];
+
+    if (!moved) {
+      // Click without drag = clear entire path
+      if (m.path.length > 0) {
+        m.path = [];
+        save(); renderMarkers();
+        toast(`ล้างเส้นทางของตี้ ${idx}`, "");
+      }
+      return;
+    }
+
+    if (shiftHeld) {
+      // SHIFT+drag = adjust current position only (no new waypoint)
+      m.x = newX; m.y = newY;
+    } else {
+      // Default drag = ADD waypoint at the old position, current becomes new
+      m.path.push({ x: startPosX, y: startPosY });
+      m.x = newX; m.y = newY;
+    }
+    save();
+    renderMarkers();
+  };
+
+  // Right-click = undo last segment
+  el.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (undoLastSegment(idx)) {
+      save();
+      renderMarkers();
+      toast(`Undo segment สุดท้ายของตี้ ${idx}`, "");
+    }
+  });
+
+  el.addEventListener("mousedown", onDown);
+  el.addEventListener("touchstart", onDown, {passive:false});
+}
+
+/* =====================================================================
+ * Map backgrounds
+ * ===================================================================== */
+function setMapBg(mapNum, input) {
+  const f = input.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    state.mapBg[mapNum] = e.target.result;
+    applyMapBg(mapNum);
+    save();
+  };
+  r.readAsDataURL(f);
+}
+function applyMapBg(mapNum) {
+  const wrap = document.getElementById("mapWrap" + mapNum);
+  if (!wrap) return;
+  if (state.mapBg[mapNum]) {
+    wrap.style.backgroundImage = `url("${state.mapBg[mapNum]}")`;
+    wrap.classList.remove("no-image");
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        const ar = img.naturalWidth / img.naturalHeight;
+        wrap.style.setProperty('--map-ar', ar);
+      }
+    };
+    img.src = state.mapBg[mapNum];
+  } else {
+    wrap.style.backgroundImage = "";
+    wrap.style.removeProperty('--map-ar');
+    wrap.classList.add("no-image");
+  }
+}
+
+let _fullscreenMap = null;
+
+function toggleMapFullscreen(mapNum) {
+  const wrap = document.getElementById("mapWrap" + mapNum);
+  if (!wrap) return;
+  const card = wrap.closest(".map-card");
+  if (!card) return;
+
+  if (_fullscreenMap === mapNum) {
+    // Close current
+    card.classList.remove("fullscreen");
+    document.getElementById("mapBackdrop")?.remove();
+    document.body.style.overflow = "";
+    _fullscreenMap = null;
+    const btn = card.querySelector(`.btn-expand-${mapNum}`);
+    if (btn) { btn.innerHTML = "⛶ Expand"; btn.title = "ขยายเต็มจอ"; }
+  } else {
+    // Close other map if currently fullscreen
+    if (_fullscreenMap !== null) toggleMapFullscreen(_fullscreenMap);
+
+    card.classList.add("fullscreen");
+    const bd = document.createElement("div");
+    bd.id = "mapBackdrop";
+    bd.className = "map-card-backdrop";
+    bd.addEventListener("click", () => toggleMapFullscreen(mapNum));
+    document.body.appendChild(bd);
+    document.body.style.overflow = "hidden";
+    _fullscreenMap = mapNum;
+    const btn = card.querySelector(`.btn-expand-${mapNum}`);
+    if (btn) { btn.innerHTML = "✕ Close"; btn.title = "ปิด (ESC)"; }
+  }
+}
+
+// ESC key closes fullscreen
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && _fullscreenMap !== null) {
+    toggleMapFullscreen(_fullscreenMap);
+  }
+});
+
+function tryAutoLoadMapImages() {
+  for (let n = 1; n <= 3; n++) {
+    if (state.mapBg[n]) continue;
+    const candidates = [`map${n}.png`, `map${n}.jpg`, `map${n}.jpeg`, `map${n}.webp`];
+    let i = 0;
+    const tryNext = () => {
+      if (i >= candidates.length) return;
+      const img = new Image();
+      img.onload = () => {
+        state.mapBg[n] = candidates[i];
+        applyMapBg(n);
+        save();
+      };
+      img.onerror = () => { i++; tryNext(); };
+      img.src = candidates[i];
+    };
+    tryNext();
+  }
+}
+
+/* =====================================================================
+ * Rendering
+ * ===================================================================== */
+function rebuildJobFilter() {
+  const sel = document.getElementById("jobFilter");
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All Jobs</option>' +
+    uniqueJobs().map(j => `<option value="${escapeHtml(j)}">${escapeHtml(j)}</option>`).join("");
+  if (current) sel.value = current;
+}
+
+// leave ("ลา") available in League AND Overrun, with INDEPENDENT per-mode
+// state (different guild events / schedules — absent for one ≠ absent for the other)
+// Auction modes piggyback on the matching event's leave list.
+function leaveField() {
+  if (state.mode === "league" || state.mode === "auction-gl") return "onLeaveLeague";
+  if (state.mode === "overrun" || state.mode === "auction-overrun") return "onLeaveOverrun";
+  return null;
+}
+function leaveEnabled() { return leaveField() !== null; }
+function isOnLeave(m) { const f = leaveField(); return !!f && !!m[f]; }
+
+function renderMembers() {
+  const search = document.getElementById("searchInput").value.trim().toLowerCase();
+  const jobF = document.getElementById("jobFilter").value;
+  const hideAssigned = document.getElementById("hideAssigned").checked;
+  const leaveOn = leaveEnabled();
+  const hideLeaveWrap = document.getElementById("hideLeaveWrap");
+  if (hideLeaveWrap) hideLeaveWrap.style.display = leaveOn ? "" : "none";
+  const hideLeaveEl = document.getElementById("hideLeave");
+  const hideLeave = leaveOn && hideLeaveEl && hideLeaveEl.checked;
+  const list = document.getElementById("memberList");
+
+  // In auction mode, one member can be in multiple buckets — count buckets so
+  // we can render a "×N" badge and skip the heavy 0.35-opacity fade that makes
+  // them look unavailable for additional drags.
+  const isAuctionMode = state.mode === "auction-gl" || state.mode === "auction-overrun";
+  const auctionBucketCount = (mid) => {
+    if (!isAuctionMode) return 0;
+    const obj = state.mode === "auction-gl" ? state.auctionGL : state.auctionOverrun;
+    if (!obj || !obj.assignments) return 0;
+    let n = 0;
+    ["main","sub"].forEach(f => {
+      const ff = obj.assignments[f]; if (!ff) return;
+      ["cards","illusion","white","black"].forEach(k => {
+        if (Array.isArray(ff[k]) && ff[k].includes(mid)) n++;
+      });
+    });
+    return n;
+  };
+
+  const filtered = state.members
+    .filter(m => !jobF || m.job === jobF)
+    .filter(m => !search || m.name.toLowerCase().includes(search) || m.job.toLowerCase().includes(search))
+    .filter(m => !hideAssigned || !isAssigned(m.id))
+    .filter(m => !hideLeave || !isOnLeave(m));
+  list.innerHTML = filtered.map(m => {
+    const assigned = isAssigned(m.id);
+    const onLeave = isOnLeave(m);
+    const bucketCount = auctionBucketCount(m.id);
+    const rowCls = [];
+    if (assigned && !isAuctionMode)   rowCls.push("assigned");
+    if (isAuctionMode && bucketCount) rowCls.push("in-auction");
+    if (onLeave)                       rowCls.push("on-leave");
+    const auctionBadge = bucketCount ? `<span class="auction-count" title="อยู่ใน ${bucketCount} คอลัมน์">×${bucketCount}</span>` : "";
+    return `
+      <div class="member-row ${rowCls.join(" ")}" draggable="true"
+           ondragstart="dragMemberStart(event, '${m.id}')"
+           ondragend="dragMemberEnd(event)"
+           ondblclick="${m.source === 'manual' ? `deleteMember('${m.id}')` : ''}"
+           title="${escapeHtml(m.name)} · ${escapeHtml(m.job)}${onLeave?' · ลา (มาร์คในตี้)':''}${m.source==='manual'?' (dblclick=ลบ)':''}">
+        <div class="mjob">${escapeHtml(m.job)}</div>
+        <div class="mname">${escapeHtml(m.name)}${onLeave ? '<span class="leave-badge">ลา</span>' : ''}${auctionBadge}</div>
+      </div>`;
+  }).join("") || `<div style="padding:20px;color:var(--muted);font-size:12px;text-align:center">
+      ไม่มีรายชื่อ<br><br>กด <b>Refresh จาก Sheet</b> หรือ <b>+ เพิ่ม</b>
+    </div>`;
+  let cnt = `(${filtered.length}/${state.members.length})`;
+  if (leaveOn) {
+    const lf = leaveField();
+    const nLeave = state.members.filter(m => m[lf]).length;
+    if (nLeave) cnt += ` · 🟠 ลา ${nLeave}`;
+  }
+  document.getElementById("memberCount").textContent = cnt;
+}
+
+function toggleLeave(id) {
+  const f = leaveField();
+  if (!f) return;   // leave = League / Overrun scope
+  const m = findMember(id);
+  if (!m) return;
+  m[f] = !m[f];
+  save();
+  render();
+}
+
+function buildPartyRowHtml(p) {
+  const slotsHtml = p.slots.map((memId, i) => {
+    if (!memId) {
+      return `<div class="slot empty"
+                   ondragover="dragOverEl(event)" ondragleave="dragLeaveEl(event)"
+                   ondrop="dropSlot(event, ${p.id}, ${i})">Empty</div>`;
+    }
+    const m = findMember(memId);
+    if (!m) {
+      return `<div class="slot empty"
+                   ondragover="dragOverEl(event)" ondragleave="dragLeaveEl(event)"
+                   ondrop="dropSlot(event, ${p.id}, ${i})">Empty</div>`;
+    }
+    const cp = m.cp || 0;
+    const cpHtml = cp > 0 ? `<span class="slot-cp">CP ${cp.toLocaleString()}</span>` : "";
+    const onLeave = isOnLeave(m);
+    return `<div class="slot filled ${onLeave ? "slot-onleave" : ""}" draggable="true"
+                 ondragstart="dragSlotStart(event, ${p.id}, ${i})"
+                 ondragend="dragSlotEnd(event)"
+                 ondragover="dragOverEl(event)" ondragleave="dragLeaveEl(event)"
+                 ondrop="dropSlot(event, ${p.id}, ${i})">
+          ${leaveEnabled() ? `<button class="slot-leave-btn" onclick="event.stopPropagation(); toggleLeave('${m.id}')" title="${onLeave ? 'คนนี้ลาอยู่ — กดเพื่อให้กลับมาพร้อม' : 'มาร์คว่าคนนี้ลา (อยู่ในตี้เหมือนเดิม ไม่ย้าย)'}">${onLeave ? 'ลา ✓' : 'ลา'}</button>` : ''}
+          <span class="slot-job">${escapeHtml(m.job)}</span>
+          <div class="slot-info">
+            <span class="slot-name">${escapeHtml(m.name)}</span>
+            ${cpHtml}
+          </div>
+          <span class="slot-del" onclick="event.stopPropagation(); removeFromSlot(${p.id}, ${i}); save(); render();" title="ลบจากตี้">×</span>
+        </div>`;
+  }).join("");
+  const tc = teamColor(p.id);
+  return `
+    <div class="party-row">
+      <div class="party-num" draggable="true"
+           style="color: ${tc}"
+           data-tip-party="${p.id}"
+           ondragstart="dragPartyNumStart(event, ${p.id})"
+           ondragend="dragPartyNumEnd(event)"
+           ondragover="dragOverEl(event)" ondragleave="dragLeaveEl(event)"
+           ondrop="dropPartyNum(event, ${p.id})"
+           ondblclick="renameParty(${p.id})">${p.id}</div>
+      ${slotsHtml}
+      <div class="party-actions" onclick="clearParty(${p.id})" title="เคลียร์ตี้นี้">✕</div>
+    </div>`;
+}
+
+function buildBfJobSummary(range) {
+  const counts = {};
+  for (const idx of range) {
+    const p = state.parties.find(p => p.id === idx);
+    if (!p) continue;
+    for (const memId of p.slots) {
+      if (!memId) continue;
+      const m = findMember(memId);
+      if (!m || !m.job) continue;
+      counts[m.job] = (counts[m.job] || 0) + 1;
+    }
+  }
+  const jobs = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  if (!jobs.length) {
+    return `<div class="bf-summary empty">ยังไม่มีสมาชิกใน battlefield นี้</div>`;
+  }
+  const pills = jobs.map(j =>
+    `<span class="bf-job-pill"><b>${escapeHtml(j)}</b> ×${counts[j]}</span>`
+  ).join("");
+  return `<div class="bf-summary">${pills}</div>`;
+}
+
+function buildBfHtml(bfIdx) {
+  const range = bfIdx === 0 ? [1,2,3,4,5,6,7,8] : [9,10,11,12,13,14,15,16];
+  const title = bfIdx === 0 ? "Main Battlefield" : "Sub Battlefield";
+  const partiesHtml = range.map(idx => {
+    const p = state.parties.find(p => p.id === idx);
+    return buildPartyRowHtml(p);
+  }).join("");
+  const totalInBf = range.reduce((s, idx) =>
+    s + state.parties.find(p=>p.id===idx).slots.filter(Boolean).length, 0);
+  return `
+    <div class="bf ${bfIdx===1?'sub':''}">
+      <div class="bf-head">
+        <span>${bfIdx===0?'🏰':'🏯'} ${title}</span>
+        <span class="count">${totalInBf} คน</span>
+        <div class="spacer"></div>
+      </div>
+      ${partiesHtml}
+      ${buildBfJobSummary(range)}
+    </div>`;
+}
+
+function buildOverrunHtml() {
+  const cards = OVERRUN_GROUPS.map(g => {
+    const rows = g.ids.map(idx => {
+      const p = state.parties.find(p => p.id === idx);
+      return buildPartyRowHtml(p);
+    }).join("");
+    const total = g.ids.reduce((s, idx) =>
+      s + state.parties.find(p=>p.id===idx).slots.filter(Boolean).length, 0);
+    return `
+      <div class="bg-card" style="--gc:${g.color}">
+        <div class="bg-head">
+          <span>● ${g.name} Party</span>
+          <span class="count">${total} คน</span>
+        </div>
+        ${rows}
+        ${buildBfJobSummary(g.ids)}
+      </div>`;
+  }).join("");
+  return '<div class="overrun">' + cards + '</div>' + buildOverrunMapHtml();
+}
+
+function buildOverrunMapHtml() {
+  return `
+    <div class="map-card" style="margin-top:10px">
+      <div class="map-title overrun-map">
+        <span>🗺️ Overrun Map · 4 ปาร์ตี้ใหญ่</span>
+        <span class="actions">
+          <button onclick="toggleMapFullscreen(3)" class="btn-expand-3" title="ขยายเต็มจอ">⛶ Expand</button>
+          <button onclick="clearArrows(3)" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>
+          <label class="btn">📷 Upload<input type="file" accept="image/*" style="display:none" onchange="setMapBg(3,this)" /></label>
+        </span>
+      </div>
+      <div class="map-wrap overrun-wrap" id="mapWrap3">
+        <svg class="map-arrows" id="mapArrows3"></svg>
+        <div class="map-frame"></div>
+      </div>
+    </div>`;
+}
+
+function buildMapHtml(mapNum) {
+  const cls = mapNum === 1 ? 'main' : 'sub';
+  const subWrapCls = mapNum === 2 ? 'sub-map' : '';
+  const icon = '🗺️';
+  const title = mapNum === 1 ? 'Main Battlefield Map' : 'Sub Battlefield Map';
+  return `
+    <div class="map-card">
+      <div class="map-title ${cls}">
+        <span>${icon} ${title} (ตี้ ${mapNum===1?'1–8':'9–16'})</span>
+        <span class="actions">
+          <button onclick="toggleMapFullscreen(${mapNum})" class="btn-expand-${mapNum}" title="ขยายเต็มจอ">⛶ Expand</button>
+          <button onclick="clearArrows(${mapNum})" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>
+          <label class="btn">📷 Upload<input type="file" accept="image/*" style="display:none" onchange="setMapBg(${mapNum},this)" /></label>
+        </span>
+      </div>
+      <div class="map-wrap ${subWrapCls}" id="mapWrap${mapNum}">
+        <svg class="map-arrows" id="mapArrows${mapNum}"></svg>
+        <div class="map-frame"></div>
+      </div>
+    </div>`;
+}
+
+function classifyJobStatus(count, target) {
+  if (!target || target <= 0) return { status: "—", cls: "status-none" };
+  if (count > target + 1) return { status: "เยอะเกินไป", cls: "status-too-many" };
+  if (count < target - 1) return { status: "น้อยเกินไป", cls: "status-too-few" };
+  return { status: "สมดุล", cls: "status-balanced" };
+}
+
+/* Merge paired jobs into a single row in Summary (e.g., Bard + Dancer). */
+const JOB_MERGES = {
+  "Bard + Dancer": ["Bard", "Dancer"]
+};
+
+function getMergedJobCounts() {
+  const counts = {};
+  for (const m of state.members) {
+    if (!m.job) continue;
+    counts[m.job] = (counts[m.job] || 0) + 1;
+  }
+  for (const [combined, parts] of Object.entries(JOB_MERGES)) {
+    let total = 0;
+    for (const p of parts) {
+      if (counts[p]) { total += counts[p]; delete counts[p]; }
+    }
+    if (total > 0) counts[combined] = total;
+  }
+  return counts;
+}
+
+const JOB_PALETTE = [
+  "#ef4444","#f97316","#f59e0b","#eab308",
+  "#84cc16","#22c55e","#10b981","#14b8a6",
+  "#06b6d4","#0ea5e9","#3b82f6","#6366f1",
+  "#8b5cf6","#a855f7","#d946ef","#ec4899"
+];
+function jobColorByIndex(i) { return JOB_PALETTE[i % JOB_PALETTE.length]; }
+
+/** SVG pie chart from {job: count} */
+function buildPieSvg(jobs, counts, total) {
+  if (!total || !jobs.length) return "";
+  const cx = 100, cy = 100, r = 90;
+  // Single full circle if only 1 job
+  if (jobs.length === 1) {
+    return `<svg viewBox="0 0 200 200" class="pie"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${jobColorByIndex(0)}" stroke="#1c2128" stroke-width="1.5"/></svg>`;
+  }
+  let angle = -90;
+  let paths = "";
+  jobs.forEach((job, i) => {
+    const c = counts[job];
+    const sweep = (c / total) * 360;
+    if (sweep <= 0) return;
+    const start = angle;
+    const end = angle + sweep;
+    angle = end;
+    const rad = Math.PI / 180;
+    const x1 = cx + r * Math.cos(start * rad);
+    const y1 = cy + r * Math.sin(start * rad);
+    const x2 = cx + r * Math.cos(end * rad);
+    const y2 = cy + r * Math.sin(end * rad);
+    const largeArc = sweep > 180 ? 1 : 0;
+    const d = `M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${largeArc} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
+    paths += `<path d="${d}" fill="${jobColorByIndex(i)}" stroke="#1c2128" stroke-width="1.5"><title>${escapeHtml(job)} ${c} คน (${(c/total*100).toFixed(1)}%)</title></path>`;
+  });
+  return `<svg viewBox="0 0 200 200" class="pie">${paths}</svg>`;
+}
+
+/** AI-style rule-based commentary on guild composition */
+function buildAiComment(jobs, counts, targets, total) {
+  if (!total || !jobs.length) {
+    return `<div class="ai-line">⚠️ ยังไม่มีสมาชิก — กด Refresh จาก Sheet เพื่อให้วิเคราะห์ได้</div>`;
+  }
+  const tooMany = [], tooFew = [], balanced = [];
+  for (const job of jobs) {
+    const c = counts[job];
+    const t = targets[job] || 0;
+    if (t === 0) continue;
+    const diff = c - t;
+    if (diff > 1) tooMany.push({ job, c, t, by: diff });
+    else if (diff < -1) tooFew.push({ job, c, t, by: -diff });
+    else balanced.push({ job, c, t });
+  }
+
+  const sorted = jobs.slice().sort((a,b) => counts[b] - counts[a]);
+  const top = sorted[0];
+  const bottom = sorted[sorted.length - 1];
+
+  const lines = [];
+  lines.push(`<div class="ai-line">🏆 อาชีพเยอะที่สุด: <b>${escapeHtml(top)}</b> (${counts[top]} คน · ${(counts[top]/total*100).toFixed(0)}%)</div>`);
+  if (bottom !== top) {
+    lines.push(`<div class="ai-line">📉 อาชีพน้อยที่สุด: <b>${escapeHtml(bottom)}</b> (${counts[bottom]} คน)</div>`);
+  }
+
+  const hasTargets = tooMany.length || tooFew.length || balanced.length;
+  if (!hasTargets) {
+    lines.push(`<div class="ai-line" style="margin-top:6px;color:var(--muted)">⚠️ ยังไม่ได้ตั้งเป้าหมาย — กรอกช่อง "เป้าหมาย" เพื่อให้วิเคราะห์ส่วนเกิน/ขาด</div>`);
+    return lines.join("");
+  }
+
+  if (tooMany.length) {
+    lines.push(`<div class="ai-line" style="margin-top:8px">🔴 <b class="too-many">เยอะเกินไป (${tooMany.length}):</b></div>`);
+    tooMany.sort((a,b)=>b.by-a.by).forEach(t => {
+      lines.push(`<div class="ai-sub">• ${escapeHtml(t.job)} เกิน ${t.by} คน <span style="color:var(--muted)">(${t.c}/${t.t})</span></div>`);
+    });
+  }
+  if (tooFew.length) {
+    lines.push(`<div class="ai-line" style="margin-top:8px">🟡 <b class="too-few">น้อยเกินไป / ขาด (${tooFew.length}):</b></div>`);
+    tooFew.sort((a,b)=>b.by-a.by).forEach(t => {
+      lines.push(`<div class="ai-sub">• ${escapeHtml(t.job)} ขาด ${t.by} คน <span style="color:var(--muted)">(${t.c}/${t.t})</span></div>`);
+    });
+  }
+  if (balanced.length) {
+    lines.push(`<div class="ai-line" style="margin-top:8px">🟢 <b class="balanced">สมดุล (${balanced.length}):</b> <span style="color:var(--muted)">${balanced.map(b=>escapeHtml(b.job)).join(", ")}</span></div>`);
+  }
+
+  // Suggestion
+  if (tooMany.length && tooFew.length) {
+    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>คำแนะนำ:</b> ลองชวนคนเปลี่ยนจาก <b class="too-many">${escapeHtml(tooMany[0].job)}</b> มาเล่น <b class="too-few">${escapeHtml(tooFew[0].job)}</b> เพิ่ม</div>`);
+  } else if (tooFew.length) {
+    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>คำแนะนำ:</b> รับสมัครหรือชวนเพิ่ม <b class="too-few">${escapeHtml(tooFew[0].job)}</b></div>`);
+  } else if (tooMany.length) {
+    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>คำแนะนำ:</b> <b class="too-many">${escapeHtml(tooMany[0].job)}</b> มีเกินกว่าที่ต้องการ ลองปรับเป้าหรือ rotate ตัวลง</div>`);
+  }
+  return lines.join("");
+}
+
+function buildSummaryHtml() {
+  const counts = getMergedJobCounts();
+  const jobs = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  const total = state.members.length;
+
+  if (!state.jobTargets) state.jobTargets = {};
+  const targets = state.jobTargets;
+
+  const rows = jobs.map((job, i) => {
+    const count = counts[job];
+    const target = targets[job] || 0;
+    const { status, cls } = classifyJobStatus(count, target);
+    const safeJob = escapeHtml(job);
+    const c = jobColorByIndex(i);
+    return `
+      <tr>
+        <td class="job-name"><span style="display:inline-block;width:8px;height:8px;background:${c};border-radius:2px;margin-right:6px;vertical-align:middle"></span>${safeJob}</td>
+        <td class="count">${count}</td>
+        <td class="target"><input type="number" min="0" data-job="${safeJob}" value="${target}"
+             oninput="updateJobTarget(this)" /></td>
+        <td class="status-cell ${cls}">${status}</td>
+      </tr>`;
+  }).join("");
+
+  const pie = buildPieSvg(jobs, counts, total);
+  const legend = jobs.map((job, i) =>
+    `<span style="--c:${jobColorByIndex(i)}">${escapeHtml(job)} (${counts[job]})</span>`
+  ).join("");
+  const ai = buildAiComment(jobs, counts, targets, total);
+
+  return `
+    <div class="summary-view">
+      <div class="summary-total">
+        <span>📊 สรุปอาชีพในกิลด์</span>
+        <div class="badges">
+          <span>${total} คน</span>
+          <span>${jobs.length} อาชีพ</span>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>อาชีพ</th>
+              <th style="text-align:center">มี</th>
+              <th style="text-align:center">เป้า</th>
+              <th style="text-align:center">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">ยังไม่มีสมาชิก — กด Refresh จาก Sheet</td></tr>'}</tbody>
+          ${jobs.length ? `<tfoot>
+            <tr>
+              <td class="label">${jobs.length} อาชีพ</td>
+              <td class="count">${jobs.reduce((s,j) => s + counts[j], 0)}</td>
+              <td class="target" style="text-align:center">${jobs.reduce((s,j) => s + (targets[j] || 0), 0)}</td>
+              <td class="status-cell">—</td>
+            </tr>
+          </tfoot>` : ''}
+        </table>
+        <div class="summary-side">
+          ${pie}
+          ${legend ? `<div class="pie-legend">${legend}</div>` : ''}
+          <div class="ai-comment">
+            <div class="ai-title">💡 AI Comment</div>
+            ${ai}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+
+/* =====================================================================
+ * Auction (GL / Overrun)
+ * ===================================================================== */
+const AUCTION_RATES = {
+  gl:      { card: 1, illusion: 1, white: 3,  black: 5  },
+  overrun: { card: 1, illusion: 1, white: 10, black: 10 }
+};
+const AUCTION_PERCENTS = [0, 50, 70, 100];
+const AUCTION_ITEMS_PER_PAGE = 4;  // Overrun auction-house page size
+
+/** Members eligible to receive loot (excludes ลา for the matching mode). */
+function getAuctionMembers(kind) {
+  const leaveFlag = kind === "gl" ? "onLeaveLeague" : "onLeaveOverrun";
+  return state.members.filter(m => !m[leaveFlag]);
+}
+
+function getAuctionAssignments(kind) {
+  const obj = kind === "gl" ? state.auctionGL : state.auctionOverrun;
+  if (!obj.assignments || !obj.assignments.main || !obj.assignments.sub) {
+    obj.assignments = {
+      main: { cards: [], white: [], black: [] },
+      sub:  { cards: [], white: [], black: [] }
+    };
+  }
+  return obj.assignments;
+}
+
+/** Compute effective totals + per-person allocation + shortage/leftover.
+ *  GL bonus formula (derived from base × multiplier — no separate inputs):
+ *    - % > 0: cards + illusion ×2 (so bonus = base), feathers ×(1 + %/100)
+ *    - % = 0: no bonus at all (bonus = 0 for all)
+ *  Overrun: no bonus ever.
+ *
+ *  Demand is computed from the per-column assignment counts, not the total
+ *  member list — user drags names into Card / Illusion / ขาว / ดำ columns
+ *  themselves so the system only needs to know who's in each bucket.
+ */
+function computeAuction(kind) {
+  const members = getAuctionMembers(kind);
+  const people = members.length;
+  const rate = AUCTION_RATES[kind];
+  const assignments = getAuctionAssignments(kind);
+
+  // Prune stale member IDs (member-set changed via sheet refresh / delete /
+  // manual edit) so .length matches what actually renders. Without this the
+  // count says "14 ppl" but the droplist shows zero rows.
+  let assignmentsDirty = false;
+  ["main", "sub"].forEach(field => {
+    if (!assignments[field]) return;
+    ["cards", "illusion", "white", "black"].forEach(key => {
+      if (!Array.isArray(assignments[field][key])) { assignments[field][key] = []; return; }
+      const before = assignments[field][key].length;
+      assignments[field][key] = assignments[field][key].filter(id => findMember(id));
+      if (assignments[field][key].length !== before) assignmentsDirty = true;
+    });
+  });
+  if (assignmentsDirty) save();
+
+  let base, percent;
+  if (kind === "gl") {
+    const a = state.auctionGL;
+    base = { cards: a.cards|0, illusion: a.illusion|0, white: a.white|0, black: a.black|0 };
+    percent = a.bonusPercent|0;
+  } else {
+    const a = state.auctionOverrun;
+    base = { cards: a.cards|0, illusion: a.illusion|0, white: a.white|0, black: a.black|0 };
+    percent = 0;
+  }
+
+  const bonusActive       = percent > 0;
+  const effBonusCards     = bonusActive ? base.cards    : 0;  // ×2 total = +base
+  const effBonusIllusion  = bonusActive ? base.illusion : 0;  // ×2 like cards
+  const effBonusWhite     = bonusActive ? Math.round(base.white * percent / 100) : 0;
+  const effBonusBlack     = bonusActive ? Math.round(base.black * percent / 100) : 0;
+
+  const totalCards    = base.cards    + effBonusCards;
+  const totalIllusion = base.illusion + effBonusIllusion;
+  const totalWhite    = base.white    + effBonusWhite;
+  const totalBlack    = base.black    + effBonusBlack;
+
+  // GL splits each item 70/30 across main+sub fields. Overrun has no sub
+  // field — main pool absorbs the full total (sub pool = 0, not rendered).
+  const hasSubField = (kind === "gl");
+  const splitMain = (n) => hasSubField ? Math.floor(n * 0.7) : n;
+
+  const buildSide = (field, key, pool, perPersonRate) => {
+    const ids = assignments[field][key];
+    const count = ids.length;
+    const need = count * perPersonRate;
+    const diff = pool - need;
+    let status, statusCls;
+    if (count === 0)        { status = "ยังไม่ลาก",  statusCls = "none" }
+    else if (diff < 0)      { status = `ขาด ${-diff}`, statusCls = "short" }
+    else if (diff === 0)    { status = "พอดี",        statusCls = "ok" }
+    else                    { status = `เหลือ ${diff}`, statusCls = "over" }
+    return { pool, count, need, diff, status, statusCls };
+  };
+
+  const ITEM_META = {
+    cards:    { label: "🎴 การ์ด",         rateKey: "card",     unit: "ใบ"   },
+    illusion: { label: "🔮 Illusion Frag.", rateKey: "illusion", unit: "ชิ้น" },
+    white:    { label: "🪶 ขนขาว",         rateKey: "white",    unit: "ขน"   },
+    black:    { label: "🪶 ขนดำ",          rateKey: "black",    unit: "ขน"   }
+  };
+  const totals    = { cards: totalCards, illusion: totalIllusion, white: totalWhite, black: totalBlack };
+  const bonusVals = { cards: effBonusCards, illusion: effBonusIllusion, white: effBonusWhite, black: effBonusBlack };
+  const items = ["cards","illusion","white","black"].map(key => {
+    const total    = totals[key];
+    const mainPool = splitMain(total);
+    const subPool  = total - mainPool;
+    const meta     = ITEM_META[key];
+    const itemRate = rate[meta.rateKey];
+    return {
+      key,
+      label: meta.label,
+      unit:  meta.unit,
+      rate:  itemRate,
+      total, base: base[key], bonus: bonusVals[key],
+      main: buildSide("main", key, mainPool, itemRate),
+      sub:  buildSide("sub",  key, subPool,  itemRate)
+    };
+  });
+
+  return { kind, members, people, percent, rate, base, items, assignments, hasSubField };
+}
+
+// All four mutators call render() (not just renderBattlefields) so the sidebar's
+// .assigned styling + "ซ่อนคนที่จัดตี้แล้ว" filter update with each drag/drop.
+// `field` = "main" (70% pool) or "sub" (30% pool).
+function assignAuctionMember(kind, field, item, memberId) {
+  const a = getAuctionAssignments(kind);
+  const bucket = a[field] && a[field][item];
+  if (!bucket || bucket.includes(memberId)) return;
+  bucket.push(memberId);
+  save(); render();
+}
+function unassignAuctionMember(kind, field, item, memberId) {
+  const a = getAuctionAssignments(kind);
+  if (!a[field] || !a[field][item]) return;
+  a[field][item] = a[field][item].filter(id => id !== memberId);
+  save(); render();
+}
+function clearAuctionColumn(kind, field, item) {
+  const a = getAuctionAssignments(kind);
+  const bucket = a[field] && a[field][item];
+  if (!bucket || !bucket.length) return;
+  if (!confirm("ล้างรายชื่อทั้งคอลัมน์นี้?")) return;
+  a[field][item] = [];
+  save(); render();
+}
+function autoFillAuctionColumn(kind, field, item) {
+  const eligibleMembers = getAuctionMembers(kind);
+  const a = getAuctionAssignments(kind);
+  if (!a[field]) return;
+  a[field][item] = eligibleMembers.map(m => m.id);
+  save(); render();
+}
+function dropAuctionColumn(e, kind, field, item) {
+  e.preventDefault();
+  e.currentTarget.classList.remove("drag-over");
+  if (drag.type === "member") {
+    assignAuctionMember(kind, field, item, drag.payload.memberId);
+  }
+}
+
+function setAuctionField(kind, field, value) {
+  // Strip non-digits so the displayed value can't drift from parsed state.
+  const cleaned = String(value).replace(/[^0-9]/g, "");
+  let n = parseInt(cleaned, 10);
+  if (isNaN(n) || n < 0) n = 0;
+  if (kind === "gl") {
+    if (state.auctionGL[field] === n) return;
+    state.auctionGL[field] = n;
+  } else {
+    if (state.auctionOverrun[field] === n) return;
+    state.auctionOverrun[field] = n;
+  }
+  save();
+  // Preserve focus + cursor across re-render so user can keep typing.
+  let cursorPos = null;
+  const focused = document.activeElement;
+  if (focused && focused.tagName === "INPUT") {
+    try { cursorPos = focused.selectionStart; } catch (e) {}
+  }
+  renderBattlefields();
+  const newInput = document.querySelector(
+    `input[data-auction-kind="${kind}"][data-auction-field="${field}"]`
+  );
+  if (newInput) {
+    newInput.focus();
+    // Cursor: keep where the user had it if known; otherwise park at end
+    // (typing happens at end). Never default to position 0 — that's the bug
+    // the user reported ("เด้งมาข้างหน้า").
+    const pos = (cursorPos != null) ? Math.min(cursorPos, newInput.value.length) : newInput.value.length;
+    try { newInput.setSelectionRange(pos, pos); } catch (e) {}
+  }
+}
+
+function setAuctionPercent(kind, value) {
+  const n = parseInt(value, 10) || 0;
+  if (kind !== "gl") return;
+  if (state.auctionGL.bonusPercent === n) return;
+  state.auctionGL.bonusPercent = n;
+  save();
+  renderBattlefields();
+}
+
+function buildAuctionInputCard(opts) {
+  const { icon, label, value, rate, perPersonLabel, effective, status, statusCls, kind, field } = opts;
+  const effectiveLine = effective != null
+    ? `<div class="ai-effective">= ${effective} (ใช้จริง)</div>` : "";
+  const statusLine = status
+    ? `<div class="ai-status ${statusCls || ""}">${status}</div>` : "";
+  return `
+    <div class="auction-input-card">
+      <div class="ai-label"><span class="ai-icon">${icon}</span>${label}</div>
+      <input type="text" inputmode="numeric" pattern="[0-9]*" value="${value}"
+             data-auction-kind="${kind}" data-auction-field="${field}"
+             oninput="setAuctionField('${kind}','${field}',this.value)"
+             onfocus="this.select()" />
+      ${rate != null ? `<div class="ai-rate"><b>${rate}</b> ${perPersonLabel}</div>` : ""}
+      ${effectiveLine}
+      ${statusLine}
+    </div>`;
+}
+
+function buildAuctionView(kind) {
+  const data = computeAuction(kind);
+  const isGL = kind === "gl";
+  const titleIcon = "🎴";
+  const title = isGL ? "Auction GL" : "Auction Overrun";
+  const rateLabel = `1 / ${data.rate.white} / ${data.rate.black}`;
+
+  // Base inputs
+  const baseInputs = ["cards","illusion","white","black"].map(field => {
+    const it = data.items.find(i => i.key === field);
+    const labelMap = {
+      cards:    ["🎴","การ์ด",         "ใบ/คน"  ],
+      illusion: ["🔮","Illusion Frag.", "ชิ้น/คน"],
+      white:    ["🪶","ขนขาว",         "ขน/คน"  ],
+      black:    ["🪶","ขนดำ",          "ขน/คน"  ]
+    };
+    const [icon, lbl, ppLbl] = labelMap[field];
+    return buildAuctionInputCard({
+      icon, label: lbl,
+      value: it.base,
+      rate: it.rate,
+      perPersonLabel: ppLbl,
+      kind, field
+    });
+  }).join("");
+
+  // Status summary — for GL shows main+sub split; for Overrun a single combined
+  // pool. Status column gives the worst of the rendered sides.
+  const summaryRows = data.items.map(it => {
+    if (data.hasSubField) {
+      const worst = it.sub.diff < it.main.diff ? it.sub : it.main;
+      const fieldName = worst === it.main ? "หลัก" : "รอง";
+      const statusText = worst.statusCls === "none" ? "ยังไม่ลาก" : `${fieldName}: ${worst.status}`;
+      return `
+        <tr>
+          <td class="item">${it.label}</td>
+          <td class="num"><b>${it.total}</b></td>
+          <td class="num" style="color:#fbbf24">${it.main.need}/<b>${it.main.pool}</b></td>
+          <td class="num" style="color:#06b6d4">${it.sub.need}/<b>${it.sub.pool}</b></td>
+          <td class="status-cell ${worst.statusCls}">${statusText}</td>
+        </tr>`;
+    }
+    return `
+      <tr>
+        <td class="item">${it.label}</td>
+        <td class="num"><b>${it.total}</b></td>
+        <td class="num">${it.main.need}/<b>${it.main.pool}</b></td>
+        <td class="status-cell ${it.main.statusCls}">${it.main.status}</td>
+      </tr>`;
+  }).join("");
+
+  const shortPairs = [];
+  data.items.forEach(it => {
+    const fields = data.hasSubField ? ["main","sub"] : ["main"];
+    fields.forEach(f => {
+      if (it[f].diff < 0) shortPairs.push({ label: it.label, field: f, short: -it[f].diff });
+    });
+  });
+  const fieldThai = (f) => f === "main" ? "หลัก" : "รอง";
+  const warning = (data.people > 0 && shortPairs.length) ? `
+    <div class="auction-warning">
+      ⚠️ <b>ของไม่พอ</b> — ${shortPairs.map(s => data.hasSubField
+          ? `${s.label.replace(/^[^\s]+\s/, "")}(สนาม${fieldThai(s.field)}) ขาด ${s.short}`
+          : `${s.label.replace(/^[^\s]+\s/, "")} ขาด ${s.short}`).join(", ")}
+    </div>` : "";
+
+  // Bonus section (GL only) — % picker only; system derives bonus from base × multiplier.
+  // Cards + Illusion always ×2 when bonus active; feathers ×(1+%/100).
+  const bonusActive = data.percent > 0;
+  const featherMult = (1 + data.percent / 100).toFixed(2);
+  const bonusRows = isGL ? data.items.map(it => {
+    const isFixedDouble = (it.key === "cards" || it.key === "illusion");
+    const multLabel     = isFixedDouble ? (bonusActive ? "×2" : "×1") : `×${featherMult}`;
+    return `
+      <tr>
+        <td class="item">${it.label}</td>
+        <td class="num">${it.base}</td>
+        <td class="num">${multLabel}</td>
+        <td class="num"><b>${it.total}</b> ${bonusActive ? `<span style="color:var(--muted);font-weight:400">(+${it.bonus})</span>` : ""}</td>
+      </tr>`;
+  }).join("") : "";
+  const bonusSection = isGL ? `
+    <div class="auction-section bonus">
+      <h3>⭐ Bonus rate</h3>
+      <div class="auction-percent-row">
+        <span class="label">เลือก % เบิ้ลของวันนี้ (การ์ด ×2 เมื่อ %>0, ขน ×(1+%)):</span>
+        ${AUCTION_PERCENTS.map(p => `
+          <button class="auction-percent-btn ${data.percent === p ? "active" : ""}"
+                  onclick="setAuctionPercent('gl', ${p})">${p}%</button>`).join("")}
+      </div>
+      <table class="auction-summary-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">รายการ</th>
+            <th>Base (รับมา)</th>
+            <th>คูณ</th>
+            <th>หลัง Bonus</th>
+          </tr>
+        </thead>
+        <tbody>${bonusRows}</tbody>
+      </table>
+    </div>` : "";
+
+  // Two sets of 3 drag-drop columns: สนามหลัก (main, 70% pool) + สนามรอง (sub, 30% pool).
+  // Each column = drop zone for member chips; per-person quantity auto-filled by rate.
+  const COL_STYLES = {
+    cards:    "#ec4899",
+    illusion: "#a855f7",
+    white:    "#fbbf24",
+    black:    "#6b7280"
+  };
+  const buildAuctionCol = (field, it) => {
+    const side = it[field];
+    const ids = data.assignments[field][it.key];
+    // Page numbering:
+    //  - GL: ONE continuous chain across all 8 buckets in order:
+    //      การ์ดสนามหลัก → การ์ดสนามรอง → Illusion-หลัก → Illusion-รอง
+    //      → ขนขาว-หลัก → ขนขาว-รอง → ขนดำ-หลัก → ขนดำ-รอง
+    //    chainOffset for a bucket = cumulative items used by earlier buckets
+    //    in the chain (each bucket's people × that bucket's item rate). Page =
+    //    ceil(startItem / 4), no reset within a bucket.
+    //  - Overrun: independent per-column batch, resets every 4 people.
+    const isGLChain = (data.kind === "gl");
+    let chainOffset = 0;
+    if (isGLChain) {
+      const a     = data.assignments;
+      const cRate = data.rate.card;
+      const iRate = data.rate.illusion;
+      const wRate = data.rate.white;
+      const bRate = data.rate.black;
+      const afterCardMain     = a.main.cards.length    * cRate;
+      const afterCardSub      = afterCardMain     + a.sub.cards.length    * cRate;
+      const afterIllusionMain = afterCardSub      + a.main.illusion.length * iRate;
+      const afterIllusionSub  = afterIllusionMain + a.sub.illusion.length  * iRate;
+      const afterWhiteMain    = afterIllusionSub  + a.main.white.length    * wRate;
+      const afterWhiteSub     = afterWhiteMain    + a.sub.white.length     * wRate;
+      const afterBlackMain    = afterWhiteSub     + a.main.black.length    * bRate;
+      chainOffset =
+          it.key === "cards"    && field === "main" ? 0
+        : it.key === "cards"    && field === "sub"  ? afterCardMain
+        : it.key === "illusion" && field === "main" ? afterCardSub
+        : it.key === "illusion" && field === "sub"  ? afterIllusionMain
+        : it.key === "white"    && field === "main" ? afterIllusionSub
+        : it.key === "white"    && field === "sub"  ? afterWhiteMain
+        : it.key === "black"    && field === "main" ? afterWhiteSub
+        : /* black sub */                              afterBlackMain;
+    }
+    const rows = ids.map((memId, i) => {
+      const m = findMember(memId);
+      if (!m) return "";
+      // Items number 1-4 LOCAL to each page (reset whenever the page changes).
+      // GL chain → split the person's allocation into segments per real auction
+      // page (one badge per page they touch). Overrun → 1 person = 1 batch slot,
+      // so always one segment with local items 1..rate.
+      let segments;
+      if (isGLChain) {
+        segments = [];
+        let remaining = it.rate;
+        let cursor    = chainOffset + i * it.rate + 1;
+        while (remaining > 0) {
+          const pg         = Math.ceil(cursor / AUCTION_ITEMS_PER_PAGE);
+          const startLocal = ((cursor - 1) % AUCTION_ITEMS_PER_PAGE) + 1;
+          const slotsLeft  = AUCTION_ITEMS_PER_PAGE - startLocal + 1;
+          const take       = Math.min(slotsLeft, remaining);
+          segments.push({ page: pg, startLocal, endLocal: startLocal + take - 1 });
+          cursor    += take;
+          remaining -= take;
+        }
+      } else {
+        const posInBatch = i % AUCTION_ITEMS_PER_PAGE;
+        segments = [{ page: posInBatch + 1, startLocal: 1, endLocal: it.rate }];
+      }
+      const pageBadge = segments.map(s => {
+        const itemsTxt = s.startLocal === s.endLocal ? `ชิ้น ${s.startLocal}` : `ชิ้น ${s.startLocal}-${s.endLocal}`;
+        return `<span class="aar-page">หน้า ${s.page} · ${itemsTxt}</span>`;
+      }).join("");
+      return `
+        <div class="auction-assigned-row">
+          <span class="aar-rk">${i + 1}.</span>
+          <div class="aar-info">
+            <span class="aar-name">${escapeHtml(m.name)}</span>
+            <span class="aar-job">${escapeHtml(m.job || "")}</span>
+            ${pageBadge}
+          </div>
+          <span class="aar-del" title="ลบออก"
+                onclick="unassignAuctionMember('${data.kind}','${field}','${it.key}','${m.id}')">×</span>
+        </div>`;
+    }).join("");
+
+    const ppLabel = it.key === "cards" ? "ใบ/คน"
+                  : it.key === "illusion" ? "ชิ้น/คน"
+                  : "ขน/คน";
+    const poolLabel = !data.hasSubField ? "รวม"
+                    : field === "main"  ? "หลัก70%" : "รอง30%";
+    return `
+      <div class="auction-column" style="--col:${COL_STYLES[it.key]}">
+        <div class="ac-head">
+          <span>${it.label}</span>
+          <span class="ac-rate"><b>${it.rate}</b> ${ppLabel}</span>
+        </div>
+        <div class="ac-stats">
+          <div>
+            <span class="ac-stat-label">คน</span>
+            <span class="ac-stat-val">${side.count}</span>
+          </div>
+          <div>
+            <span class="ac-stat-label">ใช้/${poolLabel}</span>
+            <span class="ac-stat-val">${side.need}/${side.pool}</span>
+          </div>
+          <div>
+            <span class="ac-stat-label">สถานะ</span>
+            <span class="ac-stat-val ac-status ${side.statusCls}">${side.status}</span>
+          </div>
+        </div>
+        <div class="ac-droplist"
+             ondragover="dragOverEl(event)"
+             ondragleave="dragLeaveEl(event)"
+             ondrop="dropAuctionColumn(event,'${data.kind}','${field}','${it.key}')">
+          ${rows || `<div class="ac-empty">ลากชื่อจาก sidebar<br>มาวางที่นี่</div>`}
+        </div>
+        <div class="ac-actions">
+          <button onclick="autoFillAuctionColumn('${data.kind}','${field}','${it.key}')">✨ ใส่ทุกคน</button>
+          <button class="danger" onclick="clearAuctionColumn('${data.kind}','${field}','${it.key}')">🗑 ล้าง</button>
+        </div>
+      </div>`;
+  };
+
+  const mainCols = data.items.map(it => buildAuctionCol("main", it)).join("");
+  const subCols  = data.hasSubField ? data.items.map(it => buildAuctionCol("sub",  it)).join("") : "";
+
+  const noMembersFallback = `
+    <div style="color:var(--muted);text-align:center;padding:30px">
+      ยังไม่มีสมาชิก — กด "🔄 Refresh จาก Sheet"
+    </div>`;
+  const mainHeader = data.hasSubField
+    ? "👥 สนามหลัก (70%) — ลากชื่อจาก sidebar มาวางในคอลัมน์"
+    : "👥 รายชื่อรับของ — ลากชื่อจาก sidebar มาวางในคอลัมน์";
+  const memberSection = `
+    <div class="auction-section">
+      <h3>${mainHeader}</h3>
+      ${data.members.length ? `<div class="auction-columns">${mainCols}</div>` : noMembersFallback}
+    </div>`;
+  const subSection = data.hasSubField ? `
+    <div class="auction-section">
+      <h3>🛡️ สนามรอง (30%) — ลากชื่อจาก sidebar มาวางในคอลัมน์</h3>
+      ${data.members.length ? `<div class="auction-columns">${subCols}</div>` : noMembersFallback}
+    </div>` : "";
+
+  return `
+    <div class="auction-view">
+      <div class="auction-hero ${isGL ? "" : "overrun"}">
+        <h2>${titleIcon} ${title}</h2>
+        <div class="spacer" style="flex:1"></div>
+        <div class="auction-meta">
+          <span class="rate-pill">คน: <b>${data.people}</b></span>
+          <span class="rate-pill">อัตรา: <b>${rateLabel}</b></span>
+          ${isGL ? `<span class="rate-pill">Bonus: <b>${data.percent}%</b></span>` : ""}
+        </div>
+      </div>
+
+      <div class="auction-section">
+        <h3>📦 ของหลัก (Base)</h3>
+        <div class="auction-inputs">${baseInputs}</div>
+      </div>
+
+      ${bonusSection}
+
+      <div class="auction-section">
+        <h3>📊 สรุปการแจก</h3>
+        <table class="auction-summary-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">รายการ</th>
+              <th>รวม</th>
+              ${data.hasSubField ? `
+                <th>สนามหลัก<br><span style="font-weight:400;font-size:9px">ใช้/70%</span></th>
+                <th>สนามรอง<br><span style="font-weight:400;font-size:9px">ใช้/30%</span></th>
+              ` : `<th>ใช้/มี</th>`}
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>${summaryRows}</tbody>
+        </table>
+        ${warning}
+      </div>
+
+      ${memberSection}
+
+      ${subSection}
+    </div>`;
+}
+
+function buildAuctionGlHtml()      { return buildAuctionView("gl"); }
+function buildAuctionOverrunHtml() { return buildAuctionView("overrun"); }
+
+
+function updateJobTarget(input) {
+  const job = input.dataset.job;
+  if (!job) return;
+  if (!state.jobTargets) state.jobTargets = {};
+  let n = parseInt(input.value, 10);
+  if (isNaN(n) || n < 0) n = 0;
+  state.jobTargets[job] = n;
+  save();
+  const counts = getMergedJobCounts();
+  const { status, cls } = classifyJobStatus(counts[job] || 0, n);
+  const tr = input.closest("tr");
+  if (tr) {
+    const cell = tr.querySelector(".status-cell");
+    if (cell) { cell.textContent = status; cell.className = "status-cell " + cls; }
+  }
+  const tfootTargetCell = document.querySelector(".summary-table tfoot td.target");
+  if (tfootTargetCell) {
+    const jobsList = Object.keys(counts);
+    const totalTarget = jobsList.reduce((s, j) => s + (state.jobTargets[j] || 0), 0);
+    tfootTargetCell.textContent = totalTarget;
+  }
+  const aiBox = document.querySelector(".ai-comment");
+  if (aiBox) {
+    const jobs = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+    aiBox.innerHTML = `<div class="ai-title">💡 AI Comment</div>${buildAiComment(jobs, counts, state.jobTargets, state.members.length)}`;
+  }
+}
+
+/* ===== GL Battle data ===== */
+const GL_BATTLE = {
+  result: "WIN",
+  us: { name: "1oClock", score: 1918, defeats: 561, fort: 550, boss: 1, minimon: 60 },
+  them: { name: "ฝั่งตรงข้าม", defeats: 162, fort: 48, boss: 0, minimon: 5 },
+  usPlayers: [
+    [1,"Crying Alyss I",15,1,46,141,8,1193],[2,"(player#2)",5,0,69,117,26,1074],
+    [3,"NEONEO",10,0,45,149,2,1048],[4,"Ooops",16,1,29,122,0,1017],
+    [5,"DOUGLAS",15,1,20,155,0,963],[6,"Winbz",12,0,34,126,11,952],
+    [7,"วาฬเกยตื้น",14,15,32,97,6,949],[8,"Moomiin",18,0,16,113,1,928],
+    [9,"Team7",17,0,10,152,4,916],[10,"ฮานิบ่าเอย",17,0,6,159,2,888],
+    [11,"Kanomtamm",13,1,27,103,2,867],[12,"SMITTii",14,0,30,67,4,856],
+    [13,"OreoBlizzard",12,8,27,95,10,830],[14,"(player#14)",16,5,9,95,1,815],
+    [15,"C7767",15,2,11,115,1,794],[16,"94ea",15,1,10,119,1,791],
+    [17,"ลุกเป็นไฟ",17,0,7,96,3,772],[18,"ABC123",10,14,33,59,14,762],
+    [19,"XxGreaNxX",14,4,12,106,4,756],[20,"Bambie",19,0,0,79,0,730],
+    [21,"Paengrum",18,0,0,82,1,704],[22,"solink",14,0,0,139,1,700],
+    [23,"Nigth",17,0,0,92,1,696],[24,"WarlockX",15,0,0,116,0,684],
+    [25,"Catbear",16,0,0,97,0,676],[26,"MyMILkz",17,0,0,79,0,668],
+    [27,"DarkNess",14,0,12,63,5,666],[28,"GasalonG",15,0,0,108,1,666],
+    [29,"(player#29)",16,0,0,88,0,658],[30,"bebby",8,1,22,98,8,657],
+    [31,"TouHi",15,0,0,101,0,652],[32,"Safilyn",14,0,0,111,2,642],
+    [33,"sRebelHearts",13,0,0,111,0,614],[34,"โปเยโปโลเย",16,0,0,56,1,592],
+    [35,"FewLis",15,0,0,70,1,590],[36,"Dolphin",6,5,29,54,4,583],
+    [37,"theaomlett",13,1,3,81,6,583],[38,"AmaneRom",16,0,0,51,1,582],
+    [39,"LEOLEO",1,0,22,59,22,368],[40,"Nukan",7,0,0,77,8,364]
+  ],
+  themPlayers: [
+    [1,"นักล่าแว่นแดง",0,0,16,41,21,242],[2,"ฉันน่ะเป็นละมุดนะ",1,0,16,25,10,240],
+    [3,"LordSakamoto",2,0,12,25,16,230],[4,"RadHair",3,0,11,13,11,226],
+    [5,"XORAYO1983",1,0,11,31,19,202],[6,"のつも",1,0,13,18,16,196],
+    [7,"ไมยราพ*",2,0,8,21,17,182],[8,"จารเคเค",2,0,8,14,25,168],
+    [9,"OTEM074NGO",2,0,7,18,15,166],[10,"ดมแมว",3,0,5,10,14,160],
+    [11,"MonkeyLuffy",1,0,7,26,11,152],[12,"(player#12)",3,0,3,11,11,142],
+    [13,"หนูไม่รู้",0,0,9,24,17,138],[14,"(player#14)",3,0,3,9,7,138],
+    [15,"(player#15)",1,0,4,31,14,130],[16,"SupzTH",1,0,7,14,20,128],
+    [17,"UpperCAT",3,0,0,14,12,118],[18,"Wazowskil",1,0,3,26,23,112],
+    [19,"อยากได้",2,0,2,15,21,110],[20,"BKHAHAYO",1,0,2,29,21,108],
+    [21,"Iam7P",1,0,4,18,15,106],[22,"Cartier",3,0,0,8,13,106],
+    [23,"teapot",1,0,4,17,13,104],[24,"Belladonna",1,0,1,31,20,102],
+    [25,"NonSalMonn",1,0,0,27,3,84],[26,"Peemxx",2,0,0,10,14,80],
+    [27,"HoneyBaGer",2,0,0,10,19,80],[28,"HappyFeeT",1,0,1,19,9,78],
+    [29,"(player#29)",1,0,0,22,6,74],[30,"มดตะนอย",1,0,1,16,17,72],
+    [31,"แมวเศร้า",0,0,0,35,24,70],[32,"Giornoo",0,0,1,28,23,66],
+    [33,"Spencer",0,0,2,21,12,62],[34,"พระนะโว้ย",0,0,0,30,7,60],
+    [35,"Ajazz01",0,0,1,15,21,40],[36,"ก นก",1,0,0,4,15,38],
+    [37,"VIPERZ EP",0,0,0,18,9,36]
+  ]
+};
+
+function median(arr) {
+  if (!arr.length) return 0;
+  const s = arr.slice().sort((a,b)=>a-b);
+  const m = Math.floor(s.length/2);
+  return s.length % 2 ? s[m] : (s[m-1]+s[m])/2;
+}
+
+function findUnderperformers(players, threshold) {
+  const scores = players.map(p=>p[7]);
+  const med = median(scores);
+  const cutoff = med * threshold;
+  return players.filter(p => {
+    const [_, n, fort, mi, k, a, d, total] = p;
+    return total < cutoff || d > (k + a) || (k + a === 0);
+  }).map(p => {
+    const [rank, name, fort, mi, k, a, d, total] = p;
+    const reasons = [];
+    if (total < cutoff) reasons.push(`คะแนน ${total} < median × 0.5 (=${Math.round(cutoff)})`);
+    if (d > (k + a)) reasons.push(`พ่ายแพ้ ${d} > kill+assist ${k+a}`);
+    if (k + a === 0) reasons.push("ไม่ได้ kill/assist เลย");
+    return { rank, name, total, k, a, d, reasons };
+  });
+}
+
+function buildGlBarRow(side, label, value, max) {
+  const pct = max > 0 ? (value / max * 100) : 0;
+  return `<div class="gl-bar-row ${side}">
+    <div class="label">${label}</div>
+    <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+    <div class="value">${value.toLocaleString()}</div>
+  </div>`;
+}
+
+function buildGlPlayerTable(players, side, underSet) {
+  const rows = players.map(p => {
+    const [rank, name, fort, mi, k, a, d, total] = p;
+    const rkCls = rank===1?"r1":rank===2?"r2":rank===3?"r3":"";
+    const under = underSet.has(name) ? "under" : "";
+    return `<tr class="${under}">
+      <td class="rk ${rkCls}">${rank}</td>
+      <td class="pname">${escapeHtml(name)}</td>
+      <td class="fm">${fort}/${mi}</td>
+      <td class="kad">${k}/${a}/${d}</td>
+      <td class="score">${total.toLocaleString()}</td>
+    </tr>`;
+  }).join("");
+  return `<table class="gl-ptable ${side}">
+    <thead><tr><th class="rk">#</th><th>ชื่อ</th><th>F/M</th><th>K/A/D</th><th style="text-align:right">คะแนน</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function buildGlSummaryHtml() {
+  const B = GL_BATTLE;
+  const usSumScore = B.usPlayers.reduce((s,p)=>s+p[7],0);
+  const themSumScore = B.themPlayers.reduce((s,p)=>s+p[7],0);
+  const totalDefeats = B.us.defeats + B.them.defeats;
+  const totalFort = B.us.fort + B.them.fort;
+  const totalBoss = Math.max(1, B.us.boss + B.them.boss);
+  const totalMM = B.us.minimon + B.them.minimon;
+
+  const usUnder = findUnderperformers(B.usPlayers, 0.5);
+  const themUnder = findUnderperformers(B.themPlayers, 0.5);
+  const usUnderSet = new Set(usUnder.map(u=>u.name));
+  const themUnderSet = new Set(themUnder.map(u=>u.name));
+
+  const usAvg = usSumScore / B.usPlayers.length;
+  const themAvg = themSumScore / B.themPlayers.length;
+  const ratio = themAvg ? (usAvg / themAvg) : 1;
+
+  const resultBadge = B.result === "WIN" ? "" : "lose";
+  const resultText = B.result === "WIN" ? "🏆 1oClock WIN" : "❌ 1oClock LOSE";
+
+  const renderUnder = (list) => list.length
+    ? `<ul class="gl-under-list">${list.map(u=>`<li>
+        <div><span class="uname">#${u.rank} ${escapeHtml(u.name)}</span> · คะแนน <b>${u.total}</b> · K/A/D ${u.k}/${u.a}/${u.d}</div>
+        <div class="reason">${u.reasons.map(escapeHtml).join(" · ")}</div>
+      </li>`).join("")}</ul>`
+    : `<div style="color:var(--muted);font-style:italic;padding:8px">ไม่มีผู้เล่นที่ under-perform — ทีมแน่นดี</div>`;
+
+  return `
+    <div class="gl-dashboard">
+      <div class="gl-hero">
+        <span class="gl-result-badge ${resultBadge}">${resultText}</span>
+        <h1 style="margin:0;font-size:22px">Guild League Battle Report</h1>
+        <div class="gl-sub">เปรียบเทียบสถิติ · Main Battlefield · ${B.usPlayers.length + B.themPlayers.length} ผู้เล่นรวม</div>
+        <div class="gl-score-board">
+          <div class="gl-team us">
+            <div class="gl-team-name">⚔️ ${B.us.name}</div>
+            <div class="gl-team-score">${B.us.score.toLocaleString()}</div>
+            <div class="gl-team-sub">guild score</div>
+          </div>
+          <div class="gl-vs">VS</div>
+          <div class="gl-team them">
+            <div class="gl-team-name">🛡️ ${B.them.name}</div>
+            <div class="gl-team-score">${themSumScore.toLocaleString()}</div>
+            <div class="gl-team-sub">sum of players</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gl-section">
+        <h3>📊 Key Stats</h3>
+        <div class="gl-stat-grid">
+          <div class="gl-stat-card">
+            <div class="gl-stat-label">⚔️ เอาชนะ (Defeats)</div>
+            <div class="gl-stat-row"><span class="name">1oClock</span><span class="us-v">${B.us.defeats}</span></div>
+            <div class="gl-stat-row"><span class="name">${B.them.name}</span><span class="them-v">${B.them.defeats}</span></div>
+            <div class="gl-stat-bar">
+              <div class="us-bar" style="width:${B.us.defeats/totalDefeats*100}%"></div>
+              <div class="them-bar" style="width:${B.them.defeats/totalDefeats*100}%"></div>
+            </div>
+          </div>
+          <div class="gl-stat-card">
+            <div class="gl-stat-label">🏰 ฐานที่มั่น (Forts)</div>
+            <div class="gl-stat-row"><span class="name">1oClock</span><span class="us-v">${B.us.fort}</span></div>
+            <div class="gl-stat-row"><span class="name">${B.them.name}</span><span class="them-v">${B.them.fort}</span></div>
+            <div class="gl-stat-bar">
+              <div class="us-bar" style="width:${B.us.fort/totalFort*100}%"></div>
+              <div class="them-bar" style="width:${B.them.fort/totalFort*100}%"></div>
+            </div>
+          </div>
+          <div class="gl-stat-card">
+            <div class="gl-stat-label">👹 Boss</div>
+            <div class="gl-stat-row"><span class="name">1oClock</span><span class="us-v">${B.us.boss}</span></div>
+            <div class="gl-stat-row"><span class="name">${B.them.name}</span><span class="them-v">${B.them.boss}</span></div>
+            <div class="gl-stat-bar">
+              <div class="us-bar" style="width:${B.us.boss/totalBoss*100}%"></div>
+              <div class="them-bar" style="width:${B.them.boss/totalBoss*100}%"></div>
+            </div>
+          </div>
+          <div class="gl-stat-card">
+            <div class="gl-stat-label">🐛 MiniMonster</div>
+            <div class="gl-stat-row"><span class="name">1oClock</span><span class="us-v">${B.us.minimon}</span></div>
+            <div class="gl-stat-row"><span class="name">${B.them.name}</span><span class="them-v">${B.them.minimon}</span></div>
+            <div class="gl-stat-bar">
+              <div class="us-bar" style="width:${B.us.minimon/totalMM*100}%"></div>
+              <div class="them-bar" style="width:${B.them.minimon/totalMM*100}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gl-grid-2">
+        <div class="gl-section">
+          <h3>🥇 Top 10 — 1oClock</h3>
+          ${B.usPlayers.slice(0,10).map(p=>buildGlBarRow("us", escapeHtml(p[1]), p[7], B.usPlayers[0][7])).join("")}
+        </div>
+        <div class="gl-section">
+          <h3>🥇 Top 10 — ${escapeHtml(B.them.name)}</h3>
+          ${B.themPlayers.slice(0,10).map(p=>buildGlBarRow("them", escapeHtml(p[1]), p[7], B.themPlayers[0][7])).join("")}
+        </div>
+      </div>
+
+      <div class="gl-underperf">
+        <h3>⚠️ Under Performance</h3>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">
+          เกณฑ์: คะแนน &lt; median × 0.5 · หรือ พ่ายแพ้ &gt; kill+assist · หรือไม่ได้ kill/assist เลย
+        </div>
+        <div class="gl-under-block">
+          <div class="gl-under-side us">
+            <h4>1oClock — ${usUnder.length} คน</h4>
+            ${renderUnder(usUnder)}
+          </div>
+          <div class="gl-under-side them">
+            <h4>${escapeHtml(B.them.name)} — ${themUnder.length} คน</h4>
+            ${renderUnder(themUnder)}
+          </div>
+        </div>
+      </div>
+
+      <div class="gl-section">
+        <h3>💡 AI Insights</h3>
+        <ul style="font-size:13px;padding-left:24px;line-height:1.8">
+          <li>${B.result === "WIN" ? "ชนะ" : "แพ้"}ด้วย ratio <b style="color:${B.result === "WIN" ? "var(--success)" : "var(--danger)"}">${(B.us.score/Math.max(themSumScore,1)).toFixed(1)}×</b> โดย guild score</li>
+          <li>เอาชนะ: <b style="color:#58a6ff">${B.us.defeats}</b> vs <b style="color:#f85149">${B.them.defeats}</b> = <b>${(B.us.defeats/Math.max(B.them.defeats,1)).toFixed(1)}×</b></li>
+          <li>ฐานที่มั่น: <b style="color:#58a6ff">${B.us.fort}</b> vs <b style="color:#f85149">${B.them.fort}</b> = <b>${(B.us.fort/Math.max(B.them.fort,1)).toFixed(1)}×</b></li>
+          <li>Top scorer: <b>${escapeHtml(B.usPlayers[0][1])}</b> (${B.usPlayers[0][7]})</li>
+          <li>คะแนนเฉลี่ย/คน: <b style="color:#58a6ff">${Math.round(usAvg)}</b> vs <b style="color:#f85149">${Math.round(themAvg)}</b> (×${ratio.toFixed(1)})</li>
+          <li>1oClock under-perform: <b style="color:var(--danger)">${usUnder.length}</b> คน · ${escapeHtml(B.them.name)} under-perform: <b style="color:var(--danger)">${themUnder.length}</b> คน</li>
+        </ul>
+      </div>
+
+      <div class="gl-grid-2">
+        <div class="gl-section">
+          <h3>📋 ทั้งหมด — 1oClock (${B.usPlayers.length})</h3>
+          ${buildGlPlayerTable(B.usPlayers, "us", usUnderSet)}
+        </div>
+        <div class="gl-section">
+          <h3>📋 ทั้งหมด — ${escapeHtml(B.them.name)} (${B.themPlayers.length})</h3>
+          ${buildGlPlayerTable(B.themPlayers, "them", themUnderSet)}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderBattlefields() {
+  const center = document.getElementById("center");
+  if (state.mode === "overrun") {
+    center.innerHTML = buildOverrunHtml();
+  } else if (state.mode === "summary") {
+    center.innerHTML = buildSummaryHtml();
+  } else if (state.mode === "auction-gl") {
+    center.innerHTML = buildAuctionGlHtml();
+  } else if (state.mode === "auction-overrun") {
+    center.innerHTML = buildAuctionOverrunHtml();
+  } else {
+    center.innerHTML =
+      buildBfHtml(0) +
+      buildBfHtml(1) +
+      '<div class="maps-row">' +
+        buildMapHtml(1) +
+        buildMapHtml(2) +
+      '</div>';
+    applyMapBg(1); applyMapBg(2);
+  }
+}
+
+function updateStatusInfo() {
+  const total = state.members.length;
+  const assigned = state.members.filter(m => isAssigned(m.id)).length;
+  document.getElementById("statusInfo").textContent =
+    `${total} คน · จัดแล้ว ${assigned} · ว่าง ${total - assigned}`;
+}
+
+function render() {
+  renderMembers();
+  renderBattlefields();
+  if (state.mode === "league") renderMarkers();
+  else if (state.mode === "overrun") {
+    applyMapBg(3);
+    renderOverrunMarkers();
+  }
+  updateStatusInfo();
+}
+
+/* ===== Save / Apply / Reset ===== */
+function buildTeamData() {
+  if (state.mode === "league") state.partiesLeague = state.parties;
+  else if (state.mode === "overrun") state.partiesOverrun = state.parties;
+  const ser = (parties) => (parties || makeEmptyParties()).map(p => ({
+    name: p.name,
+    slots: p.slots.map(memberId => {
+      if (!memberId) return null;
+      const m = findMember(memberId);
+      return m ? { name: m.name, job: m.job } : null;
+    })
+  }));
+  return {
+    savedAt: new Date().toISOString(),
+    mode: state.mode,
+    league: ser(state.partiesLeague || makeEmptyParties()),
+    overrun: ser(state.partiesOverrun || makeEmptyParties()),
+    jobTargets: state.jobTargets || {}
+  };
+}
+
+function applySavedTeam(data) {
+  if (!data) return;
+  const apply = (target, saved) => {
+    if (!Array.isArray(saved)) return;
+    saved.forEach((savedParty, i) => {
+      if (i >= target.length) return;
+      const party = target[i];
+      if (savedParty.name) party.name = savedParty.name;
+      if (Array.isArray(savedParty.slots)) {
+        const newSlots = savedParty.slots.map(slot => {
+          if (!slot || !slot.name) return null;
+          // exact name+job first; fall back to name-only so a member who
+          // changed job in the sheet is NOT dropped from the party
+          const m = state.members.find(mem => mem.name === slot.name && mem.job === slot.job)
+                 || state.members.find(mem => mem.name === slot.name);
+          return m ? m.id : null;
+        });
+        while (newSlots.length < PARTY_SLOTS) newSlots.push(null);
+        target[i].slots = newSlots.slice(0, PARTY_SLOTS);
+      }
+    });
+  };
+  if (Array.isArray(data.parties) && !data.league && !data.overrun) {
+    if (state.mode === "league") apply(state.parties, data.parties);
+    return;
+  }
+  if (!state.partiesLeague || state.partiesLeague.length !== PARTIES) state.partiesLeague = makeEmptyParties();
+  if (!state.partiesOverrun || state.partiesOverrun.length !== PARTIES) state.partiesOverrun = makeEmptyParties();
+  if (Array.isArray(data.league)) apply(state.partiesLeague, data.league);
+  if (Array.isArray(data.overrun)) apply(state.partiesOverrun, data.overrun);
+  // Legacy: ignore data.dimension / data.dimensionNames from older saves
+  if (data.jobTargets && typeof data.jobTargets === "object") {
+    state.jobTargets = { ...state.jobTargets, ...data.jobTargets };
+  }
+  state.parties = state.mode === "league" ? state.partiesLeague
+                : state.mode === "overrun" ? state.partiesOverrun
+                : state.partiesLeague;
+}
+
+const TEAM_SAVE_KEY = "roo_party_team_v1";
+
+function saveTeam() {
+  try {
+    const teamData = buildTeamData();
+    localStorage.setItem(TEAM_SAVE_KEY, JSON.stringify(teamData));
+    toast("✅ บันทึกแล้ว — เปิดมาเรียกอัตโนมัติ", "success");
+  } catch (e) {
+    toast("บันทึกไม่สำเร็จ: " + e.message, "error");
+  }
+}
+
+function loadSavedTeam() {
+  try {
+    const raw = localStorage.getItem(TEAM_SAVE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { console.warn(e); }
+  return null;
+}
+
+function resetAll() {
+  if (!confirm("รีเซ็ตข้อมูลทั้งหมด?")) return;
+  localStorage.removeItem("roo_party_v2");
+  localStorage.removeItem(TEAM_SAVE_KEY);
+  location.reload();
+}
+
+/* ===== Init ===== */
+load();
+if (!Array.isArray(state.partiesLeague) || state.partiesLeague.length !== PARTIES) {
+  state.partiesLeague = (state.mode === "league") ? state.parties : makeEmptyParties();
+}
+if (!Array.isArray(state.partiesOverrun) || state.partiesOverrun.length !== PARTIES) {
+  state.partiesOverrun = (state.mode === "overrun") ? state.parties : makeEmptyParties();
+}
+// Strip legacy dimension state from older saves
+delete state.partiesDimension;
+delete state.dimensionNames;
+// Legacy modes redirect to league
+if (state.mode === "dimension" || state.mode === "glsummary") state.mode = "league";
+if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun") {
+  state.parties = state.partiesLeague;
+} else {
+  state.parties = state.mode === "overrun" ? state.partiesOverrun : state.partiesLeague;
+}
+if (!state.jobTargets || typeof state.jobTargets !== "object") state.jobTargets = {};
+// Normalize one auction object: ensure shape + migrate legacy flat assignments
+// (cards/white/black at top level → main bucket, fresh sub bucket). Also
+// backfills "illusion" key on saves that pre-date the Illusion Fragment item.
+function normalizeAuctionState(obj) {
+  if (!obj || typeof obj !== "object") {
+    return { cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0,
+      assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } };
+  }
+  delete obj.bonusCards; delete obj.bonusWhite; delete obj.bonusBlack;
+  if (typeof obj.bonusPercent !== "number") obj.bonusPercent = 0;
+  if (typeof obj.illusion !== "number") obj.illusion = 0;
+  let a = obj.assignments;
+  if (!a || typeof a !== "object") a = {};
+  // Legacy flat shape → migrate into main
+  if (Array.isArray(a.cards) || Array.isArray(a.white) || Array.isArray(a.black) || Array.isArray(a.illusion)) {
+    a = { main: { cards: a.cards || [], illusion: a.illusion || [], white: a.white || [], black: a.black || [] },
+          sub:  { cards: [], illusion: [], white: [], black: [] } };
+  }
+  ["main","sub"].forEach(f => {
+    if (!a[f] || typeof a[f] !== "object") a[f] = { cards: [], illusion: [], white: [], black: [] };
+    ["cards","illusion","white","black"].forEach(k => {
+      if (!Array.isArray(a[f][k])) a[f][k] = [];
+    });
+  });
+  obj.assignments = a;
+  return obj;
+}
+state.auctionGL      = normalizeAuctionState(state.auctionGL);
+state.auctionOverrun = normalizeAuctionState(state.auctionOverrun);
+if (!state.overrunMarkers || typeof state.overrunMarkers !== "object") state.overrunMarkers = {};
+if (!state.mapBg) state.mapBg = { 1: null, 2: null, 3: null };
+if (!(3 in state.mapBg)) state.mapBg[3] = null;
+
+updateModeToggleUI();
+initMarkers();
+rebuildJobFilter();
+setupSidebarDrop();
+setupTooltip();
+
+if (state.members.length) {
+  const savedTeam = loadSavedTeam();
+  if (savedTeam) applySavedTeam(savedTeam);
+}
+
+render();
+applyMapBg(1); applyMapBg(2); applyMapBg(3);
+tryAutoLoadMapImages();
+if (state.mode === "league") renderMarkers();
+else if (state.mode === "overrun") renderOverrunMarkers();
+
+if (!state.members.length) {
+  refreshFromSheet();
+}
+</script>
+</body>
+</html>
