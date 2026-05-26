@@ -136,6 +136,175 @@
     background: linear-gradient(90deg, #d97706, #f97316);
   }
   .mode-toggle .seg { flex-shrink: 0; white-space: nowrap; }
+  .mode-toggle.roster-active .seg-indicator {
+    background: linear-gradient(90deg, #10b981, #34d399);
+  }
+
+  /* ===== Roster page (Firebase-synced member table) ===== */
+  .roster-view {
+    display: flex; flex-direction: column;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .roster-hero {
+    background: linear-gradient(135deg, #0a3220 0%, #051a10 100%);
+    border: 1px solid var(--border-2);
+    border-left: 4px solid #10b981;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap;
+  }
+  .roster-hero h2 {
+    margin: 0; font-size: 18px; font-weight: 800;
+    color: #34d399;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .roster-hero .roster-meta {
+    color: var(--muted); font-size: 12px;
+    display: flex; gap: 14px; flex-wrap: wrap;
+  }
+  .roster-hero .rate-pill {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    color: var(--text);
+  }
+  .roster-hero .rate-pill b { color: #34d399; }
+  .roster-toolbar {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .roster-toolbar input.r-search {
+    flex: 1; min-width: 200px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .roster-toolbar input.r-search:focus { border-color: #10b981; outline: none; }
+  .roster-toolbar button {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 5px;
+    cursor: pointer; font-size: 12px;
+    font-family: inherit;
+  }
+  .roster-toolbar button.primary {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: #000; border-color: #10b981; font-weight: 700;
+  }
+  .roster-toolbar button:hover { border-color: var(--accent); }
+
+  .roster-table-wrap {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .roster-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .roster-table thead {
+    background: var(--panel-2);
+    position: sticky; top: 0; z-index: 1;
+  }
+  .roster-table th {
+    text-align: left;
+    padding: 9px 12px;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .roster-table th .badge {
+    margin-left: 6px;
+    background: rgba(248,81,73,0.15);
+    color: var(--danger);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .roster-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .roster-table tr:hover td { background: rgba(16,185,129,0.04); }
+  .roster-table td.r-rk {
+    width: 36px; text-align: center;
+    color: var(--muted); font-weight: 700; font-size: 11px;
+  }
+  .roster-table td.r-actions {
+    width: 50px; text-align: center;
+  }
+  .roster-table input.r-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .roster-table input.r-input:focus { border-color: #10b981; outline: none; }
+  .roster-table input.r-cp {
+    text-align: right;
+    font-family: monospace;
+    font-weight: 700;
+    color: #fbbf24;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .roster-table input.r-cp::-webkit-outer-spin-button,
+  .roster-table input.r-cp::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  .roster-table .r-cell-static {
+    padding: 5px 8px;
+    color: var(--text);
+  }
+  .roster-table .r-cell-static.r-job { color: var(--accent); font-weight: 600; }
+  .roster-table button.r-del {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .roster-table button.r-del:hover {
+    border-color: var(--danger); color: var(--danger);
+    background: rgba(248,81,73,0.1);
+  }
+
+  .roster-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .roster-empty b { color: var(--text); }
+  .roster-status {
+    font-size: 11px; color: var(--muted);
+    padding: 8px 12px;
+    background: var(--panel-2);
+    border-top: 1px solid var(--border);
+  }
 
   /* ===== Auction view ===== */
   .auction-view {
@@ -1393,11 +1562,17 @@
 </head>
 <body>
 
+<!-- Firebase SDK (compat builds = global `firebase` namespace, no module system) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
 <header>
   <div class="brand">⚔️ ROO Party</div>
-  <div class="mode-toggle cols-5" id="modeToggle">
+  <div class="mode-toggle cols-6" id="modeToggle">
     <button class="seg active" data-mode="league" onclick="switchMode('league')">⚔️ League</button>
     <button class="seg" data-mode="overrun" onclick="switchMode('overrun')">🏆 Overrun</button>
+    <button class="seg" data-mode="roster" onclick="switchMode('roster')">📋 Roster</button>
     <button class="seg" data-mode="summary" onclick="switchMode('summary')">📊 Members</button>
     <button class="seg" data-mode="auction-gl" onclick="switchMode('auction-gl')">🎴 Auction GL</button>
     <button class="seg" data-mode="auction-overrun" onclick="switchMode('auction-overrun')">🎴 Auction Overrun</button>
@@ -1584,6 +1759,7 @@ function updateModeToggleUI() {
     b.classList.toggle("active", b.dataset.mode === state.mode);
   });
   t.classList.toggle("overrun-active", state.mode === "overrun");
+  t.classList.toggle("roster-active", state.mode === "roster");
   t.classList.toggle("summary-active", state.mode === "summary");
   t.classList.toggle("auction-gl-active", state.mode === "auction-gl");
   t.classList.toggle("auction-overrun-active", state.mode === "auction-overrun");
@@ -3312,6 +3488,231 @@ async function initSync() {
   if (!isAdmin()) startPolling();
 }
 
+/* =====================================================================
+ * Firebase Realtime Database — Roster (the new Excel replacement)
+ *   • Anonymous auth = everyone gets a UID, no manual login required.
+ *   • Roster has 3 fields: name, job, cp. Anyone can write CP, but the
+ *     frontend gates name/job behind isAdmin() (PAT-based).
+ *   • Replace the Google Sheet as source of truth for state.members.
+ * ===================================================================== */
+const FIREBASE_CONFIG = {
+  /* PASTE FROM FIREBASE CONSOLE: Project Settings → Web app → SDK setup
+     The apiKey here is NOT a secret — it identifies the project; real
+     access control lives in Realtime Database Rules. */
+  apiKey:        "TODO_REPLACE_ME",
+  authDomain:    "TODO_REPLACE_ME",
+  databaseURL:   "TODO_REPLACE_ME",
+  projectId:     "TODO_REPLACE_ME",
+  storageBucket: "TODO_REPLACE_ME",
+  messagingSenderId: "TODO_REPLACE_ME",
+  appId:         "TODO_REPLACE_ME"
+};
+
+let _fbApp = null, _fbDB = null, _fbAuth = null, _fbRosterRef = null;
+let rosterCache = [];         // sorted by name asc
+let _rosterReady = false;
+
+function firebaseConfigured() {
+  return FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "TODO_REPLACE_ME";
+}
+
+async function initFirebase() {
+  if (!firebaseConfigured()) {
+    console.warn("[firebase] Not configured — Roster tab will show setup hint.");
+    return;
+  }
+  if (typeof firebase === "undefined") {
+    console.error("[firebase] SDK not loaded.");
+    return;
+  }
+  try {
+    _fbApp  = firebase.initializeApp(FIREBASE_CONFIG);
+    _fbAuth = firebase.auth();
+    _fbDB   = firebase.database();
+    // Sign in anonymously so DB Rules (auth != null) pass.
+    await _fbAuth.signInAnonymously();
+    _fbRosterRef = _fbDB.ref("roster");
+    _fbRosterRef.on("value", snap => {
+      const v = snap.val() || {};
+      rosterCache = Object.entries(v)
+        .map(([id, r]) => ({ id, name: r.name || "", job: r.job || "", cp: r.cp || 0, updatedAt: r.updatedAt || 0 }))
+        .sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
+      _rosterReady = true;
+      // Mirror roster → state.members so League/Overrun/Auction find members
+      state.members = rosterCache.map(r => ({ id: r.id, name: r.name, job: r.job, cp: r.cp, source: "roster" }));
+      if (state.mode === "roster") renderBattlefields();
+      else { rebuildJobFilter(); render(); }
+    }, e => console.warn("[firebase] roster listener error", e));
+  } catch (e) {
+    console.error("[firebase] init failed", e);
+  }
+}
+
+/* ----- Roster CRUD ----- */
+function rosterAdd() {
+  if (!isAdmin()) { toast("Admin only", "error"); return; }
+  if (!_fbRosterRef) { toast("Firebase ยังไม่ตั้งค่า", "error"); return; }
+  const name = prompt("ชื่อตัวละคร:");
+  if (!name || !name.trim()) return;
+  const job  = prompt("Job:", "");
+  _fbRosterRef.push({
+    name: name.trim(),
+    job:  (job || "").trim(),
+    cp:   0,
+    updatedAt: Date.now()
+  });
+}
+
+function rosterUpdate(id, field, value) {
+  if (!_fbRosterRef) return;
+  // Frontend gating: name/job restricted to admin
+  if ((field === "name" || field === "job") && !isAdmin()) {
+    toast("เพิ่ม/แก้ ชื่อ + Job ทำได้เฉพาะ Admin", "error");
+    // Revert UI
+    renderBattlefields();
+    return;
+  }
+  let val;
+  if (field === "cp") val = Math.max(0, parseInt(String(value).replace(/[^0-9]/g, ""), 10) || 0);
+  else val = String(value).trim();
+  _fbRosterRef.child(id).update({ [field]: val, updatedAt: Date.now() });
+}
+
+function rosterDelete(id) {
+  if (!isAdmin()) { toast("Admin only", "error"); return; }
+  const m = rosterCache.find(r => r.id === id);
+  if (!m) return;
+  if (!confirm(`ลบ ${m.name} (${m.job}) ?`)) return;
+  _fbRosterRef.child(id).remove();
+}
+
+function rosterImportFromSheet() {
+  if (!isAdmin()) { toast("Admin only", "error"); return; }
+  if (!_fbRosterRef) { toast("Firebase ยังไม่ตั้งค่า", "error"); return; }
+  if (!state.sheetUrl) { toast("ตั้งค่า Sheet URL ก่อนที่ ⚙ Settings", "error"); return; }
+  if (!confirm("Import ทุกคนใน Sheet เข้า Roster?\n(ผู้ที่มีอยู่แล้ว — match name+job — จะข้าม)")) return;
+  (async () => {
+    try {
+      const { id, gid } = parseSheetUrl(state.sheetUrl);
+      const resp = await fetchSheetJSON(id, gid);
+      const rows = gvizToRows(resp);
+      const fetched = extractMembersFromRows(rows);
+      let added = 0, skipped = 0;
+      for (const m of fetched) {
+        const dup = rosterCache.find(r => r.name === m.name && r.job === m.job);
+        if (dup) { skipped++; continue; }
+        await _fbRosterRef.push({ name: m.name, job: m.job, cp: m.cp || 0, updatedAt: Date.now() });
+        added++;
+      }
+      toast(`✅ Import เสร็จ: เพิ่ม ${added} · ข้าม ${skipped}`, "success");
+    } catch (e) {
+      toast("Import ไม่สำเร็จ: " + e.message, "error");
+    }
+  })();
+}
+
+/* ----- Roster page render ----- */
+let _rosterSearch = "";
+function rosterSearchInput(v) {
+  _rosterSearch = (v || "").trim().toLowerCase();
+  // Re-render only the table body to keep input focus
+  const tbody = document.querySelector(".roster-table tbody");
+  if (tbody) tbody.innerHTML = buildRosterRowsHtml();
+}
+
+function buildRosterRowsHtml() {
+  const admin = isAdmin();
+  const search = _rosterSearch;
+  const filtered = !search ? rosterCache
+    : rosterCache.filter(m =>
+        (m.name || "").toLowerCase().includes(search) ||
+        (m.job || "").toLowerCase().includes(search));
+  if (!filtered.length) {
+    if (!rosterCache.length) {
+      return `<tr><td colspan="5" class="roster-empty">
+        ยังไม่มีสมาชิกใน Roster<br>
+        ${admin ? '<b>Admin:</b> กด <b>➕ เพิ่มสมาชิก</b> หรือ <b>📥 Import จาก Sheet</b>'
+                : 'รอ Admin เพิ่มสมาชิก'}
+      </td></tr>`;
+    }
+    return `<tr><td colspan="5" class="roster-empty">ไม่พบ "${escapeHtml(search)}"</td></tr>`;
+  }
+  return filtered.map((m, i) => `
+    <tr data-id="${m.id}">
+      <td class="r-rk">${i + 1}</td>
+      <td>${admin
+        ? `<input class="r-input" value="${escapeHtml(m.name)}" onchange="rosterUpdate('${m.id}','name',this.value)" />`
+        : `<div class="r-cell-static">${escapeHtml(m.name)}</div>`}</td>
+      <td>${admin
+        ? `<input class="r-input" value="${escapeHtml(m.job)}" onchange="rosterUpdate('${m.id}','job',this.value)" />`
+        : `<div class="r-cell-static r-job">${escapeHtml(m.job)}</div>`}</td>
+      <td>
+        <input class="r-input r-cp" type="text" inputmode="numeric" pattern="[0-9]*"
+               value="${m.cp || 0}" onchange="rosterUpdate('${m.id}','cp',this.value)" />
+      </td>
+      <td class="r-actions">${admin
+        ? `<button class="r-del" onclick="rosterDelete('${m.id}')" title="ลบ">×</button>`
+        : ""}</td>
+    </tr>`).join("");
+}
+
+function buildRosterHtml() {
+  const admin = isAdmin();
+  if (!firebaseConfigured()) {
+    return `
+      <div class="roster-view">
+        <div class="roster-hero">
+          <h2>📋 Roster</h2>
+        </div>
+        <div class="auction-warning" style="background:linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.05));border-color:#fbbf24;border-left-color:#fbbf24;color:var(--text);font-size:13px;line-height:1.7">
+          ⚠️ <b>Firebase ยังไม่ได้ตั้งค่า</b> — ตอนนี้ Roster ใช้งานไม่ได้ครับ.<br>
+          กรุณาทำตามขั้นตอน setup ที่ admin จัดเตรียมไว้ → แล้ว apiKey + databaseURL จะถูกเพิ่มเข้ามาในรุ่นถัดไป.
+        </div>
+      </div>`;
+  }
+  const total = rosterCache.length;
+  const totalCP = rosterCache.reduce((s, m) => s + (m.cp || 0), 0);
+  const avgCP   = total ? Math.round(totalCP / total) : 0;
+  return `
+    <div class="roster-view">
+      <div class="roster-hero">
+        <h2>📋 Roster · CP Sheet</h2>
+        <div style="flex:1"></div>
+        <div class="roster-meta">
+          <span class="rate-pill">สมาชิก: <b>${total}</b></span>
+          <span class="rate-pill">รวม CP: <b>${totalCP.toLocaleString()}</b></span>
+          <span class="rate-pill">เฉลี่ย: <b>${avgCP.toLocaleString()}</b></span>
+        </div>
+      </div>
+      <div class="roster-toolbar">
+        <input class="r-search" placeholder="🔎 ค้นหาชื่อ/Job..." oninput="rosterSearchInput(this.value)" value="${escapeHtml(_rosterSearch)}" />
+        ${admin ? `
+          <button class="primary" onclick="rosterAdd()">➕ เพิ่มสมาชิก</button>
+          <button onclick="rosterImportFromSheet()" title="Import ครั้งเดียวจาก Google Sheet เดิม">📥 Import จาก Sheet</button>
+        ` : `<span style="color:var(--muted);font-size:12px">🔒 Read-only — เฉพาะ CP ที่แก้ได้</span>`}
+      </div>
+      <div class="roster-table-wrap">
+        <table class="roster-table">
+          <thead>
+            <tr>
+              <th style="width:36px">#</th>
+              <th>ชื่อ${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th>Job${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th style="width:140px;text-align:right">CP</th>
+              <th style="width:50px"></th>
+            </tr>
+          </thead>
+          <tbody>${buildRosterRowsHtml()}</tbody>
+        </table>
+        <div class="roster-status">
+          ${admin
+            ? "🟢 Admin · กรอกได้ทุกช่อง · บันทึก Realtime"
+            : "🔵 Viewer · กรอกได้แค่ CP · บันทึก Realtime"}
+        </div>
+      </div>
+    </div>`;
+}
+
 /** Members eligible to receive loot (excludes ลา for the matching mode). */
 function getAuctionMembers(kind) {
   const leaveFlag = kind === "gl" ? "onLeaveLeague" : "onLeaveOverrun";
@@ -4102,6 +4503,8 @@ function renderBattlefields() {
   const center = document.getElementById("center");
   if (state.mode === "overrun") {
     center.innerHTML = buildOverrunHtml();
+  } else if (state.mode === "roster") {
+    center.innerHTML = buildRosterHtml();
   } else if (state.mode === "summary") {
     center.innerHTML = buildSummaryHtml();
   } else if (state.mode === "auction-gl") {
@@ -4238,7 +4641,7 @@ delete state.partiesDimension;
 delete state.dimensionNames;
 // Legacy modes redirect to league
 if (state.mode === "dimension" || state.mode === "glsummary") state.mode = "league";
-if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun") {
+if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun" || state.mode === "roster") {
   state.parties = state.partiesLeague;
 } else {
   state.parties = state.mode === "overrun" ? state.partiesOverrun : state.partiesLeague;
@@ -4301,6 +4704,10 @@ initSync().then(() => {
   if (isAdmin() && !state.members.length) refreshFromSheet();
   render();
 });
+
+// Firebase Roster — once initialized, members will sync via Firebase listener
+// (which overwrites state.members when roster data arrives).
+initFirebase();
 </script>
 </body>
 </html>
