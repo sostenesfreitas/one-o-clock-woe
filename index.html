@@ -5957,7 +5957,19 @@ function arDayActive(date) {
 
 function arSetDayActive(date, mode, active) {
   if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return; }
-  _fbDB.ref(`auction_days/${date}/${mode}`).set(!!active);
+  // Optimistic local update so the UI reacts immediately. Revert on failure.
+  if (!state.auctionDays) state.auctionDays = {};
+  if (!state.auctionDays[date]) state.auctionDays[date] = {};
+  const prev = state.auctionDays[date][mode];
+  state.auctionDays[date][mode] = !!active;
+  if (typeof render === "function") render();
+  _fbDB.ref(`auction_days/${date}/${mode}`).set(!!active)
+    .catch(e => {
+      state.auctionDays[date][mode] = prev;
+      if (typeof render === "function") render();
+      toast(`เปิด/ปิดวันไม่สำเร็จ: ${e.message}. ตรวจ Firebase Rules ที่ /auction_days`, "error");
+      console.error("[auction-request] set day failed", e);
+    });
 }
 
 /** Detect main/sub for a member in a given mode. Returns "main" | "sub" | null. */
@@ -6028,7 +6040,10 @@ function arCreateRequest({ date, mode, items, priority, note }) {
   };
   _fbDB.ref(`auction_requests/${date}/${mode}/${id}`).set(req)
     .then(() => toast("✅ ส่งคำขอแล้ว — รอ admin อนุมัติ", "success"))
-    .catch(e => toast("ส่งไม่สำเร็จ: " + e.message, "error"));
+    .catch(e => {
+      toast(`ส่งไม่สำเร็จ: ${e.message}. ตรวจ Firebase Rules ที่ /auction_requests`, "error");
+      console.error("[auction-request] create failed", e);
+    });
 }
 
 function arApproveRequest(date, mode, requestId) {
@@ -6061,6 +6076,9 @@ function arApproveRequest(date, mode, requestId) {
     decidedAt: Date.now(),
     decidedBy: (_fbUser && _fbUser.email) || "admin",
     computedField: field
+  }).catch(e => {
+    toast(`อนุมัติไม่สำเร็จ: ${e.message}`, "error");
+    console.error("[auction-request] approve failed", e);
   });
 }
 
@@ -6089,6 +6107,9 @@ function arRejectRequest(date, mode, requestId, reason) {
     decidedAt: Date.now(),
     decidedBy: (_fbUser && _fbUser.email) || "admin",
     rejectReason: reason || ""
+  }).catch(e => {
+    toast(`ปฏิเสธไม่สำเร็จ: ${e.message}`, "error");
+    console.error("[auction-request] reject failed", e);
   });
 }
 
@@ -6326,10 +6347,13 @@ function buildAuctionRequestHtml() {
   const requestButtons = claimedId ? `
     <div class="ar-bulk-bar">
       <button class="ar-request-btn" ${!active.gl ? "disabled" : ""}
-        onclick="arOpenRequestModal('${date}','gl')">🙋 ขอประมูล GL วันที่ ${date}</button>
+        title="${!active.gl ? "admin ยังไม่เปิดรับวันนี้" : ""}"
+        onclick="arOpenRequestModal('${date}','gl')">🙋 ขอประมูล GL วันที่ ${date}${!active.gl ? " (🔒 ปิด)" : ""}</button>
       <button class="ar-request-btn" ${!active.overrun ? "disabled" : ""}
-        onclick="arOpenRequestModal('${date}','overrun')">🙋 ขอประมูล Overrun วันที่ ${date}</button>
+        title="${!active.overrun ? "admin ยังไม่เปิดรับวันนี้" : ""}"
+        onclick="arOpenRequestModal('${date}','overrun')">🙋 ขอประมูล Overrun วันที่ ${date}${!active.overrun ? " (🔒 ปิด)" : ""}</button>
     </div>
+    ${(!active.gl && !active.overrun) ? `<div style="text-align:center;color:#fbbf24;padding:10px;font-size:13px">⚠️ ${admin ? "ติ๊ก \"เปิดรับ GL/Overrun\" ด้านบนก่อน เพื่อให้ Guest กดขอประมูลได้" : "Admin ยังไม่เปิดรับวันนี้ — ลองวันถัดไป"}</div>` : ""}
   ` : "";
   const mySection = claimedId ? `
     <div class="ar-section">
