@@ -5470,7 +5470,10 @@ function buildAuctionView(kind) {
     //    chainOffset for a bucket = cumulative items used by earlier buckets
     //    in the chain (each bucket's people × that bucket's item rate). Page =
     //    ceil(startItem / 4), no reset within a bucket.
-    //  - Overrun: independent per-column batch, resets every 4 people.
+    //  - Overrun: chain is INDEPENDENT per column (cards/illusion/white/black
+    //    each start at item #1). Within a column, items run sequentially across
+    //    auction pages of 4 slots, splitting a person's allocation across pages
+    //    when needed (e.g. Overrun white/black rate=10 → 1 คน กิน 3 หน้า).
     const isGLChain = (data.kind === "gl");
     let chainOffset = 0;
     if (isGLChain) {
@@ -5506,12 +5509,12 @@ function buildAuctionView(kind) {
         return "";
       }
       // Items number 1-4 LOCAL to each page (reset whenever the page changes).
-      // GL chain → split the person's allocation into segments per real auction
-      // page (one badge per page they touch). Overrun → 1 person = 1 batch slot,
-      // so always one segment with local items 1..rate.
-      let segments;
-      if (isGLChain) {
-        segments = [];
+      // Split the person's allocation into segments per real auction page (one
+      // badge per page they touch). Both modes share the same chain math; only
+      // chainOffset differs (GL chains across buckets, Overrun resets to 0 per
+      // column).
+      const segments = [];
+      {
         let remaining = it.rate;
         let cursor    = chainOffset + i * it.rate + 1;
         while (remaining > 0) {
@@ -5523,9 +5526,6 @@ function buildAuctionView(kind) {
           cursor    += take;
           remaining -= take;
         }
-      } else {
-        const posInBatch = i % AUCTION_ITEMS_PER_PAGE;
-        segments = [{ page: posInBatch + 1, startLocal: 1, endLocal: it.rate }];
       }
       const pageBadge = segments.map(s => {
         const itemsTxt = s.startLocal === s.endLocal ? `ชิ้น ${s.startLocal}` : `ชิ้น ${s.startLocal}-${s.endLocal}`;
