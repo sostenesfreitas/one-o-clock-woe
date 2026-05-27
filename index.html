@@ -2560,11 +2560,12 @@ let state = {
   // Bookkeeping for the auto-clear job. Strings are BKK dates so they're
   // stable across timezones / DST.
   system: { lastDailyReset: "", lastWeeklyReset: "" },
-  // Auction Request feature — per-date guest requests + admin queue.
-  //   auctionRequests["YYYY-MM-DD"]["gl"|"overrun"][requestId] = { ... }
-  // Mirrored to Firebase at /auction_requests. Always open for the next
-  // AR_MAX_DAYS_AHEAD days — no per-day enable flag.
-  auctionRequests: {}
+  auctionRequests: {},
+  // Admin list mirrored from Firebase /admins/. Keyed by the email with
+  // dots replaced by underscores (Firebase RTDB doesn't allow "." in keys).
+  // Anyone can read; only existing admins can write (per Database Rules),
+  // bootstrapped by the ADMIN_EMAILS hardcoded fallback below.
+  admins: {}
 };
 
 /* ---------- BKK timezone helpers (used by Leave page + auto-clear) ----- */
@@ -4371,11 +4372,22 @@ const syncState = {
   applyingRemote: false
 };
 
-// Admin = signed in with a Google account whose email is in ADMIN_EMAILS.
-// Guest = anonymous Firebase user (auto). Anyone else who signs in with a
-// non-admin Google account is still a guest (but with their email visible).
+// Encode an email so it can be used as a Firebase RTDB key. RTDB rejects
+// ".", "$", "#", "[", "]", "/". We only need to escape "." for emails.
+// Same transformation used by Database Rules — see the JSON in README.
+function emailToAdminKey(email) {
+  return (email || "").toLowerCase().replace(/\./g, "_");
+}
+
+// Admin = email/password account whose email is either in ADMIN_EMAILS
+// (hardcoded bootstrap) OR registered in /admins/ via the in-app
+// "Manage admins" UI. Guest = anonymous Firebase user (auto).
 function isAdmin() {
-  return !!(_fbUser && _fbUser.email && ADMIN_EMAILS.includes(_fbUser.email.toLowerCase()));
+  if (!_fbUser || !_fbUser.email) return false;
+  const email = _fbUser.email.toLowerCase();
+  if (ADMIN_EMAILS.includes(email)) return true;
+  const key = emailToAdminKey(email);
+  return !!(state.admins && state.admins[key] === true);
 }
 
 function loadPat() {
@@ -4500,7 +4512,13 @@ function applyViewerMode() {
 // Legacy Gist indicator → now just calls updateAuthUI (Firebase-based)
 function updateSyncUI() { updateAuthUI(); }
 
-/* ----- Login dialog (replaces Gist PAT dialog) ----- */
+/* ----- Login dialog (email + password) ------------------------ *
+ * Three states:
+ *   1. Admin   → shows account info + manage-admins panel + Sign Out
+ *   2. Logged in but NOT admin → account info + Sign Out
+ *   3. Guest (anonymous)       → email/password form
+ * The shared action button is hidden when the form is shown — the form
+ * has its own submit button. */
 function openSyncSettings() {
   const dlg = document.getElementById("syncDialog");
   if (!dlg) return;
@@ -4512,7 +4530,11 @@ function openSyncSettings() {
       <div style="color:var(--success);font-weight:700;margin-bottom:6px">🔓 Logged in as Admin</div>
       <div><b>${escapeHtml(_fbUser.email)}</b></div>
       <div style="color:var(--muted);font-size:12px;margin-top:8px">มีสิทธิ์แก้ไขทุกอย่าง รวมถึงเพิ่ม/ลบรายชื่อใน Roster.</div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+      <div style="font-weight:700;margin-bottom:6px">👥 จัดการ Admin</div>
+      ${buildAdminManagePanel()}
     `;
+    btn.style.display = "";
     btn.textContent = "🚪 Sign Out";
     btn.onclick = () => { signOutUser(); document.getElementById("syncDialog").close(); };
   } else if (_fbUser && !isAnon && _fbUser.email) {
@@ -4520,24 +4542,82 @@ function openSyncSettings() {
       <div style="color:var(--accent-2);font-weight:700;margin-bottom:6px">👤 Logged in (Not Admin)</div>
       <div><b>${escapeHtml(_fbUser.email)}</b></div>
       <div style="color:var(--muted);font-size:12px;margin-top:8px">บัญชีนี้ไม่ได้อยู่ใน admin list — กรอกได้เฉพาะ CP ใน Roster.</div>
-      <div style="color:var(--muted);font-size:11px;margin-top:6px">Admin emails: ${ADMIN_EMAILS.join(", ")}</div>
+      <div style="color:var(--muted);font-size:11px;margin-top:6px">ขอ admin คนเดิมเพิ่มอีเมลของคุณใน "จัดการ Admin"</div>
     `;
+    btn.style.display = "";
     btn.textContent = "🚪 Sign Out";
     btn.onclick = () => { signOutUser(); document.getElementById("syncDialog").close(); };
   } else {
     body.innerHTML = `
       <div style="color:var(--muted);font-weight:700;margin-bottom:6px">👁 Guest Mode</div>
-      <div style="font-size:13px;line-height:1.7">
+      <div style="font-size:13px;line-height:1.7;margin-bottom:10px">
         • ดูข้อมูลได้ทุกหน้า<br>
         • กรอก CP ของตัวเองได้ใน <b>📋 Roster</b><br>
-        • หน้าอื่นเป็น read-only<br>
-        • ถ้าเป็น Admin → กดปุ่ม "Sign in with Google" ด้านล่าง
+        • ขอประมูลได้ในแท็บ <b>🙋 ขอประมูล</b><br>
+        • เป็น Admin → ล็อกอินด้วย email + password ด้านล่าง
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="loginEmail" type="email" placeholder="email"
+          style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px" />
+        <input id="loginPassword" type="password" placeholder="password"
+          onkeydown="if(event.key==='Enter')handleLoginSubmit()"
+          style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px" />
+        <button onclick="handleLoginSubmit()"
+          style="background:linear-gradient(135deg,#a855f7,#ec4899);color:white;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:700">
+          🔐 เข้าสู่ระบบ
+        </button>
+        <div style="color:var(--muted);font-size:11px">
+          ⓘ บัญชีต้องสร้างใน Firebase Console → Authentication → Users ก่อน
+        </div>
       </div>
     `;
-    btn.textContent = "🔵 Sign in with Google";
-    btn.onclick = () => { signInWithGoogle(); document.getElementById("syncDialog").close(); };
+    btn.style.display = "none";  // form has its own submit button
+    btn.onclick = null;
+    // Focus the email input after dialog opens
+    setTimeout(() => {
+      const el = document.getElementById("loginEmail");
+      if (el) el.focus();
+    }, 50);
   }
   dlg.showModal();
+}
+
+async function handleLoginSubmit() {
+  const email = (document.getElementById("loginEmail") || {}).value || "";
+  const pw    = (document.getElementById("loginPassword") || {}).value || "";
+  if (!email || !pw) { toast("กรอก email + password", "error"); return; }
+  const ok = await signInWithEmail(email, pw);
+  if (ok) {
+    toast("✅ เข้าสู่ระบบสำเร็จ", "success");
+    document.getElementById("syncDialog").close();
+  }
+}
+
+function buildAdminManagePanel() {
+  const admins = state.admins || {};
+  const keys = Object.keys(admins).filter(k => admins[k] === true).sort();
+  const myKey = emailToAdminKey(_fbUser && _fbUser.email);
+  const rows = keys.length ? keys.map(k => {
+    const display = k.replace(/_/g, ".");  // best-effort reverse: emails only have dots, so this is safe
+    const isMe = k === myKey;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:12px">
+      <span style="flex:1">${escapeHtml(display)}${isMe ? ' <span style="color:var(--success)">(คุณ)</span>' : ''}</span>
+      ${isMe ? '' : `<button onclick="removeAdminEmail('${escapeHtml(k)}')" style="background:#450a0a;border:1px solid #b91c1c;color:#fca5a5;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">ลบ</button>`}
+    </div>`;
+  }).join("") : `<div style="color:var(--muted);font-size:12px;font-style:italic;margin-bottom:8px">— ยังไม่มีในตาราง /admins (ใช้ ADMIN_EMAILS fallback) —</div>`;
+  return `
+    ${rows}
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <input id="newAdminEmail" type="email" placeholder="email ของ admin คนใหม่"
+        onkeydown="if(event.key==='Enter'){addAdminEmail(this.value);this.value='';openSyncSettings();}"
+        style="flex:1;background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px" />
+      <button onclick="const el=document.getElementById('newAdminEmail');addAdminEmail(el.value).then(()=>{el.value='';openSyncSettings();})"
+        style="background:#6d28d9;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700">+ เพิ่ม</button>
+    </div>
+    <div style="color:var(--muted);font-size:11px;margin-top:6px">
+      ⓘ บัญชีต้องสร้างใน Firebase Console ก่อน เพิ่มที่นี่จะให้สิทธิ์ admin ทันที
+    </div>
+  `;
 }
 
 /* Legacy stubs (no-op) — kept so older calls don't crash */
@@ -4573,9 +4653,12 @@ const FIREBASE_CONFIG = {
   appId:             "1:992111979010:web:206138501fc4eb8a86d51b"
 };
 
-// Admin emails (hardcoded). Anyone else who signs in is treated as guest.
-// To add more admins: append to this array + redeploy, or use Firebase Console
-// to add /config/admins/{email-with-dots-as-underscores}: true at runtime.
+// Bootstrap admin fallback. The first admin in this list is treated as
+// admin even if /admins/ in Firebase is empty — that account creates all
+// the others via "Manage admins" in the login dialog (writes to
+// /admins/{email_with_dots_as_underscores}: true). Real-time updates
+// to /admins/ flow through state.admins, so changes go live without a
+// code change or redeploy.
 const ADMIN_EMAILS = [
   "blankkardor@gmail.com"
 ];
@@ -4824,6 +4907,21 @@ function fbSubscribeAll() {
     safeRender();
   });
 
+  // admins: email-keyed map of who has admin privileges. Read by isAdmin()
+  // alongside the hardcoded ADMIN_EMAILS fallback so the bootstrap account
+  // works even if /admins is empty.
+  _fbDB.ref("admins").on("value", snap => {
+    const v = snap.val() || {};
+    _fbApplyingRemote = true;
+    state.admins = v;
+    _fbApplyingRemote = false;
+    // Admin status may have changed — refresh the auth UI + viewer mode +
+    // active page render.
+    applyViewerMode();
+    updateAuthUI();
+    if (typeof render === "function") render();
+  });
+
   // auction_requests: per-date guest requests + admin queue. Lives entirely
   // in Firebase so multiple guests see updates instantly; we keep a local
   // mirror in state.auctionRequests for render.
@@ -4950,16 +5048,30 @@ function fbPushAll() {
   }
 }
 
-/* ---------- Google sign-in / sign-out ---------- */
-async function signInWithGoogle() {
-  if (!_fbAuth) { toast("Firebase ยังไม่พร้อม", "error"); return; }
-  const provider = new firebase.auth.GoogleAuthProvider();
+/* ---------- Email/password sign-in (admin) + sign-out ---------- *
+ * Accounts are provisioned in the Firebase Console (Authentication →
+ * Users → "Add user"). The app only signs IN; it does not create
+ * accounts. Promoting a new admin = the bootstrap admin enters their
+ * email in "Manage admins" and Firebase Rules accept future writes
+ * from that email.
+ */
+async function signInWithEmail(email, password) {
+  if (!_fbAuth) { toast("Firebase ยังไม่พร้อม", "error"); return false; }
   try {
-    await _fbAuth.signInWithPopup(provider);
-    // onAuthStateChanged will handle the rest
+    await _fbAuth.signInWithEmailAndPassword(email.trim(), password);
+    return true;
   } catch (e) {
-    if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return;
-    toast("Login ไม่สำเร็จ: " + (e.message || e.code), "error");
+    let msg = e.message || e.code || "Login failed";
+    if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential")
+      msg = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+    else if (e.code === "auth/user-not-found")
+      msg = "ไม่พบบัญชีนี้ — ต้องสร้างใน Firebase Console ก่อน";
+    else if (e.code === "auth/too-many-requests")
+      msg = "พยายามมากเกินไป รอสักครู่แล้วลองใหม่";
+    else if (e.code === "auth/network-request-failed")
+      msg = "เชื่อมต่อ Firebase ไม่ได้ — เช็คเน็ต";
+    toast("Login ไม่สำเร็จ: " + msg, "error");
+    return false;
   }
 }
 
@@ -4970,6 +5082,37 @@ async function signOutUser() {
     // onAuthStateChanged will sign in anonymously again
   } catch (e) {
     console.warn("[firebase] sign out failed", e);
+  }
+}
+
+/* ---------- Manage admins (admin-only) ---------- */
+async function addAdminEmail(rawEmail) {
+  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return; }
+  const email = (rawEmail || "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    toast("รูปแบบอีเมลไม่ถูกต้อง", "error"); return;
+  }
+  const key = emailToAdminKey(email);
+  try {
+    await _fbDB.ref(`admins/${key}`).set(true);
+    toast(`✅ เพิ่ม admin: ${email}`, "success");
+  } catch (e) {
+    toast(`เพิ่ม admin ไม่สำเร็จ: ${e.message}`, "error");
+    console.error("[admins] add failed", e);
+  }
+}
+
+async function removeAdminEmail(key) {
+  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return; }
+  const myKey = emailToAdminKey(_fbUser && _fbUser.email);
+  if (key === myKey) { toast("ลบตัวเองออกจาก admin ไม่ได้", "error"); return; }
+  if (!confirm(`ลบ admin "${key.replace(/_/g, '.')}" ?`)) return;
+  try {
+    await _fbDB.ref(`admins/${key}`).remove();
+    toast("✅ ลบ admin แล้ว", "success");
+  } catch (e) {
+    toast(`ลบ admin ไม่สำเร็จ: ${e.message}`, "error");
+    console.error("[admins] remove failed", e);
   }
 }
 
