@@ -5913,6 +5913,16 @@ function arSetClaimedMember(id) {
   render();
 }
 
+/** Has the member registered leave for the given date in /leaves/?
+ *  state.leaves[memberId][date] === true means "ลา". Members on leave
+ *  for the war day forfeit their auction request right.
+ */
+function arHasLeaveOnDate(memberId, date) {
+  if (!memberId || !date || !state.leaves) return false;
+  const bucket = state.leaves[memberId];
+  return !!(bucket && bucket[date]);
+}
+
 function arGetDateRange() {
   // Today plus next AR_MAX_DAYS_AHEAD days, BKK timezone
   const out = [];
@@ -5973,6 +5983,10 @@ function arCreateRequest({ date, mode, items, note }) {
   if (!memberId) { toast("กรุณาเลือกชื่อตัวเองก่อน", "error"); return; }
   const m = findMember(memberId);
   if (!m) { toast("ไม่พบสมาชิก", "error"); return; }
+  if (arHasLeaveOnDate(memberId, date)) {
+    toast(`คุณลงลาวันที่ ${date} ไว้แล้ว — ไม่มีสิทธิ์ขอประมูล (ถ้าเข้าได้ ยกเลิกลาก่อนในแท็บ "🌴 ลา")`, "error");
+    return;
+  }
   if (!Array.isArray(items) || items.length === 0) { toast("เลือกของอย่างน้อย 1 อย่าง", "error"); return; }
 
   // Block duplicate: same member + same date+mode + overlapping items
@@ -6145,6 +6159,10 @@ function arOpenRequestModal(date, mode) {
   const memberId = arGetClaimedMemberId();
   if (!memberId) { toast("กรุณาเลือกชื่อตัวเองก่อน", "error"); return; }
   if (!findMember(memberId)) { toast("ไม่พบสมาชิก — เลือกใหม่", "error"); return; }
+  if (arHasLeaveOnDate(memberId, date)) {
+    toast(`คุณลงลาวันที่ ${date} ไว้ — ไม่มีสิทธิ์ขอประมูล`, "error");
+    return;
+  }
   _arModalState = { date, mode, items: new Set(), note: "" };
   render();
 }
@@ -6248,11 +6266,17 @@ function buildAuctionRequestHtml() {
 
   // ---- Guest: request button + my list ----
   const myRequests = claimedId ? arGetMyRequests(claimedId).filter(r => r.date >= todayBkkISO()) : [];
+  const onLeave = claimedId && arHasLeaveOnDate(claimedId, date);
   const requestButtons = claimedId ? `
     <div class="ar-bulk-bar">
-      <button class="ar-request-btn" onclick="arOpenRequestModal('${date}','gl')">🙋 ขอประมูล GL วันที่ ${date}</button>
-      <button class="ar-request-btn" onclick="arOpenRequestModal('${date}','overrun')">🙋 ขอประมูล Overrun วันที่ ${date}</button>
+      <button class="ar-request-btn" ${onLeave ? "disabled" : ""}
+        title="${onLeave ? "คุณลงลาวันนี้ไว้ — ไม่มีสิทธิ์ขอประมูล" : ""}"
+        onclick="arOpenRequestModal('${date}','gl')">🙋 ขอประมูล GL วันที่ ${date}${onLeave ? " (🌴 ลา)" : ""}</button>
+      <button class="ar-request-btn" ${onLeave ? "disabled" : ""}
+        title="${onLeave ? "คุณลงลาวันนี้ไว้ — ไม่มีสิทธิ์ขอประมูล" : ""}"
+        onclick="arOpenRequestModal('${date}','overrun')">🙋 ขอประมูล Overrun วันที่ ${date}${onLeave ? " (🌴 ลา)" : ""}</button>
     </div>
+    ${onLeave ? `<div style="text-align:center;color:#fb923c;padding:10px;font-size:13px;background:rgba(249,115,22,0.1);border:1px solid #f97316;border-radius:6px;margin-top:8px">🌴 คุณลงลาวันที่ ${date} ไว้แล้ว — ไม่มีสิทธิ์ขอประมูลวันนี้ <br><span style="font-size:11px">ถ้าเข้าได้ ให้ยกเลิกลาก่อนในแท็บ "🌴 ลา"</span></div>` : ""}
   ` : "";
   const mySection = claimedId ? `
     <div class="ar-section">
@@ -6301,6 +6325,8 @@ function arRenderRow(r, asAdmin) {
   const fieldTag = r.computedField
     ? `<span class="ar-field-tag ${r.computedField === "sub" ? "sub" : ""}">${r.computedField === "sub" ? "สนามรอง" : "สนามหลัก"}</span>`
     : `<span class="ar-field-tag" style="background:#3f3f46;color:#a1a1aa">ยังไม่อยู่ในตี้</span>`;
+  const leaveTag = arHasLeaveOnDate(r.memberId, r.date)
+    ? `<span class="ar-field-tag" style="background:#7c2d12;color:#fdba74">🌴 ลา</span>` : "";
   const modeTag = `<span style="font-size:10px;color:var(--muted)">${r.mode === "gl" ? "GL" : "OR"} · ${r.date}</span>`;
   const statusTag = `<span class="ar-status-tag ${r.status}">${r.status === "pending" ? "รออนุมัติ" : r.status === "approved" ? "อนุมัติ" : "ปฏิเสธ"}</span>`;
   const noteRow = r.note ? `<div class="ar-note">"${escapeHtml(r.note)}"</div>` : "";
@@ -6321,6 +6347,7 @@ function arRenderRow(r, asAdmin) {
     <span class="ar-name">${escapeHtml(name)}</span>
     <span class="ar-job">${escapeHtml(job)}</span>
     ${fieldTag}
+    ${leaveTag}
     <span class="ar-items">${items}</span>
     ${modeTag}
     ${statusTag}
