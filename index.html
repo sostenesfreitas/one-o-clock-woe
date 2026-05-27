@@ -4829,6 +4829,31 @@ async function initFirebase() {
   }
 }
 
+/* ---------- Firebase array reconstruction helper ------------------- *
+ * Firebase RTDB stores arrays as objects under the hood. When the JSON
+ * is "dense enough" the SDK gives us a real Array back, but a sparse
+ * array (e.g. [null, null, null, null, "x"] — common when dropping a
+ * member into the last party slot while earlier ones are empty) comes
+ * back as a plain object {"4": "x"}. Array.isArray then says false and
+ * the existing listener falls back to "all nulls" — wiping the slot
+ * the user just filled. This helper accepts either shape and returns a
+ * regular fixed-length Array.
+ */
+function fbToFixedArray(v, len, fillValue) {
+  const out = Array(len).fill(fillValue);
+  if (Array.isArray(v)) {
+    for (let i = 0; i < Math.min(v.length, len); i++) {
+      if (v[i] !== undefined) out[i] = v[i];
+    }
+  } else if (v && typeof v === "object") {
+    Object.keys(v).forEach(k => {
+      const i = parseInt(k, 10);
+      if (!isNaN(i) && i >= 0 && i < len) out[i] = v[k];
+    });
+  }
+  return out;
+}
+
 /* ---------- Firebase subscriptions: realtime listeners on every path ----- */
 function fbSubscribeAll() {
   if (!_fbDB || _fbSubscribed) return;
@@ -4978,12 +5003,19 @@ function fbSubscribeAll() {
   // parties/league
   _fbDB.ref("parties/league").on("value", snap => {
     const v = snap.val();
-    if (!Array.isArray(v) || v.length !== PARTIES) return;
+    if (v == null) return;  // no data yet — don't wipe local state
+    const partiesRaw = fbToFixedArray(v, PARTIES, null);
     _fbApplyingRemote = true;
-    state.partiesLeague = v.map(p => ({
-      id: p.id, name: p.name || "",
-      slots: Array.isArray(p.slots) ? p.slots.slice(0, PARTY_SLOTS).concat(Array(PARTY_SLOTS).fill(null)).slice(0, PARTY_SLOTS) : Array(PARTY_SLOTS).fill(null)
-    }));
+    state.partiesLeague = partiesRaw.map((p, i) => {
+      // Empty slot in the parties array (Firebase dropped a leading
+      // entry) — synthesize a blank party so the index/id pairing
+      // stays stable.
+      if (!p) return { id: i + 1, name: "ตี้ " + (i + 1), slots: Array(PARTY_SLOTS).fill(null) };
+      return {
+        id: p.id || (i + 1), name: p.name || "",
+        slots: fbToFixedArray(p.slots, PARTY_SLOTS, null)
+      };
+    });
     if (state.mode === "league") state.parties = state.partiesLeague;
     _fbApplyingRemote = false;
     // Sanitize after applying — if anything was orphaned, push the cleaned
@@ -4997,12 +5029,16 @@ function fbSubscribeAll() {
   // parties/overrun
   _fbDB.ref("parties/overrun").on("value", snap => {
     const v = snap.val();
-    if (!Array.isArray(v) || v.length !== PARTIES) return;
+    if (v == null) return;  // no data yet — don't wipe local state
+    const partiesRaw = fbToFixedArray(v, PARTIES, null);
     _fbApplyingRemote = true;
-    state.partiesOverrun = v.map(p => ({
-      id: p.id, name: p.name || "",
-      slots: Array.isArray(p.slots) ? p.slots.slice(0, PARTY_SLOTS).concat(Array(PARTY_SLOTS).fill(null)).slice(0, PARTY_SLOTS) : Array(PARTY_SLOTS).fill(null)
-    }));
+    state.partiesOverrun = partiesRaw.map((p, i) => {
+      if (!p) return { id: i + 1, name: "ตี้ " + (i + 1), slots: Array(PARTY_SLOTS).fill(null) };
+      return {
+        id: p.id || (i + 1), name: p.name || "",
+        slots: fbToFixedArray(p.slots, PARTY_SLOTS, null)
+      };
+    });
     if (state.mode === "overrun") state.parties = state.partiesOverrun;
     _fbApplyingRemote = false;
     if (sanitizeSlots(state.partiesOverrun) && isAdmin()) {
