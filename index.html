@@ -147,6 +147,15 @@
   .mode-toggle.auction-request-active .seg-indicator {
     background: linear-gradient(90deg, #8b5cf6, #ec4899);
   }
+  .mode-toggle.users-active .seg-indicator {
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+  }
+  /* Admin-only chrome (Users tab, mobile dropdown option). Hidden by
+     default and only revealed when applyViewerMode() flags body
+     data-admin="true". */
+  .seg-admin, .user-option-admin { display: none; }
+  body[data-admin="true"] .seg-admin { display: inline-flex; }
+  body[data-admin="true"] .user-option-admin { display: list-item; }
 
   /* ===== Leave page ===== */
   .leave-view {
@@ -2782,15 +2791,10 @@ function updateModeToggleUI() {
   t.classList.toggle("auction-request-active", state.mode === "auction-request");
   t.classList.toggle("leave-active", state.mode === "leave");
   t.classList.toggle("users-active", state.mode === "users");
-  // Hide the Users tab from non-admins (only the bootstrap admin or any
-  // /admins entry should see it). Mobile <select> mirror gets the same.
-  const admin = isAdmin();
-  t.querySelectorAll(".seg-admin").forEach(el => { el.style.display = admin ? "" : "none"; });
-  const sel2 = document.getElementById("modeSelect");
-  if (sel2) {
-    const opt = sel2.querySelector(".user-option-admin");
-    if (opt) opt.style.display = admin ? "" : "none";
-  }
+  // Admin-only chrome (e.g., Users tab) is gated by CSS using
+  // body[data-admin="true"] — applyViewerMode() flips that attribute
+  // whenever auth changes, so this UI updates without us having to
+  // call updateModeToggleUI again from the auth listener.
   positionModeIndicator();
 }
 
@@ -4615,7 +4619,12 @@ function stopPolling() {
 }
 
 function applyViewerMode() {
-  document.body.classList.toggle("viewer-mode", !isAdmin());
+  const admin = isAdmin();
+  document.body.classList.toggle("viewer-mode", !admin);
+  // Drive admin-only chrome (Users tab, etc.) off a body attribute so
+  // CSS can react without us re-running updateModeToggleUI on every
+  // auth/state change.
+  document.body.dataset.admin = admin ? "true" : "false";
 }
 // Legacy Gist indicator → now just calls updateAuthUI (Firebase-based)
 function updateSyncUI() { updateAuthUI(); }
