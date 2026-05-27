@@ -4140,11 +4140,11 @@ function buildBfHtml(bfIdx) {
   }).join("");
   const totalInBf = range.reduce((s, idx) =>
     s + state.parties.find(p=>p.id===idx).slots.filter(Boolean).length, 0);
-  // Admin-only "Repair Slots" button on Main Battlefield header — clears any
-  // orphaned slot references that the auto-sanitize might have missed (e.g.
-  // due to a race condition).
-  const repairBtn = (bfIdx === 0 && typeof isAdmin === "function" && isAdmin())
-    ? `<button class="repair-slots-btn" onclick="window.repairGhostSlots && window.repairGhostSlots()" title="ลบช่องผี (ช่องที่ชี้ไปยังคนที่ถูกลบ)">🧹 ซ่อมช่องผี</button>`
+  // Admin-only "Repair Slots" button on every battlefield header so the
+  // admin can fix ghost slots from whichever card they happen to be
+  // looking at (Main or Sub) without scrolling up.
+  const repairBtn = (typeof isAdmin === "function" && isAdmin())
+    ? `<button class="repair-slots-btn" onclick="window.repairGhostSlots && window.repairGhostSlots()" title="ลบช่องผี (ช่องที่ชี้ไปยังคนที่ถูกลบ หรือชื่อ/อาชีพไม่ครบ)">🧹 ซ่อมช่องผี</button>`
     : "";
   return `
     <div class="bf ${bfIdx===1?'sub':''}">
@@ -4167,9 +4167,10 @@ function buildOverrunHtml() {
     }).join("");
     const total = g.ids.reduce((s, idx) =>
       s + state.parties.find(p=>p.id===idx).slots.filter(Boolean).length, 0);
-    // Admin repair button on first card only (Overrun page).
-    const repairBtn = (gi === 0 && typeof isAdmin === "function" && isAdmin())
-      ? `<button class="repair-slots-btn" onclick="window.repairGhostSlots && window.repairGhostSlots()" title="ลบช่องผี (ช่องที่ชี้ไปยังคนที่ถูกลบ)">🧹 ซ่อมช่องผี</button>`
+    // Admin repair button on every overrun card so it's reachable from
+    // any group, not just the first one.
+    const repairBtn = (typeof isAdmin === "function" && isAdmin())
+      ? `<button class="repair-slots-btn" onclick="window.repairGhostSlots && window.repairGhostSlots()" title="ลบช่องผี (ช่องที่ชี้ไปยังคนที่ถูกลบ หรือชื่อ/อาชีพไม่ครบ)">🧹 ซ่อมช่องผี</button>`
       : "";
     return `
       <div class="bg-card" style="--gc:${g.color}">
@@ -4926,14 +4927,37 @@ function fbSubscribeAll() {
   };
 
   // Force-clean ghost slots and push to Firebase (admin only).
+  // STRICT mode here — clears any slot whose member is "ghost" (missing
+  // name OR job), not just fully-blank. That's the slot that renders as
+  // Empty visually but still has an orphan id underneath, leaking a
+  // stray × icon into the row. Auto-sanitize stays looser to avoid
+  // accidentally wiping rows mid-edit; the manual button is admin-
+  // initiated so it's safe to go aggressive.
   window.repairGhostSlots = () => {
-    if (!isAdmin()) { console.warn("[repair] need admin to write"); return false; }
-    let changed = 0;
-    if (sanitizeSlots(state.partiesLeague))  { _fbDB.ref("parties/league").set(state.partiesLeague);   changed++; }
-    if (sanitizeSlots(state.partiesOverrun)) { _fbDB.ref("parties/overrun").set(state.partiesOverrun); changed++; }
-    console.log("[repair] cleaned", changed, "parties tree(s)");
+    if (!isAdmin()) { toast && toast("ต้องเป็น admin", "error"); return false; }
+    let cleared = 0, trees = 0;
+    const strictClean = (parties) => {
+      if (!Array.isArray(parties)) return false;
+      let touched = false;
+      parties.forEach(p => {
+        if (!p || !Array.isArray(p.slots)) return;
+        p.slots = p.slots.map(id => {
+          if (!id) return null;
+          if (isGhostMember(findMember(id))) { cleared++; touched = true; return null; }
+          return id;
+        });
+      });
+      return touched;
+    };
+    if (strictClean(state.partiesLeague))  { _fbDB.ref("parties/league").set(state.partiesLeague);   trees++; }
+    if (strictClean(state.partiesOverrun)) { _fbDB.ref("parties/overrun").set(state.partiesOverrun); trees++; }
+    console.log("[repair] cleaned", cleared, "slots across", trees, "tree(s)");
     if (typeof render === "function") render();
-    return changed > 0;
+    if (typeof toast === "function") {
+      if (cleared) toast(`🧹 ซ่อม ${cleared} ช่องผีแล้ว`, "success");
+      else         toast("ไม่พบช่องผีที่ต้องซ่อม", "");
+    }
+    return cleared > 0;
   };
 
   // parties/league
