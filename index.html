@@ -314,6 +314,98 @@
   body[data-mode="auction-request"] .hamburger-btn    { display: none; }
   body[data-mode="auction-request"] .sidebar-backdrop { display: none !important; }
 
+  body[data-mode="users"] .sidebar          { display: none; }
+  body[data-mode="users"] .layout           { grid-template-columns: 1fr !important; }
+  body[data-mode="users"] .hamburger-btn    { display: none; }
+  body[data-mode="users"] .sidebar-backdrop { display: none !important; }
+
+  /* ===== Users page (admin-only) ===== */
+  .users-view { display: flex; flex-direction: column; gap: 14px; max-width: 900px; }
+  .users-hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%);
+    border: 1px solid #3b82f6;
+    border-left: 4px solid #60a5fa;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .users-hero h2 { margin: 0; color: #93c5fd; font-size: 18px; }
+  .users-hero .users-meta { color: var(--muted); font-size: 13px; }
+  .users-section {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px;
+  }
+  .users-section h3 { margin: 0 0 12px 0; font-size: 14px; color: var(--text); }
+  .users-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
+  .users-form label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .users-form input {
+    background: var(--bg-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; width: 100%;
+    font-family: monospace;
+  }
+  .users-form input:focus { border-color: #60a5fa; outline: none; }
+  .users-form .pw-row { display: flex; gap: 6px; }
+  .users-form .pw-row input { flex: 1; }
+  .users-form .pw-row .gen-btn {
+    background: var(--bg-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12px;
+    white-space: nowrap;
+  }
+  .users-form .gen-btn:hover { border-color: #60a5fa; }
+  .users-form .create-btn {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white; border: none; border-radius: 6px;
+    padding: 10px 18px; font-size: 13px; font-weight: 700;
+    cursor: pointer; height: 100%;
+  }
+  .users-form .create-btn:hover { box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
+  @media (max-width: 700px) {
+    .users-form { grid-template-columns: 1fr; }
+  }
+
+  .users-credential-box {
+    background: #052e16; border: 1px solid #10b981;
+    border-radius: 6px; padding: 10px 14px; margin-top: 10px;
+    font-family: monospace; font-size: 13px;
+  }
+  .users-credential-box b { color: #6ee7b7; }
+  .users-credential-box .row {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 4px 0;
+  }
+  .users-credential-box .copy-btn {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 11px;
+  }
+  .users-credential-box .warn {
+    color: #fbbf24; font-size: 11px; margin-top: 6px;
+  }
+
+  .users-list { display: flex; flex-direction: column; gap: 6px; }
+  .users-row {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .users-row .u-name {
+    font-family: monospace; font-weight: 700; font-size: 14px; color: #93c5fd;
+    min-width: 120px;
+  }
+  .users-row .u-meta { color: var(--muted); font-size: 11px; }
+  .users-row .u-badge {
+    background: rgba(59,130,246,0.18); color: #93c5fd;
+    border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700;
+  }
+  .users-row .u-del {
+    margin-left: auto;
+    background: #450a0a; color: #fca5a5; border: 1px solid #b91c1c;
+    border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 11px;
+  }
+  .users-empty {
+    text-align: center; color: var(--muted); padding: 20px; font-size: 13px;
+  }
+
   /* ===== Auction Request page ===== */
   .ar-view { display: flex; flex-direction: column; gap: 14px; }
   .ar-hero {
@@ -2395,7 +2487,7 @@
 <header>
   <button id="hamburgerBtn" class="hamburger-btn" onclick="toggleSidebar()" aria-label="เปิดเมนูรายชื่อ" title="รายชื่อสมาชิก">☰</button>
   <div class="brand">⚔️ ROO Party</div>
-  <div class="mode-toggle cols-7" id="modeToggle">
+  <div class="mode-toggle cols-8" id="modeToggle">
     <button class="seg active" data-mode="league" onclick="switchMode('league')">⚔️ League</button>
     <button class="seg" data-mode="overrun" onclick="switchMode('overrun')">🏆 Overrun</button>
     <button class="seg" data-mode="roster" onclick="switchMode('roster')">📋 Roster</button>
@@ -2403,6 +2495,7 @@
     <button class="seg" data-mode="auction-overrun" onclick="switchMode('auction-overrun')">🎴 Auction Overrun</button>
     <button class="seg" data-mode="auction-request" onclick="switchMode('auction-request')">🙋 ขอประมูล</button>
     <button class="seg" data-mode="leave" onclick="switchMode('leave')">🌴 ลา</button>
+    <button class="seg seg-admin" data-mode="users" onclick="switchMode('users')">👥 Users</button>
     <span class="seg-indicator"></span>
   </div>
   <select class="mode-select" id="modeSelect" onchange="switchMode(this.value)">
@@ -2413,6 +2506,7 @@
     <option value="auction-overrun">🎴 Auction Overrun</option>
     <option value="auction-request">🙋 ขอประมูล</option>
     <option value="leave">🌴 ลา</option>
+    <option value="users" class="user-option-admin">👥 Users</option>
   </select>
   <span class="status" id="statusInfo">Loading…</span>
   <div class="spacer"></div>
@@ -2565,7 +2659,11 @@ let state = {
   // dots replaced by underscores (Firebase RTDB doesn't allow "." in keys).
   // Anyone can read; only existing admins can write (per Database Rules),
   // bootstrapped by the ADMIN_EMAILS hardcoded fallback below.
-  admins: {}
+  admins: {},
+  // App-created user accounts (admin-created via the Users page). Each
+  // entry is { username, email, createdAt, createdBy }. Firebase Auth
+  // holds the credential; this map is the admin-facing "who exists" list.
+  users: {}
 };
 
 /* ---------- BKK timezone helpers (used by Leave page + auto-clear) ----- */
@@ -2683,6 +2781,16 @@ function updateModeToggleUI() {
   t.classList.toggle("auction-overrun-active", state.mode === "auction-overrun");
   t.classList.toggle("auction-request-active", state.mode === "auction-request");
   t.classList.toggle("leave-active", state.mode === "leave");
+  t.classList.toggle("users-active", state.mode === "users");
+  // Hide the Users tab from non-admins (only the bootstrap admin or any
+  // /admins entry should see it). Mobile <select> mirror gets the same.
+  const admin = isAdmin();
+  t.querySelectorAll(".seg-admin").forEach(el => { el.style.display = admin ? "" : "none"; });
+  const sel2 = document.getElementById("modeSelect");
+  if (sel2) {
+    const opt = sel2.querySelector(".user-option-admin");
+    if (opt) opt.style.display = admin ? "" : "none";
+  }
   positionModeIndicator();
 }
 
@@ -4553,29 +4661,37 @@ function openSyncSettings() {
       <div style="font-size:13px;line-height:1.7;margin-bottom:10px">
         • ดูข้อมูลได้ทุกหน้า<br>
         • กรอก CP ของตัวเองได้ใน <b>📋 Roster</b><br>
-        • ขอประมูลได้ในแท็บ <b>🙋 ขอประมูล</b><br>
-        • เป็น Admin → ล็อกอินด้วย email + password ด้านล่าง
+        • ขอประมูลได้ในแท็บ <b>🙋 ขอประมูล</b>
       </div>
+
+      <button onclick="signInWithGoogle().then(ok=>{if(ok)document.getElementById('syncDialog').close()})"
+        style="width:100%;background:#fff;color:#0d1117;border:1px solid var(--border-2);border-radius:6px;padding:10px 14px;cursor:pointer;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-size:14px">🔵</span> Sign in with Google (admin หลัก)
+      </button>
+
+      <div style="display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:11px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span>หรือ ใช้ ID + Password ที่ admin สร้างให้</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
       <div style="display:flex;flex-direction:column;gap:8px">
-        <input id="loginEmail" type="email" placeholder="email"
-          style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px" />
+        <input id="loginUsername" type="text" placeholder="ID (เช่น johnny)"
+          autocapitalize="off" autocorrect="off" spellcheck="false"
+          style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;font-family:monospace" />
         <input id="loginPassword" type="password" placeholder="password"
           onkeydown="if(event.key==='Enter')handleLoginSubmit()"
-          style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px" />
+          style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;font-family:monospace" />
         <button onclick="handleLoginSubmit()"
-          style="background:linear-gradient(135deg,#a855f7,#ec4899);color:white;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:700">
-          🔐 เข้าสู่ระบบ
+          style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:700">
+          🔐 เข้าสู่ระบบด้วย ID
         </button>
-        <div style="color:var(--muted);font-size:11px">
-          ⓘ บัญชีต้องสร้างใน Firebase Console → Authentication → Users ก่อน
-        </div>
       </div>
     `;
     btn.style.display = "none";  // form has its own submit button
     btn.onclick = null;
-    // Focus the email input after dialog opens
     setTimeout(() => {
-      const el = document.getElementById("loginEmail");
+      const el = document.getElementById("loginUsername");
       if (el) el.focus();
     }, 50);
   }
@@ -4583,10 +4699,10 @@ function openSyncSettings() {
 }
 
 async function handleLoginSubmit() {
-  const email = (document.getElementById("loginEmail") || {}).value || "";
-  const pw    = (document.getElementById("loginPassword") || {}).value || "";
-  if (!email || !pw) { toast("กรอก email + password", "error"); return; }
-  const ok = await signInWithEmail(email, pw);
+  const username = (document.getElementById("loginUsername") || {}).value || "";
+  const pw       = (document.getElementById("loginPassword") || {}).value || "";
+  if (!username || !pw) { toast("กรอก ID + password", "error"); return; }
+  const ok = await signInWithUsername(username, pw);
   if (ok) {
     toast("✅ เข้าสู่ระบบสำเร็จ", "success");
     document.getElementById("syncDialog").close();
@@ -4922,6 +5038,16 @@ function fbSubscribeAll() {
     if (typeof render === "function") render();
   });
 
+  // users: admin-managed list of app-created accounts (one entry per
+  // username). Powers the Users page admin UI.
+  _fbDB.ref("users").on("value", snap => {
+    const v = snap.val() || {};
+    _fbApplyingRemote = true;
+    state.users = v;
+    _fbApplyingRemote = false;
+    if (typeof render === "function" && state.mode === "users") render();
+  });
+
   // auction_requests: per-date guest requests + admin queue. Lives entirely
   // in Firebase so multiple guests see updates instantly; we keep a local
   // mirror in state.auctionRequests for render.
@@ -5048,13 +5174,38 @@ function fbPushAll() {
   }
 }
 
-/* ---------- Email/password sign-in (admin) + sign-out ---------- *
- * Accounts are provisioned in the Firebase Console (Authentication →
- * Users → "Add user"). The app only signs IN; it does not create
- * accounts. Promoting a new admin = the bootstrap admin enters their
- * email in "Manage admins" and Firebase Rules accept future writes
- * from that email.
+/* ---------- Auth: Google (bootstrap admin) + Email/Password (app users) -- *
+ * Two ways in:
+ *   1. Google sign-in popup — for the bootstrap admin (blankkardor@gmail.com).
+ *      This account is the source of /admins truth.
+ *   2. Email/password — for accounts the admin creates via the "Users"
+ *      page. Usernames map to synthetic emails (username@USER_DOMAIN)
+ *      under the hood so we can reuse Firebase Auth.
  */
+const USER_DOMAIN = "woe.local";  // synthetic email suffix for ID/password logins
+
+function usernameToEmail(u) {
+  return (u || "").trim().toLowerCase() + "@" + USER_DOMAIN;
+}
+function emailToUsername(email) {
+  const suffix = "@" + USER_DOMAIN;
+  if (typeof email !== "string" || !email.endsWith(suffix)) return null;
+  return email.slice(0, -suffix.length);
+}
+
+async function signInWithGoogle() {
+  if (!_fbAuth) { toast("Firebase ยังไม่พร้อม", "error"); return false; }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await _fbAuth.signInWithPopup(provider);
+    return true;
+  } catch (e) {
+    if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return false;
+    toast("Login ไม่สำเร็จ: " + (e.message || e.code), "error");
+    return false;
+  }
+}
+
 async function signInWithEmail(email, password) {
   if (!_fbAuth) { toast("Firebase ยังไม่พร้อม", "error"); return false; }
   try {
@@ -5063,9 +5214,9 @@ async function signInWithEmail(email, password) {
   } catch (e) {
     let msg = e.message || e.code || "Login failed";
     if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential")
-      msg = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+      msg = "ID หรือรหัสผ่านไม่ถูกต้อง";
     else if (e.code === "auth/user-not-found")
-      msg = "ไม่พบบัญชีนี้ — ต้องสร้างใน Firebase Console ก่อน";
+      msg = "ไม่พบบัญชีนี้ — แจ้ง admin สร้างบัญชีให้";
     else if (e.code === "auth/too-many-requests")
       msg = "พยายามมากเกินไป รอสักครู่แล้วลองใหม่";
     else if (e.code === "auth/network-request-failed")
@@ -5075,6 +5226,10 @@ async function signInWithEmail(email, password) {
   }
 }
 
+async function signInWithUsername(username, password) {
+  return signInWithEmail(usernameToEmail(username), password);
+}
+
 async function signOutUser() {
   if (!_fbAuth) return;
   try {
@@ -5082,6 +5237,91 @@ async function signOutUser() {
     // onAuthStateChanged will sign in anonymously again
   } catch (e) {
     console.warn("[firebase] sign out failed", e);
+  }
+}
+
+/* ---------- App user management (admin creates accounts) -----------
+ * Firebase client SDK's createUserWithEmailAndPassword signs IN as the
+ * new user, which would log the admin out. We sidestep this by spinning
+ * up a SECONDARY Firebase app + auth instance just for user creation —
+ * its signInState is independent of the main app, so the admin stays
+ * signed in.
+ */
+let _fbSecondary = null;
+function getSecondaryAuth() {
+  if (_fbSecondary) return _fbSecondary;
+  try {
+    const app = firebase.initializeApp(FIREBASE_CONFIG, "Secondary");
+    _fbSecondary = app.auth();
+  } catch (e) {
+    // initializeApp throws if "Secondary" already exists (HMR / re-init)
+    _fbSecondary = firebase.app("Secondary").auth();
+  }
+  return _fbSecondary;
+}
+
+function genRandomPassword(len = 10) {
+  // Alphanumeric only — easy to read out loud / send via chat.
+  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let out = "";
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < len; i++) out += charset[arr[i] % charset.length];
+  return out;
+}
+
+async function createAppUser(username, password) {
+  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return null; }
+  username = (username || "").trim().toLowerCase();
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+    toast("ID ใช้ a-z, 0-9, _ ความยาว 3-20 ตัว", "error"); return null;
+  }
+  if (!password || password.length < 6) {
+    toast("รหัสผ่านต้องอย่างน้อย 6 ตัว", "error"); return null;
+  }
+  const email = usernameToEmail(username);
+  const secAuth = getSecondaryAuth();
+  try {
+    const cred = await secAuth.createUserWithEmailAndPassword(email, password);
+    // Mirror in /users for the admin-facing list (Firebase Auth has no
+    // client-side "list users" API). Also flag as admin in /admins so the
+    // new account gets full privileges.
+    const adminKey = emailToAdminKey(email);
+    const myEmail = (_fbUser && _fbUser.email) || "system";
+    await _fbDB.ref(`users/${username}`).set({
+      username,
+      email,
+      createdAt: Date.now(),
+      createdBy: myEmail
+    });
+    await _fbDB.ref(`admins/${adminKey}`).set(true);
+    await secAuth.signOut();  // don't leave the secondary holding the new user's session
+    toast(`✅ สร้าง user "${username}" สำเร็จ`, "success");
+    return { username, password };
+  } catch (e) {
+    let msg = e.message || e.code || "create failed";
+    if (e.code === "auth/email-already-in-use")
+      msg = `ID "${username}" มีอยู่แล้ว`;
+    else if (e.code === "auth/weak-password")
+      msg = "รหัสผ่านอ่อนเกินไป";
+    toast("สร้าง user ไม่สำเร็จ: " + msg, "error");
+    console.error("[users] create failed", e);
+    return null;
+  }
+}
+
+async function deleteAppUser(username) {
+  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return; }
+  if (!confirm(`ลบ user "${username}" ?\n\n(Firebase Auth account ต้องลบเองที่ Firebase Console — หน้านี้แค่ revoke admin role + ลบจากตาราง)`)) return;
+  const email = usernameToEmail(username);
+  const adminKey = emailToAdminKey(email);
+  try {
+    await _fbDB.ref(`users/${username}`).remove();
+    await _fbDB.ref(`admins/${adminKey}`).remove();
+    toast(`✅ ลบ user "${username}" — โปรดลบใน Firebase Auth ด้วย`, "success");
+  } catch (e) {
+    toast("ลบไม่สำเร็จ: " + e.message, "error");
+    console.error("[users] delete failed", e);
   }
 }
 
@@ -6590,6 +6830,141 @@ function arBuildModal() {
 }
 
 /* =====================================================================
+ * Users page (admin-only) — create / list / delete app login accounts
+ * ===================================================================== *
+ * Admin types a username + password (or hits "🎲 สุ่ม" for an auto-
+ * generated one), and createAppUser() spins up a secondary Firebase
+ * Auth instance to register the account without disturbing the admin
+ * session. The resulting credentials are surfaced in a copy-friendly
+ * box so the admin can pass them to the new user out of band.
+ */
+
+// Local-only state — tracks the most recently created credential so it
+// can be displayed once. Cleared on tab switch / re-render.
+let _lastCreatedUser = null;
+
+async function handleCreateUser() {
+  const uEl = document.getElementById("newUserId");
+  const pEl = document.getElementById("newUserPw");
+  const username = (uEl && uEl.value) || "";
+  const password = (pEl && pEl.value) || "";
+  const result = await createAppUser(username, password);
+  if (result) {
+    _lastCreatedUser = result;
+    if (uEl) uEl.value = "";
+    if (pEl) pEl.value = "";
+    render();
+  }
+}
+
+function genUserPwIntoInput() {
+  const el = document.getElementById("newUserPw");
+  if (!el) return;
+  el.type = "text";  // reveal so admin can copy
+  el.value = genRandomPassword(10);
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("📋 คัดลอกแล้ว", "success");
+  } catch (e) {
+    toast("คัดลอกไม่สำเร็จ — copy เอง", "error");
+  }
+}
+
+function dismissLastCredential() {
+  _lastCreatedUser = null;
+  render();
+}
+
+function buildUsersHtml() {
+  if (!isAdmin()) {
+    return `<div class="users-view">
+      <div class="users-hero">
+        <h2>👥 Users</h2>
+        <div class="users-meta">หน้านี้สำหรับ admin เท่านั้น</div>
+      </div>
+      <div class="users-section">
+        <div class="users-empty">🔒 ต้อง login เป็น admin ก่อน</div>
+      </div>
+    </div>`;
+  }
+
+  const users = state.users || {};
+  const list = Object.values(users).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  const lastBox = _lastCreatedUser ? `
+    <div class="users-credential-box">
+      <div style="font-weight:700;color:#6ee7b7;margin-bottom:6px">✅ สร้าง user สำเร็จ — ส่ง credentials นี้ให้ user</div>
+      <div class="row">
+        <span>ID:</span>
+        <b>${escapeHtml(_lastCreatedUser.username)}</b>
+        <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(_lastCreatedUser.username)}')">📋 copy</button>
+      </div>
+      <div class="row">
+        <span>Password:</span>
+        <b>${escapeHtml(_lastCreatedUser.password)}</b>
+        <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(_lastCreatedUser.password)}')">📋 copy</button>
+      </div>
+      <div class="row">
+        <button class="copy-btn" onclick="copyToClipboard('ID: ${escapeHtml(_lastCreatedUser.username)}\\nPassword: ${escapeHtml(_lastCreatedUser.password)}')">📋 copy ทั้งคู่</button>
+        <div style="flex:1"></div>
+        <button class="copy-btn" onclick="dismissLastCredential()">✕ ปิด</button>
+      </div>
+      <div class="warn">⚠️ จะแสดงครั้งเดียว — เก็บไว้ก่อนปิดหน้า / refresh</div>
+    </div>
+  ` : "";
+
+  const rows = list.length ? list.map(u => {
+    const dt = u.createdAt ? new Date(u.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" }) : "";
+    return `<div class="users-row">
+      <span class="u-name">${escapeHtml(u.username || "?")}</span>
+      <span class="u-badge">admin</span>
+      <span class="u-meta">สร้างเมื่อ ${escapeHtml(dt)} โดย ${escapeHtml(u.createdBy || "?")}</span>
+      <button class="u-del" onclick="deleteAppUser('${escapeHtml(u.username)}')">🗑 ลบ</button>
+    </div>`;
+  }).join("") : `<div class="users-empty">— ยังไม่มี user — สร้างคนแรกได้เลย —</div>`;
+
+  return `<div class="users-view">
+    <div class="users-hero">
+      <div>
+        <h2>👥 Users · จัดการบัญชี Login</h2>
+        <div class="users-meta">สร้าง ID + Password ให้สมาชิกล็อกอินเป็น admin — ไม่ต้องเปิด Firebase Console</div>
+      </div>
+    </div>
+
+    <div class="users-section">
+      <h3>➕ สร้าง User ใหม่</h3>
+      <div class="users-form">
+        <div>
+          <label>ID (a-z, 0-9, _ · 3-20 ตัว)</label>
+          <input id="newUserId" type="text" placeholder="เช่น johnny" maxlength="20"
+            autocapitalize="off" autocorrect="off" spellcheck="false" />
+        </div>
+        <div>
+          <label>Password (อย่างน้อย 6 ตัว)</label>
+          <div class="pw-row">
+            <input id="newUserPw" type="password" placeholder="หรือกดสุ่ม →" />
+            <button class="gen-btn" onclick="genUserPwIntoInput()" title="สุ่มรหัสผ่าน 10 ตัว">🎲 สุ่ม</button>
+          </div>
+        </div>
+        <button class="create-btn" onclick="handleCreateUser()">➕ สร้าง</button>
+      </div>
+      ${lastBox}
+    </div>
+
+    <div class="users-section">
+      <h3>📋 รายชื่อ User (${list.length})</h3>
+      <div class="users-list">${rows}</div>
+      <div style="margin-top:10px;color:var(--muted);font-size:11px;line-height:1.6">
+        ⓘ ปุ่ม "ลบ" จะเอาออกจาก /users + /admins (ทำให้ login มาก็ไม่มีสิทธิ์ admin แล้ว) แต่ Firebase Auth account ยังอยู่ — ถ้าต้องการลบจริงต้องเข้า Firebase Console → Authentication → Users
+      </div>
+    </div>
+  </div>`;
+}
+
+/* =====================================================================
  * Leave page (ลา)
  * =====================================================================
  * Anyone (guest + admin) can register leave for any roster member on any
@@ -7052,6 +7427,8 @@ function renderBattlefields() {
     center.innerHTML = buildLeaveHtml();
   } else if (state.mode === "auction-request") {
     center.innerHTML = buildAuctionRequestHtml();
+  } else if (state.mode === "users") {
+    center.innerHTML = buildUsersHtml();
   } else {
     center.innerHTML =
       buildBfHtml(0) +
@@ -7182,7 +7559,7 @@ delete state.partiesDimension;
 delete state.dimensionNames;
 // Legacy modes redirect to league
 if (state.mode === "dimension" || state.mode === "glsummary") state.mode = "league";
-if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun" || state.mode === "roster" || state.mode === "auction-request") {
+if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun" || state.mode === "roster" || state.mode === "auction-request" || state.mode === "users") {
   state.parties = state.partiesLeague;
 } else {
   state.parties = state.mode === "overrun" ? state.partiesOverrun : state.partiesLeague;
