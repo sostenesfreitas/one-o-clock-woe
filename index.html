@@ -4570,14 +4570,22 @@ function sortPartyByJob(partyId) {
 let _auctionSearch = "";
 function auctionSearchInput(v) {
   _auctionSearch = (v || "").trim().toLowerCase();
+  // Remember the user's current scroll position so the re-render doesn't
+  // jump them back to the top of the page (browsers auto-scroll a focused
+  // element into view, and renderBattlefields rebuilds the entire #center
+  // innerHTML which makes that auto-scroll fire). preventScroll on focus
+  // is the canonical fix; scrollTo restores any drift that still happened.
+  const scrollX = window.scrollX, scrollY = window.scrollY;
   if (typeof renderBattlefields === "function") renderBattlefields();
-  // Restore focus on the input after re-render
+  // Restore focus on the input after re-render, without scrolling it into view
   setTimeout(() => {
     const el = document.querySelector(".auction-search-input");
     if (el) {
-      el.focus();
+      try { el.focus({ preventScroll: true }); } catch(e) { el.focus(); }
       try { el.setSelectionRange(el.value.length, el.value.length); } catch(e){}
     }
+    // Belt-and-suspenders for browsers that ignore preventScroll
+    window.scrollTo(scrollX, scrollY);
   }, 0);
 }
 
@@ -6277,24 +6285,29 @@ function setAuctionField(kind, field, value) {
     state.auctionOverrun[field] = n;
   }
   save();
-  // Preserve focus + cursor across re-render so user can keep typing.
+  // Preserve focus + cursor + scroll across re-render so the user can keep
+  // typing without the page jumping. preventScroll on focus is the canonical
+  // fix; window.scrollTo is the belt-and-suspenders for browsers that
+  // ignore the hint.
   let cursorPos = null;
   const focused = document.activeElement;
   if (focused && focused.tagName === "INPUT") {
     try { cursorPos = focused.selectionStart; } catch (e) {}
   }
+  const scrollX = window.scrollX, scrollY = window.scrollY;
   renderBattlefields();
   const newInput = document.querySelector(
     `input[data-auction-kind="${kind}"][data-auction-field="${field}"]`
   );
   if (newInput) {
-    newInput.focus();
+    try { newInput.focus({ preventScroll: true }); } catch (e) { newInput.focus(); }
     // Cursor: keep where the user had it if known; otherwise park at end
     // (typing happens at end). Never default to position 0 — that's the bug
     // the user reported ("เด้งมาข้างหน้า").
     const pos = (cursorPos != null) ? Math.min(cursorPos, newInput.value.length) : newInput.value.length;
     try { newInput.setSelectionRange(pos, pos); } catch (e) {}
   }
+  window.scrollTo(scrollX, scrollY);
 }
 
 function setAuctionPercent(kind, value) {
