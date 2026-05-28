@@ -676,6 +676,15 @@
     font-weight: 600;
     border-bottom: 1px solid var(--border);
   }
+  .roster-table th.r-th-sort {
+    cursor: pointer;
+    user-select: none;
+    transition: color .12s, background .12s;
+  }
+  .roster-table th.r-th-sort:hover {
+    color: var(--text);
+    background: var(--bg-2);
+  }
   .roster-table th .badge {
     margin-left: 6px;
     background: rgba(248,81,73,0.15);
@@ -5627,12 +5636,47 @@ async function rosterDedupe(silent) {
 }
 
 /* ----- Roster page render ----- */
-let _rosterSearch = "";
+let _rosterSearch  = "";
+let _rosterSortKey = "name";   // "name" | "job" | "discord" | "discordName" | "cp"
+let _rosterSortDir = "asc";    // "asc" | "desc"
+
 function rosterSearchInput(v) {
   _rosterSearch = (v || "").trim().toLowerCase();
   // Re-render only the table body to keep input focus
   const tbody = document.querySelector(".roster-table tbody");
   if (tbody) tbody.innerHTML = buildRosterRowsHtml();
+}
+
+/** Click a header → sort by that column. Click again on the same column
+ *  flips direction. Re-renders the whole Roster so the header arrow
+ *  indicator updates too. */
+function rosterSort(key) {
+  if (_rosterSortKey === key) {
+    _rosterSortDir = _rosterSortDir === "asc" ? "desc" : "asc";
+  } else {
+    _rosterSortKey = key;
+    // Numeric columns default to descending (highest CP first feels natural);
+    // string columns default to ascending (alphabetical).
+    _rosterSortDir = (key === "cp") ? "desc" : "asc";
+  }
+  if (typeof render === "function") render();
+}
+
+function rosterSortArrow(key) {
+  if (_rosterSortKey !== key) return ' <span style="opacity:0.3">↕</span>';
+  return _rosterSortDir === "asc" ? ' <span style="color:#fbbf24">▲</span>' : ' <span style="color:#fbbf24">▼</span>';
+}
+
+function rosterApplySort(list) {
+  const key = _rosterSortKey;
+  const dir = _rosterSortDir === "asc" ? 1 : -1;
+  const sorted = list.slice();
+  if (key === "cp") {
+    sorted.sort((a, b) => ((a.cp || 0) - (b.cp || 0)) * dir);
+  } else {
+    sorted.sort((a, b) => (a[key] || "").localeCompare(b[key] || "", "th") * dir);
+  }
+  return sorted;
 }
 
 function buildRosterRowsHtml() {
@@ -5646,15 +5690,15 @@ function buildRosterRowsHtml() {
         (m.discordName || "").toLowerCase().includes(search));
   if (!filtered.length) {
     if (!rosterCache.length) {
-      return `<tr><td colspan="6" class="roster-empty">
+      return `<tr><td colspan="7" class="roster-empty">
         ยังไม่มีสมาชิกใน Roster<br>
         ${admin ? '<b>Admin:</b> กด <b>➕ เพิ่มสมาชิก</b> หรือ <b>📥 Import จาก Sheet</b>'
                 : 'รอ Admin เพิ่มสมาชิก'}
       </td></tr>`;
     }
-    return `<tr><td colspan="6" class="roster-empty">ไม่พบ "${escapeHtml(search)}"</td></tr>`;
+    return `<tr><td colspan="7" class="roster-empty">ไม่พบ "${escapeHtml(search)}"</td></tr>`;
   }
-  return filtered.map((m, i) => `
+  return rosterApplySort(filtered).map((m, i) => `
     <tr data-id="${m.id}">
       <td class="r-rk">${i + 1}</td>
       <td data-label="ชื่อ">${admin
@@ -5799,11 +5843,11 @@ function buildRosterHtml() {
           <thead>
             <tr>
               <th style="width:36px">#</th>
-              <th>ชื่อ${!admin ? '<span class="badge">admin only</span>' : ""}</th>
-              <th>Job${!admin ? '<span class="badge">admin only</span>' : ""}</th>
-              <th>Discord${!admin ? '<span class="badge">admin only</span>' : ""}</th>
-              <th>Discord Name${!admin ? '<span class="badge">admin only</span>' : ""}</th>
-              <th style="width:140px;text-align:right">CP</th>
+              <th class="r-th-sort" onclick="rosterSort('name')">ชื่อ${rosterSortArrow("name")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th class="r-th-sort" onclick="rosterSort('job')">Job${rosterSortArrow("job")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th class="r-th-sort" onclick="rosterSort('discord')">Discord${rosterSortArrow("discord")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th class="r-th-sort" onclick="rosterSort('discordName')">Discord Name${rosterSortArrow("discordName")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th class="r-th-sort" style="width:140px;text-align:right" onclick="rosterSort('cp')">CP${rosterSortArrow("cp")}</th>
               <th style="width:50px"></th>
             </tr>
           </thead>
