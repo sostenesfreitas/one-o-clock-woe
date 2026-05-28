@@ -756,7 +756,7 @@
   }
   .roster-table .r-cell-static.r-job { color: var(--accent); font-weight: 600; }
   .roster-table .r-cell-static.r-discord { color: #a78bfa; font-family: monospace; font-size: 12px; }
-  .roster-table .r-cell-static.r-discord-name { color: #fbbf24; font-size: 12px; }
+  .roster-table .r-cell-static.r-discord-id { color: #fbbf24; font-size: 12px; }
   .roster-table button.r-del {
     background: transparent;
     border: 1px solid var(--border);
@@ -3074,19 +3074,20 @@ function extractMembersFromRows(rows) {
   const seen = new Set();
   for (const r of rows) {
     if (!r || r.length < 5) continue;
-    const name    = (r[2]  || "").trim();   // col C — Guild Member
-    const job     = (r[4]  || "").trim();   // col E — Job
-    const discord = (r[5]  || "").trim();   // col F — Discord username
+    const name      = (r[2]  || "").trim();   // col C — Guild Member
+    const job       = (r[4]  || "").trim();   // col E — Job
+    const discord   = (r[5]  || "").trim();   // col F — Discord username
+    const discordId = (r[12] || "").trim();   // col M — Discord ID
     if (!name || !job) continue;
     if (name === "Guild Member" || name.toLowerCase() === "name") continue;
     if (name === "#N/A" || job === "#N/A") continue;
     const key = name + "|" + job;
     if (seen.has(key)) continue;
     seen.add(key);
-    const cp = parseNum(r[11]);             // col L — CP
+    const cp = parseNum(r[11]);               // col L — CP
     members.push({
       id: "sheet_" + uid(),
-      name, job, discord,
+      name, job, discord, discordId,
       cp,
       source: "sheet"
     });
@@ -4879,14 +4880,14 @@ function fbSubscribeAll() {
         name:        r.name        || "",
         job:         r.job         || "",
         discord:     r.discord     || "",
-        discordName: r.discordName || "",
+        discordId: r.discordId || "",
         cp:          r.cp          || 0,
         updatedAt:   r.updatedAt   || 0
       }))
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
     _fbApplyingRemote = true;
     state.members = rosterCache.map(r => ({
-      id: r.id, name: r.name, job: r.job, discord: r.discord, discordName: r.discordName, cp: r.cp, source: "firebase"
+      id: r.id, name: r.name, job: r.job, discord: r.discord, discordId: r.discordId, cp: r.cp, source: "firebase"
     }));
     _fbApplyingRemote = false;
     rebuildJobFilter();
@@ -5506,12 +5507,12 @@ function rosterAdd() {
   if (!name || !name.trim()) return;
   const job         = prompt(`Job (ปล่อยว่างได้ — เลือกจาก dropdown หลังเพิ่ม):\n\n${JOB_LIST.join(" / ")}`, "") || "";
   const discord     = prompt("Discord username (เช่น @johnny):", "") || "";
-  const discordName = prompt("ชื่อใน Discord (display name):", "") || "";
+  const discordId   = prompt("Discord ID:", "") || "";
   _fbMembersRef.push({
     name:        name.trim(),
     job:         job.trim(),
     discord:     discord.trim(),
-    discordName: discordName.trim(),
+    discordId: discordId.trim(),
     cp:          0,
     updatedAt:   Date.now()
   });
@@ -5519,8 +5520,8 @@ function rosterAdd() {
 
 function rosterUpdate(id, field, value) {
   if (!_fbMembersRef) return;
-  // Frontend gating: name/job/discord/discordName restricted to admin; cp open to everyone
-  if ((field === "name" || field === "job" || field === "discord" || field === "discordName") && !isAdmin()) {
+  // Frontend gating: name/job/discord/discordId restricted to admin; cp open to everyone
+  if ((field === "name" || field === "job" || field === "discord" || field === "discordId") && !isAdmin()) {
     toast("เพิ่ม/แก้ ชื่อ + Job + Discord ทำได้เฉพาะ Admin", "error");
     renderBattlefields();
     return;
@@ -5544,7 +5545,6 @@ function rosterImportFromSheet() {
   if (!_fbMembersRef) { toast("Firebase ยังไม่ตั้งค่า", "error"); return; }
   const sheetUrl = state.sheetUrl || DEFAULT_SHEET;
   if (!sheetUrl) { toast("ไม่มี Sheet URL", "error"); return; }
-  if (!confirm("Import จาก Google Sheet เข้า Roster?\n\nจะดึง 4 fields: ชื่อ / Job / Discord / CP\n• เพิ่มคนใหม่\n• อัพเดต Discord/CP ของคนที่มีอยู่แล้ว (match by name+job)\n\n* ระบบจะ dedupe อัตโนมัติหลัง import")) return;
   (async () => {
     try {
       toast("⏳ กำลังโหลดจาก Sheet…", "");
@@ -5552,6 +5552,38 @@ function rosterImportFromSheet() {
       const resp = await fetchSheetJSON(id, gid);
       const rows = gvizToRows(resp);
       const fetched = extractMembersFromRows(rows);
+
+      // Mapping verification — show admin a preview of what each row will
+      // become BEFORE writing to Firebase. Lets admin catch any wrong-column
+      // mapping (e.g. Discord ID landed in CP) before any data is committed.
+      console.log("[import] Column mapping:");
+      console.log("  col C (idx 2)  → name");
+      console.log("  col E (idx 4)  → job");
+      console.log("  col F (idx 5)  → discord (@username)");
+      console.log("  col L (idx 11) → CP");
+      console.log("  col M (idx 12) → discordId");
+      console.log("[import] Sample of first 5 fetched rows:");
+      console.table(fetched.slice(0, 5));
+      console.log(`[import] Total parsed: ${fetched.length} member(s)`);
+      const sampleLines = fetched.slice(0, 3).map(m =>
+        `  • ${m.name} (${m.job}) — Discord "${m.discord}" — Discord ID "${m.discordId}" — CP ${m.cp}`
+      ).join("\n");
+      const msg = `Import จาก Google Sheet เข้า Roster?\n\n` +
+        `จะดึง 5 fields:\n` +
+        `  • Name (col C)\n` +
+        `  • Job (col E)\n` +
+        `  • Discord username (col F)\n` +
+        `  • CP (col L)\n` +
+        `  • Discord ID (col M) ← ใหม่\n\n` +
+        `Total rows: ${fetched.length}\n\n` +
+        `ตัวอย่าง 3 แถวแรก (ดูครบใน DevTools Console):\n${sampleLines}\n\n` +
+        `กด OK ถ้า mapping ถูกต้อง — ไม่งั้นกด Cancel\n` +
+        `(ระบบจะ dedupe อัตโนมัติหลัง import)`;
+      if (!confirm(msg)) {
+        toast("ยกเลิก import — ไม่ได้บันทึก", "");
+        return;
+      }
+
       // Fetch latest snapshot first — guarantees dedup check sees current Firebase
       // state (avoids race if listener hasn't fired yet on first load).
       const snap = await _fbMembersRef.once("value");
@@ -5563,10 +5595,11 @@ function rosterImportFromSheet() {
       for (const m of fetched) {
         const dup = existing.find(r => r.name === m.name && r.job === m.job);
         const payload = {
-          name:    m.name,
-          job:     m.job,
-          discord: m.discord || "",
-          cp:      m.cp || 0,
+          name:      m.name,
+          job:       m.job,
+          discord:   m.discord   || "",
+          discordId: m.discordId || "",
+          cp:        m.cp || 0,
           updatedAt: Date.now()
         };
         if (dup) {
@@ -5615,12 +5648,13 @@ async function rosterDedupe(silent) {
       const sb = (b.discord ? 1000000 : 0) + (b.cp || 0);
       return sb > sa ? b : a;
     });
-    // Optionally merge any discord/cp into best if best is missing them
+    // Optionally merge any discord/discordId/cp into best if best is missing them
     const mergedPayload = {
-      name:    best.name,
-      job:     best.job,
-      discord: best.discord || group.find(g => g.discord)?.discord || "",
-      cp:      Math.max(...group.map(g => g.cp || 0)),
+      name:      best.name,
+      job:       best.job,
+      discord:   best.discord   || group.find(g => g.discord)?.discord     || "",
+      discordId: best.discordId || group.find(g => g.discordId)?.discordId || "",
+      cp:        Math.max(...group.map(g => g.cp || 0)),
       updatedAt: Date.now()
     };
     await _fbMembersRef.child(best.id).update(mergedPayload);
@@ -5637,7 +5671,7 @@ async function rosterDedupe(silent) {
 
 /* ----- Roster page render ----- */
 let _rosterSearch  = "";
-let _rosterSortKey = "name";   // "name" | "job" | "discord" | "discordName" | "cp"
+let _rosterSortKey = "name";   // "name" | "job" | "discord" | "discordId" | "cp"
 let _rosterSortDir = "asc";    // "asc" | "desc"
 
 function rosterSearchInput(v) {
@@ -5687,7 +5721,7 @@ function buildRosterRowsHtml() {
         (m.name        || "").toLowerCase().includes(search) ||
         (m.job         || "").toLowerCase().includes(search) ||
         (m.discord     || "").toLowerCase().includes(search) ||
-        (m.discordName || "").toLowerCase().includes(search));
+        (m.discordId || "").toLowerCase().includes(search));
   if (!filtered.length) {
     if (!rosterCache.length) {
       return `<tr><td colspan="7" class="roster-empty">
@@ -5721,9 +5755,9 @@ function buildRosterRowsHtml() {
       <td data-label="Discord">${admin
         ? `<input class="r-input" value="${escapeHtml(m.discord || "")}" placeholder="@username" onchange="rosterUpdate('${m.id}','discord',this.value)" />`
         : `<div class="r-cell-static r-discord">${m.discord ? escapeHtml(m.discord) : '<span style="color:var(--muted)">—</span>'}</div>`}</td>
-      <td data-label="Discord Name">${admin
-        ? `<input class="r-input" value="${escapeHtml(m.discordName || "")}" placeholder="ชื่อใน Discord" onchange="rosterUpdate('${m.id}','discordName',this.value)" />`
-        : `<div class="r-cell-static r-discord-name">${m.discordName ? escapeHtml(m.discordName) : '<span style="color:var(--muted)">—</span>'}</div>`}</td>
+      <td data-label="Discord ID">${admin
+        ? `<input class="r-input" value="${escapeHtml(m.discordId || "")}" placeholder="Discord ID" onchange="rosterUpdate('${m.id}','discordId',this.value)" />`
+        : `<div class="r-cell-static r-discord-id">${m.discordId ? escapeHtml(m.discordId) : '<span style="color:var(--muted)">—</span>'}</div>`}</td>
       <td data-label="CP">
         <input class="r-input r-cp" type="text" inputmode="numeric" pattern="[0-9]*"
                value="${m.cp || 0}" onchange="rosterUpdate('${m.id}','cp',this.value)" />
@@ -5846,7 +5880,7 @@ function buildRosterHtml() {
               <th class="r-th-sort" onclick="rosterSort('name')">ชื่อ${rosterSortArrow("name")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
               <th class="r-th-sort" onclick="rosterSort('job')">Job${rosterSortArrow("job")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
               <th class="r-th-sort" onclick="rosterSort('discord')">Discord${rosterSortArrow("discord")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
-              <th class="r-th-sort" onclick="rosterSort('discordName')">Discord Name${rosterSortArrow("discordName")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th class="r-th-sort" onclick="rosterSort('discordId')">Discord ID${rosterSortArrow("discordId")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
               <th class="r-th-sort" style="width:140px;text-align:right" onclick="rosterSort('cp')">CP${rosterSortArrow("cp")}</th>
               <th style="width:50px"></th>
             </tr>
