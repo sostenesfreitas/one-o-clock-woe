@@ -4740,16 +4740,16 @@ function buildAdminManagePanel() {
     const isMe = k === myKey;
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:12px">
       <span style="flex:1">${escapeHtml(display)}${isMe ? ' <span style="color:var(--success)">(คุณ)</span>' : ''}</span>
-      ${isMe ? '' : `<button onclick="removeAdminEmail('${escapeHtml(k)}')" style="background:#450a0a;border:1px solid #b91c1c;color:#fca5a5;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">ลบ</button>`}
+      ${isMe ? '' : `<button data-key="${escapeHtml(k)}" onclick="removeAdminEmail(this.dataset.key)" style="background:#450a0a;border:1px solid #b91c1c;color:#fca5a5;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">ลบ</button>`}
     </div>`;
   }).join("") : `<div style="color:var(--muted);font-size:12px;font-style:italic;margin-bottom:8px">— ยังไม่มีในตาราง /admins (ใช้ ADMIN_EMAILS fallback) —</div>`;
   return `
     ${rows}
     <div style="display:flex;gap:6px;margin-top:8px">
       <input id="newAdminEmail" type="email" placeholder="email ของ admin คนใหม่"
-        onkeydown="if(event.key==='Enter'){addAdminEmail(this.value);this.value='';openSyncSettings();}"
+        onkeydown="if(event.key==='Enter'){const el=this;addAdminEmail(el.value).then(ok=>{if(ok){el.value='';openSyncSettings();}})}"
         style="flex:1;background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px" />
-      <button onclick="const el=document.getElementById('newAdminEmail');addAdminEmail(el.value).then(()=>{el.value='';openSyncSettings();})"
+      <button onclick="const el=document.getElementById('newAdminEmail');addAdminEmail(el.value).then(ok=>{if(ok){el.value='';openSyncSettings();}})"
         style="background:#6d28d9;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700">+ เพิ่ม</button>
     </div>
     <div style="color:var(--muted);font-size:11px;margin-top:6px">
@@ -5371,10 +5371,21 @@ function getSecondaryAuth() {
 function genRandomPassword(len = 10) {
   // Alphanumeric only — easy to read out loud / send via chat.
   const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  // Guard for older / insecure-origin contexts where window.crypto isn't
+  // exposed. Falls back to Math.random with a console warning so admins
+  // know it happened (passwords are 10-char alphanum, weakness is small).
+  const hasCrypto = typeof crypto !== "undefined" && crypto.getRandomValues;
+  if (!hasCrypto) {
+    console.warn("[genRandomPassword] crypto.getRandomValues unavailable — falling back to Math.random");
+  }
   let out = "";
-  const arr = new Uint32Array(len);
-  crypto.getRandomValues(arr);
-  for (let i = 0; i < len; i++) out += charset[arr[i] % charset.length];
+  if (hasCrypto) {
+    const arr = new Uint32Array(len);
+    crypto.getRandomValues(arr);
+    for (let i = 0; i < len; i++) out += charset[arr[i] % charset.length];
+  } else {
+    for (let i = 0; i < len; i++) out += charset[Math.floor(Math.random() * charset.length)];
+  }
   return out;
 }
 
@@ -5389,8 +5400,14 @@ async function createAppUser(username, password) {
   }
   const email = usernameToEmail(username);
   const secAuth = getSecondaryAuth();
+  // Defensive: a previous failed create may have left the secondary signed
+  // in as an orphan. Sign out first so createUserWithEmailAndPassword
+  // doesn't operate on a stale session.
+  try { await secAuth.signOut(); } catch (_) { /* ignore */ }
+  let createdUser = null;
   try {
     const cred = await secAuth.createUserWithEmailAndPassword(email, password);
+    createdUser = cred.user;
     // Mirror in /users for the admin-facing list (Firebase Auth has no
     // client-side "list users" API). Also flag as admin in /admins so the
     // new account gets full privileges.
@@ -5403,7 +5420,6 @@ async function createAppUser(username, password) {
       createdBy: myEmail
     });
     await _fbDB.ref(`admins/${adminKey}`).set(true);
-    await secAuth.signOut();  // don't leave the secondary holding the new user's session
     toast(`✅ สร้าง user "${username}" สำเร็จ`, "success");
     return { username, password };
   } catch (e) {
@@ -5414,7 +5430,24 @@ async function createAppUser(username, password) {
       msg = "รหัสผ่านอ่อนเกินไป";
     toast("สร้าง user ไม่สำเร็จ: " + msg, "error");
     console.error("[users] create failed", e);
+    // Rollback: if the Auth account was created but a subsequent DB write
+    // failed, delete the orphan Auth account so the admin isn't stuck
+    // with auth/email-already-in-use on retry. createdUser.delete() works
+    // because the secondary auth is currently signed in as that user.
+    if (createdUser) {
+      try {
+        await createdUser.delete();
+        console.log("[users] rolled back orphan Auth account");
+      } catch (de) {
+        console.warn("[users] rollback delete failed — manual cleanup in Firebase Console may be needed:", de);
+      }
+    }
     return null;
+  } finally {
+    // Always sign the secondary auth out, even when create succeeded —
+    // we don't want it lingering as the new user's session and bleeding
+    // into the next create call.
+    try { await secAuth.signOut(); } catch (_) { /* ignore */ }
   }
 }
 
@@ -5435,18 +5468,26 @@ async function deleteAppUser(username) {
 
 /* ---------- Manage admins (admin-only) ---------- */
 async function addAdminEmail(rawEmail) {
-  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return; }
+  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return false; }
   const email = (rawEmail || "").trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    toast("รูปแบบอีเมลไม่ถูกต้อง", "error"); return;
+    toast("รูปแบบอีเมลไม่ถูกต้อง", "error"); return false;
+  }
+  // RTDB path keys disallow ". $ # [ ] /". emailToAdminKey only escapes
+  // ".", so reject emails containing the other forbidden chars before
+  // we try to write — otherwise Firebase rejects with a cryptic error.
+  if (/[#$\[\]\/]/.test(email)) {
+    toast("อีเมลห้ามมีตัวอักษร # $ [ ] /", "error"); return false;
   }
   const key = emailToAdminKey(email);
   try {
     await _fbDB.ref(`admins/${key}`).set(true);
     toast(`✅ เพิ่ม admin: ${email}`, "success");
+    return true;
   } catch (e) {
     toast(`เพิ่ม admin ไม่สำเร็จ: ${e.message}`, "error");
     console.error("[admins] add failed", e);
+    return false;
   }
 }
 
@@ -7162,21 +7203,28 @@ function buildUsersHtml() {
   const users = state.users || {};
   const list = Object.values(users).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
+  // Credentials box: pass strings via data-* attributes instead of inline
+  // string-interpolating into onclick, so a password containing ' or \
+  // can't break out of the JS string (or open an injection vector).
+  // escapeHtml on the attribute value handles HTML-context safety; the
+  // handler reads via this.dataset to keep JS-context safety.
   const lastBox = _lastCreatedUser ? `
     <div class="users-credential-box">
       <div style="font-weight:700;color:#6ee7b7;margin-bottom:6px">✅ สร้าง user สำเร็จ — ส่ง credentials นี้ให้ user</div>
       <div class="row">
         <span>ID:</span>
         <b>${escapeHtml(_lastCreatedUser.username)}</b>
-        <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(_lastCreatedUser.username)}')">📋 copy</button>
+        <button class="copy-btn" data-copy="${escapeHtml(_lastCreatedUser.username)}" onclick="copyToClipboard(this.dataset.copy)">📋 copy</button>
       </div>
       <div class="row">
         <span>Password:</span>
         <b>${escapeHtml(_lastCreatedUser.password)}</b>
-        <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(_lastCreatedUser.password)}')">📋 copy</button>
+        <button class="copy-btn" data-copy="${escapeHtml(_lastCreatedUser.password)}" onclick="copyToClipboard(this.dataset.copy)">📋 copy</button>
       </div>
       <div class="row">
-        <button class="copy-btn" onclick="copyToClipboard('ID: ${escapeHtml(_lastCreatedUser.username)}\\nPassword: ${escapeHtml(_lastCreatedUser.password)}')">📋 copy ทั้งคู่</button>
+        <button class="copy-btn"
+          data-copy="${escapeHtml("ID: " + _lastCreatedUser.username + "\nPassword: " + _lastCreatedUser.password)}"
+          onclick="copyToClipboard(this.dataset.copy)">📋 copy ทั้งคู่</button>
         <div style="flex:1"></div>
         <button class="copy-btn" onclick="dismissLastCredential()">✕ ปิด</button>
       </div>
@@ -7190,7 +7238,7 @@ function buildUsersHtml() {
       <span class="u-name">${escapeHtml(u.username || "?")}</span>
       <span class="u-badge">admin</span>
       <span class="u-meta">สร้างเมื่อ ${escapeHtml(dt)} โดย ${escapeHtml(u.createdBy || "?")}</span>
-      <button class="u-del" onclick="deleteAppUser('${escapeHtml(u.username)}')">🗑 ลบ</button>
+      <button class="u-del" data-username="${escapeHtml(u.username)}" onclick="deleteAppUser(this.dataset.username)">🗑 ลบ</button>
     </div>`;
   }).join("") : `<div class="users-empty">— ยังไม่มี user — สร้างคนแรกได้เลย —</div>`;
 
