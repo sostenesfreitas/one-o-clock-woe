@@ -6549,8 +6549,11 @@ function arApproveRequest(date, mode, requestId) {
   const req = r[requestId];
   if (!req) return;
   if (req.status === "approved") return;
-  // Place into auction column(s)
-  const field = req.computedField || arDetectField(req.memberId, mode) || "main";
+  // Re-detect field at approve time so the member lands in the column
+  // matching their CURRENT party assignment, not whatever snapshot the
+  // request was created with. Falls back to the stored value (if any)
+  // then to "main" if the member isn't in any party.
+  const field = arDetectField(req.memberId, mode) || req.computedField || "main";
   const auctionKey = mode === "gl" ? "auctionGL" : "auctionOverrun";
   const obj = state[auctionKey];
   if (!obj) { toast("ยังไม่ได้ตั้งค่า auction state", "error"); return; }
@@ -6876,8 +6879,13 @@ function arRenderRow(r, asAdmin) {
   const name = m ? m.name : (r.memberName || "?");
   const job  = m ? (m.job || "") : "";
   const items = (r.items || []).map(k => `<span class="ar-item-chip">${AR_ITEM_META[k] ? AR_ITEM_META[k].label : k}</span>`).join("");
-  const fieldTag = r.computedField
-    ? `<span class="ar-field-tag ${r.computedField === "sub" ? "sub" : ""}">${r.computedField === "sub" ? "สนามรอง" : "สนามหลัก"}</span>`
+  // Re-detect field at render time so the main/sub tag tracks the
+  // member's current party assignment instead of the snapshot from
+  // request-creation time. The parties listener calls safeRender on
+  // change, so this stays realtime without extra plumbing.
+  const liveField = arDetectField(r.memberId, r.mode);
+  const fieldTag = liveField
+    ? `<span class="ar-field-tag ${liveField === "sub" ? "sub" : ""}">${liveField === "sub" ? "สนามรอง" : "สนามหลัก"}</span>`
     : `<span class="ar-field-tag" style="background:#3f3f46;color:#a1a1aa">ยังไม่อยู่ในตี้</span>`;
   const leaveTag = arHasLeaveOnDate(r.memberId, r.date)
     ? `<span class="ar-field-tag" style="background:#7c2d12;color:#fdba74">🌴 ลา</span>` : "";
