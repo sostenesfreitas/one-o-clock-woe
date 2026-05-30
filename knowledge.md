@@ -203,17 +203,23 @@ load() ──▶ initFirebase() ──▶ onAuthStateChanged
   (cards+illusion ×2 when %>0, feathers ×(1+%/100)) then splits each item
   **70/30** main/sub (`Math.floor(total*0.7)`); Overrun has no sub field
   (`hasSubField=false`). Shortage per side = `pool − count×rate`.
-- **Auction-page CHAIN numbering** (`buildAuctionCol`, ~6645) — the subtle part:
-  - **GL** = ONE continuous chain across all 8 buckets in fixed order
-    (cards-main → cards-sub → illusion-main → … → black-sub). Each bucket's
-    `chainOffset` = Σ(earlier buckets' `count × that bucket's rate`).
-  - **Overrun** = chain resets to 0 **per column** (cards/illusion/white/black
-    independent).
-  - A person's allocation = `rate` items, split into per-page segments of
-    `AUCTION_ITEMS_PER_PAGE` (=4): `page = ceil(cursor/4)`, slots local 1–4.
-  - **Because the chain reads `getAuctionRates()`, editing a rate changes the
-    page layout.** This interaction is the highest-value thing to test —
-    `test/run.js` locks it down ("editing the rate CHANGES the chain").
+- **Supply-based page-map** (`computeAuction` → `data.pageMap` + `it.{main,sub}.page`)
+  — the REAL in-game auction pages, from the ITEM POOL (counts), `AUCTION_ITEMS_PER_PAGE`
+  (=4) per page. NOT from assigned people, NOT from `rate`.
+  - Each `it.main.page`/`it.sub.page` = `{items, startCursor, endCursor, startPage,
+    endPage, startSlot, pageOffset}`, walked from a cumulative POOL cursor.
+  - **GL** = ONE continuous run over 8 buckets (cards-main → cards-sub → … →
+    black-sub); sub continues main's partial page (the 70/30 boundary). `pageMap`
+    = `{perType, totalItems, totalPages}`; invariant `max(endPage) === totalPages`.
+  - **Overrun** = each item type independent, starts page 1 (no sub).
+  - **Rate-independent** — pages come from counts only; editing a per-person rate
+    must NOT move them (locked by a test).
+- **Per-person page badge** (`buildAuctionCol`, ~6645): a dragged person's
+  "หน้า P · ชิ้น s". Start offset = that bucket's POOL `pageOffset` (from the
+  page-map), so the page is the REAL auction page even when earlier columns are
+  underfilled. Within a bucket: `cursor = pageOffset + i*rate + 1`, split into
+  per-page segments of 4 (slots local 1–4). The *span* scales with `rate`; the
+  *start page* is supply-anchored. `test/run.js` `[auction page-map]` locks it down.
 - **Event-day request gate** (`arRequestBlockReason`, ~7165) — single source of
   truth used by both `arOpenRequestModal` and `arCreateRequest`. Allows a
   request only when: date == today (BKK), `isEventDay(today)` is truthy, the
@@ -233,8 +239,10 @@ load() ──▶ initFirebase() ──▶ onAuthStateChanged
   boot `load();` line. `setAdmin(bool)` / `setToday(iso)` override `isAdmin` /
   `todayBkkISO` for deterministic tests.
 - Coverage today: event-day gate, editable rates (defaults/override/clamp/
-  admin-guard), `normalizeAuctionState` migration, 70/30 + shortage math, and
-  GL+Overrun page-chain numbering with custom rates.
+  admin-guard), `normalizeAuctionState` migration, 70/30 + shortage math,
+  GL+Overrun per-person badge numbering, the supply-based `[auction page-map]`
+  (per-type ranges, total pages, 70/30 continuity + exact-fill, rate-invariance,
+  zero-item, badge re-anchor), and the version stamp.
 - **When you change auction or request behavior, add/extend a test** in
   `test/run.js` in the same commit (CLAUDE.md rule). Harness stub gaps (e.g. a
   missing DOM method) are fixed in `harness.js`, not worked around in tests.
