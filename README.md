@@ -1,25 +1,43 @@
 # WOE Party Organizer
 
-Single-file HTML tool for organizing WoE (War of Emperium) parties and post-WoE auctions.
+Single-file HTML tool for organizing WoE (War of Emperium) parties and
+post-WoE auctions. Used by a single Ragnarok Online guild.
 
-## Features
+## Pages
 
-- **League** — 16 parties × 5 slots, drag-drop, map markers, save/restore
+- **League** — 16 parties × 5 slots over main + sub maps, drag-drop,
+  map markers, save/restore
 - **Overrun** — 4 big parties × 4 sub-parties on a single map
-- **Members** — Job-count summary, target tracking
-- **Auction GL** — Post-WoE loot split 70/30 (main/sub field) with bonus rate
-- **Auction Overrun** — Per-column drag-drop with auction page numbering
+- **Roster** — member table (name, job, CP, Discord) with per-row edits
+- **Summary** — job counts vs. targets
+- **Auction GL** — post-WoE loot split 70/30 (main/sub field) with a
+  bonus-rate input
+- **Auction Overrun** — per-column drag-drop with auction page numbering
+- **Leave** — scheduled-leave registration, auto-resets every Monday
+  00:00 Asia/Bangkok
 
-## Data Source
+## Data source
 
-Loads member list from a Google Sheet (set in Settings).
-The sheet must be shared as **Anyone with link – Viewer**.
+All shared state lives in **Firebase Realtime Database** (project
+`woe-party`, region `asia-southeast1`). The `index.html` is the only
+client — sign-in is via Google for admins, anonymous for viewers.
 
-## State
+- Admin allowlist: `ADMIN_EMAILS` near the top of the Firebase block in
+  `index.html`. Editors must be on that list.
+- Anonymous viewers see live state but can't write.
+- `localStorage` (`roo_party_v2`) is a local cache for offline reloads.
 
-All state is per-browser via `localStorage` — every visitor has their own
-assignments. The deployed copy is read-only; this tool is single-user per
-device.
+## Deploy
+
+Static — copy `index.html` and the `maps/` folder to any static host
+(GitHub Pages, etc.). No build step.
+
+## Documentation for contributors
+
+- `CLAUDE.md` — coding conventions, key constants, page list
+- `knowledge.md` — architecture, state shape, sync model, pitfalls
+- `.claude/skills/woe-edit/SKILL.md` — editing playbook
+- `.claude/agents/woe-coder.md` — focused coding subagent
 
 ## License
 
