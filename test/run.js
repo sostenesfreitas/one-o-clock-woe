@@ -318,13 +318,13 @@ t("GL 70/30 boundary: sub continues main's partial page (white=10)", () => {
   eq(w.sub.page.startPage, w.main.page.endPage, "sub continues main's last page");
   eq(w.sub.page.startSlot, 4, "sub starts page2 slot4");
 });
-t("GL 70/30 exact-fill: main fills a page → sub starts fresh (white=6)", () => {
+t("GL split @70 ceil-to-main: white=6 → main 5 (p1-2) / sub 1 (p2)", () => {
   reset(app, []);
   Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 6, black: 0, bonusPercent: 0 });
   const w = app.call("computeAuction", "gl").items.find(i => i.key === "white");
-  eq([w.main.page.startPage, w.main.page.endPage], [1, 1], "main 4 → page 1");
-  eq(w.sub.page.startPage, w.main.page.endPage + 1, "sub starts fresh page 2");
-  eq(w.sub.page.startSlot, 1, "sub at slot 1");
+  eq([w.main.pool, w.sub.pool], [5, 1], "6 @70 → main 5 / sub 1 (remainder to main)");
+  eq([w.main.page.startPage, w.main.page.endPage], [1, 2], "main 5 → pages 1-2");
+  eq([w.sub.page.startPage, w.sub.page.startSlot], [2, 2], "sub continues page 2 slot 2");
 });
 t("Overrun: each item type on its own fresh page block (continuous day)", () => {
   reset(app, []);
@@ -383,6 +383,84 @@ t("over-filled column shows เกิน", () => {
   app.state.auctionGL.rates.white = 7;                 // 2 ppl × 7 = 14 > pool 7
   app.state.auctionGL.assignments.main.white = ["w1", "w2"];
   eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ ครบแล้ว · เกินมา 7 ชิ้น", "over by 7");
+});
+
+console.log("\n[auction main/sub split % — editable GL split]");
+function glPools(key) {
+  const d = app.call("computeAuction", "gl");
+  const it = d.items.find(i => i.key === key);
+  return { total: it.total, main: it.main.pool, sub: it.sub.pool, split: d.splitMainPercent };
+}
+function setSplit(p) { app.state.auctionGL.splitMainPercent = p; }
+t("default split is 70 (getter + computeAuction)", () => {
+  reset(app, []);
+  eq(app.call("getAuctionSplitPercent", "gl"), 70, "getter default");
+  eq(app.call("getAuctionSplitPercent", "overrun"), 100, "overrun = no split");
+  Object.assign(app.state.auctionGL, { white: 10, bonusPercent: 0 });
+  eq(glPools("white"), { total: 10, main: 7, sub: 3, split: 70 }, "white10 @70");
+});
+t("uneven split: remainder goes to สนามหลัก (ceil)", () => {
+  reset(app, []);
+  Object.assign(app.state.auctionGL, { white: 5, bonusPercent: 0 });
+  eq(glPools("white"), { total: 5, main: 4, sub: 1, split: 70 }, "5 @70 → main 4 / sub 1");
+  Object.assign(app.state.auctionGL, { white: 6 });
+  eq(glPools("white"), { total: 6, main: 5, sub: 1, split: 70 }, "6 @70 → main 5 / sub 1");
+});
+t("changing the split % moves main/sub pools", () => {
+  reset(app, []);
+  Object.assign(app.state.auctionGL, { white: 5, bonusPercent: 0 });
+  setSplit(60); eq(glPools("white"), { total: 5, main: 3, sub: 2, split: 60 }, "5 @60 → 3/2");
+  setSplit(100); Object.assign(app.state.auctionGL, { white: 10 });
+  eq(glPools("white"), { total: 10, main: 10, sub: 0, split: 100 }, "100% → all main");
+  setSplit(0); eq(glPools("white"), { total: 10, main: 0, sub: 10, split: 0 }, "0% → all sub");
+});
+t("setAuctionSplitPercent: admin-gated + clamps 0..100", () => {
+  reset(app, []);
+  app.setAdmin(true);
+  app.call("setAuctionSplitPercent", "gl", "250"); eq(app.call("getAuctionSplitPercent", "gl"), 100, "clamp 250→100");
+  app.call("setAuctionSplitPercent", "gl", "-5");  eq(app.call("getAuctionSplitPercent", "gl"), 0, "clamp -5→0");
+  app.call("setAuctionSplitPercent", "gl", "60");  eq(app.call("getAuctionSplitPercent", "gl"), 60, "set 60");
+  app.setAdmin(false);
+  app.call("setAuctionSplitPercent", "gl", "20");  eq(app.call("getAuctionSplitPercent", "gl"), 60, "viewer cannot change");
+  app.setAdmin(true);
+});
+t("normalize backfills split (missing/invalid → 70)", () => {
+  eq(app.call("normalizeAuctionState", {}, "gl").splitMainPercent, 70, "missing → 70");
+  eq(app.call("normalizeAuctionState", { splitMainPercent: 999 }, "gl").splitMainPercent, 70, "invalid → 70");
+  eq(app.call("normalizeAuctionState", { splitMainPercent: 55 }, "gl").splitMainPercent, 55, "valid kept");
+});
+t("split is independent of per-person rate", () => {
+  reset(app, []);
+  Object.assign(app.state.auctionGL, { white: 5, bonusPercent: 0 });
+  const before = JSON.stringify(glPools("white"));
+  app.state.auctionGL.rates.white = 7;
+  eq(JSON.stringify(glPools("white")), before, "rate edit doesn't move the split");
+});
+t("Overrun ignores the split (no sub field)", () => {
+  reset(app, []);
+  Object.assign(app.state.auctionOverrun, { white: 10 });
+  const d = app.call("computeAuction", "overrun");
+  const w = d.items.find(i => i.key === "white");
+  eq([w.main.pool, w.sub.pool, d.hasSubField], [10, 0, false], "overrun white10 → all main, no sub");
+});
+t("page ranges stay split-invariant at 70% (worked example)", () => {
+  reset(app, []);
+  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10, bonusPercent: 0 });
+  const pm = pageMapOf("gl");
+  eq(pm.perType.map(x => [x.key, x.startPage, x.endPage]),
+     [["cards",1,2],["illusion",3,3],["white",4,6],["black",7,9]], "per-type pages unchanged");
+  eq(pm.totalPages, 9, "total pages unchanged");
+});
+t("GL view renders the editable split control + dynamic field labels", () => {
+  reset(app, []);
+  app.setAdmin(true);
+  app.state.auctionGL.splitMainPercent = 60;
+  const html = app.call("buildAuctionView", "gl");
+  ok(html.includes('data-auction-split-kind="gl"'), "split input present for admin");
+  ok(html.includes("สนามหลัก (60%)"), "main header shows 60%");
+  ok(html.includes("สนามรอง (40%)"), "sub header shows 40%");
+  const or = app.call("buildAuctionView", "overrun");
+  ok(!or.includes('data-auction-split-kind'), "Overrun has no split control");
 });
 
 console.log("\n[version stamp]");

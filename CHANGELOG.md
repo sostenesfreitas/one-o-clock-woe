@@ -10,6 +10,20 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.05.30.5]
+### Added
+- **Editable สนามหลัก/สนามรอง split % for the GL auction.** Admins can set what
+  percent of each item goes to สนามหลัก (default 70); สนามรอง gets the rest. New
+  "⚖️ การแบ่งสนาม" control on the Auction GL page; all field labels (headers, per-column
+  ใช้/XX%, summary) follow the value live. The split rides the existing `auction_gl`
+  Firebase object (no rule change). Overrun is unaffected (no sub field).
+### Changed
+- **Uneven split now rounds the leftover to สนามหลัก (ceil), not down.** When an item
+  count doesn't divide cleanly, the extra piece is auctioned on the main field — e.g. 5
+  ชิ้น @70% = หลัก 4 / รอง 1 (previously 3/2). Whole splits (e.g. 10 @70% = 7/3) are
+  unchanged, as are the supply page-map's per-type page ranges (they derive from each
+  item's total, not the main/sub split).
+
 ## [2026.05.30.4]
 ### Added
 - **Branded landing page (front door).** A new static `index.html` is now the front

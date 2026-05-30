@@ -2726,7 +2726,7 @@ let state = {
   mapBg: { 1: null, 2: null, 3: null },
   overrunMarkers: {},
   jobTargets: {},
-  auctionGL: { cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0,
+  auctionGL: { cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0, splitMainPercent: 70,
     assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } },
   auctionOverrun: { cards: 0, illusion: 0, white: 0, black: 0,
     assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } },
@@ -4598,7 +4598,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.05.30.4";
+const APP_VERSION = "2026.05.30.5";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -6327,6 +6327,15 @@ function getAuctionRates(kind) {
   return { card: pick("card"), illusion: pick("illusion"), white: pick("white"), black: pick("black") };
 }
 
+/** Admin-editable GL main/sub split — % of each item that goes to สนามหลัก (main);
+ *  สนามรอง (sub) gets the rest. Clamped 0..100, default 70. GL only (Overrun has no
+ *  sub). The remainder on an uneven split goes to MAIN (ceil) — see computeAuction. */
+function getAuctionSplitPercent(kind) {
+  if (kind !== "gl") return 100;
+  const v = state.auctionGL && state.auctionGL.splitMainPercent;
+  return (typeof v === "number" && isFinite(v) && v >= 0 && v <= 100) ? Math.round(v) : 70;
+}
+
 /** Compute effective totals + per-person allocation + shortage/leftover.
  *  GL bonus formula (derived from base × multiplier — no separate inputs):
  *    - % > 0: cards + illusion ×2 (so bonus = base), feathers ×(1 + %/100)
@@ -6380,10 +6389,13 @@ function computeAuction(kind) {
   const totalWhite    = base.white    + effBonusWhite;
   const totalBlack    = base.black    + effBonusBlack;
 
-  // GL splits each item 70/30 across main+sub fields. Overrun has no sub
-  // field — main pool absorbs the full total (sub pool = 0, not rendered).
+  // GL splits each item between main+sub by an admin-editable percent (default
+  // 70). The remainder on an uneven split goes to MAIN (ceil), so the leftover
+  // item is auctioned on the main field. Overrun has no sub field — main pool
+  // absorbs the full total (sub pool = 0, not rendered).
   const hasSubField = (kind === "gl");
-  const splitMain = (n) => hasSubField ? Math.floor(n * 0.7) : n;
+  const mainPct = getAuctionSplitPercent(kind);
+  const splitMain = (n) => hasSubField ? Math.ceil(n * mainPct / 100) : n;
 
   const buildSide = (field, key, pool, perPersonRate) => {
     const ids = assignments[field][key];
@@ -6471,7 +6483,7 @@ function computeAuction(kind) {
   });
   const pageMap = { perType, totalItems, totalPages };
 
-  return { kind, members, people, percent, rate, base, items, assignments, hasSubField, pageMap };
+  return { kind, members, people, percent, rate, base, items, assignments, hasSubField, pageMap, splitMainPercent: mainPct };
 }
 
 // All four mutators call render() (not just renderBattlefields) so the sidebar's
@@ -6586,6 +6598,35 @@ function setAuctionRate(kind, rateKey, value) {
   );
   if (newInput) {
     try { newInput.focus({ preventScroll: true }); } catch (e) { newInput.focus(); }
+    const pos = (cursorPos != null) ? Math.min(cursorPos, newInput.value.length) : newInput.value.length;
+    try { newInput.setSelectionRange(pos, pos); } catch (e) {}
+  }
+  window.scrollTo(scrollX, scrollY);
+}
+
+/** Admin-editable GL main/sub split %. Mirrors setAuctionRate's focus/scroll
+ *  preservation. GL only; clamps 0..100. Sub % is derived (100 − main). */
+function setAuctionSplitPercent(kind, value) {
+  if (kind !== "gl") return;
+  if (!isAdmin()) { toast("ต้องเป็น admin ถึงจะแก้ % การแบ่งสนามได้", "error"); return; }
+  // Keep a leading "-" so a typed negative clamps to 0 (don't strip it to a positive).
+  const cleaned = String(value).replace(/[^0-9-]/g, "");
+  let n = parseInt(cleaned, 10);
+  if (isNaN(n)) n = 70;
+  if (n < 0) n = 0; if (n > 100) n = 100;
+  if (state.auctionGL.splitMainPercent === n) return;
+  state.auctionGL.splitMainPercent = n;
+  save();
+  let cursorPos = null;
+  const focused = document.activeElement;
+  if (focused && focused.tagName === "INPUT") {
+    try { cursorPos = focused.selectionStart; } catch (e) {}
+  }
+  const scrollX = window.scrollX, scrollY = window.scrollY;
+  renderBattlefields();
+  const newInput = document.querySelector(`input[data-auction-split-kind="${kind}"]`);
+  if (newInput) {
+    try { newInput.focus({ preventScroll: true }); } catch (e) {}
     const pos = (cursorPos != null) ? Math.min(cursorPos, newInput.value.length) : newInput.value.length;
     try { newInput.setSelectionRange(pos, pos); } catch (e) {}
   }
@@ -6733,6 +6774,24 @@ function buildAuctionView(kind) {
       </table>
     </div>` : "";
 
+  // GL main/sub split %: admin types main %, sub = 100 − main (live). Remainder
+  // on an uneven split goes to main (see computeAuction's ceil). GL only.
+  const splitPct = data.splitMainPercent;
+  const splitSection = isGL ? `
+    <div class="auction-section split">
+      <h3>⚖️ การแบ่งสนาม (หลัก/รอง)</h3>
+      <div class="auction-split-row">
+        <span class="label">ของแต่ละชนิดเข้า สนามหลัก</span>
+        ${isAdmin()
+          ? `<input class="auction-split-input" type="text" inputmode="numeric" pattern="[0-9]*"
+                    value="${splitPct}" data-auction-split-kind="gl"
+                    oninput="setAuctionSplitPercent('gl', this.value)" onfocus="this.select()" />`
+          : `<b class="auction-split-static">${splitPct}</b>`}
+        <span class="label">% · ที่เหลือเข้า สนามรอง <b>${100 - splitPct}%</b></span>
+      </div>
+      <div class="auction-split-note">เศษที่หารไม่ลงตัวจะเข้า “สนามหลัก” · เช่น 5 ชิ้น ${splitPct}% = หลัก ${Math.ceil(5*splitPct/100)} / รอง ${5 - Math.ceil(5*splitPct/100)}</div>
+    </div>` : "";
+
   // Two sets of 3 drag-drop columns: สนามหลัก (main, 70% pool) + สนามรอง (sub, 30% pool).
   // Each column = drop zone for member chips; per-person quantity auto-filled by rate.
   const COL_STYLES = {
@@ -6809,7 +6868,8 @@ function buildAuctionView(kind) {
                   : it.key === "illusion" ? "ชิ้น/คน"
                   : "ขน/คน";
     const poolLabel = !data.hasSubField ? "รวม"
-                    : field === "main"  ? "หลัก70%" : "รอง30%";
+                    : field === "main"  ? ("หลัก" + data.splitMainPercent + "%")
+                                        : ("รอง" + (100 - data.splitMainPercent) + "%");
     // Real auction pages this column's item pool occupies (supply-based).
     const pg = side.page;
     const pageChip = (side.pool > 0 && pg && pg.startPage != null)
@@ -6882,7 +6942,7 @@ function buildAuctionView(kind) {
       ยังไม่มีสมาชิก — กด "🔄 Refresh จาก Sheet"
     </div>`;
   const mainHeader = data.hasSubField
-    ? "👥 สนามหลัก (70%) — ลากชื่อจาก sidebar มาวางในคอลัมน์"
+    ? `👥 สนามหลัก (${data.splitMainPercent}%) — ลากชื่อจาก sidebar มาวางในคอลัมน์`
     : "👥 รายชื่อรับของ — ลากชื่อจาก sidebar มาวางในคอลัมน์";
 
   // Search input — lets guests filter by their name to see only their rows.
@@ -6903,7 +6963,7 @@ function buildAuctionView(kind) {
     </div>`;
   const subSection = data.hasSubField ? `
     <div class="auction-section">
-      <h3>🛡️ สนามรอง (30%) — ลากชื่อจาก sidebar มาวางในคอลัมน์</h3>
+      <h3>🛡️ สนามรอง (${100 - data.splitMainPercent}%) — ลากชื่อจาก sidebar มาวางในคอลัมน์</h3>
       ${data.members.length ? `<div class="auction-columns">${subCols}</div>` : noMembersFallback}
     </div>` : "";
 
@@ -6942,6 +7002,8 @@ function buildAuctionView(kind) {
 
       ${bonusSection}
 
+      ${splitSection}
+
       <div class="auction-section">
         <h3>📊 สรุปการแจก</h3>
         <table class="auction-summary-table">
@@ -6950,8 +7012,8 @@ function buildAuctionView(kind) {
               <th style="text-align:left">รายการ</th>
               <th>รวม</th>
               ${data.hasSubField ? `
-                <th>สนามหลัก<br><span style="font-weight:400;font-size:9px">ใช้/70%</span></th>
-                <th>สนามรอง<br><span style="font-weight:400;font-size:9px">ใช้/30%</span></th>
+                <th>สนามหลัก<br><span style="font-weight:400;font-size:9px">ใช้/${data.splitMainPercent}%</span></th>
+                <th>สนามรอง<br><span style="font-weight:400;font-size:9px">ใช้/${100 - data.splitMainPercent}%</span></th>
               ` : `<th>ใช้/มี</th>`}
               <th>สถานะ</th>
             </tr>
@@ -8354,13 +8416,16 @@ if (!state.jobTargets || typeof state.jobTargets !== "object") state.jobTargets 
 function normalizeAuctionState(obj, kind) {
   const defRates = AUCTION_DEFAULT_RATES[kind] || AUCTION_DEFAULT_RATES.gl;
   if (!obj || typeof obj !== "object") {
-    return { cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0,
+    return { cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0, splitMainPercent: 70,
       rates: { ...defRates },
       assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } };
   }
   delete obj.bonusCards; delete obj.bonusWhite; delete obj.bonusBlack;
   if (typeof obj.bonusPercent !== "number") obj.bonusPercent = 0;
   if (typeof obj.illusion !== "number") obj.illusion = 0;
+  // Backfill GL main/sub split % (added 2026-05). Valid range 0..100, default 70.
+  if (typeof obj.splitMainPercent !== "number" || !isFinite(obj.splitMainPercent)
+      || obj.splitMainPercent < 0 || obj.splitMainPercent > 100) obj.splitMainPercent = 70;
   // Backfill / validate editable per-person rates (added 2026-05). Any missing
   // or invalid (<1) key falls back to this mode's default.
   if (!obj.rates || typeof obj.rates !== "object") obj.rates = {};

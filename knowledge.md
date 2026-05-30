@@ -200,9 +200,14 @@ load() ──▶ initFirebase() ──▶ onAuthStateChanged
   via `save()` → the existing `auction_gl` / `auction_overrun` Firebase push
   (no new listener needed — `rates` rides inside the same object).
 - **`computeAuction(kind)`** computes per-item totals. GL applies the bonus
-  (cards+illusion ×2 when %>0, feathers ×(1+%/100)) then splits each item
-  **70/30** main/sub (`Math.floor(total*0.7)`); Overrun has no sub field
-  (`hasSubField=false`). Shortage per side = `pool − count×rate`.
+  (cards+illusion ×2 when %>0, feathers ×(1+%/100)) then splits each item by an
+  **admin-editable main %** (`state.auctionGL.splitMainPercent`, default 70):
+  `mainPool = Math.ceil(total * mainPct/100)` so the leftover on an uneven split goes
+  to **สนามหลัก**; `subPool = total − mainPool`. Read it via `getAuctionSplitPercent(kind)`
+  (GL only; returns 100 for Overrun → no sub), set via `setAuctionSplitPercent` (admin-gated,
+  clamps 0..100, mirrors `setAuctionRate`). Overrun has no sub field (`hasSubField=false`).
+  Shortage per side = `pool − count×rate`. NOTE: page-map per-type ranges depend on each
+  item's *total*, not the split, so they don't move when the split changes.
 - **Supply-based page-map** (`computeAuction` → `data.pageMap` + `it.{main,sub}.page`)
   — the REAL in-game auction pages, from the ITEM POOL (counts), `AUCTION_ITEMS_PER_PAGE`
   (=4) per page. NOT from assigned people, NOT from `rate`.
