@@ -150,8 +150,14 @@ Never use `new Date()` directly for date math (off-by-one outside Bangkok).
 
 ## Critical files
 
-- `index.html` — entire app (~8,200 lines).
+- `index.html` — entire app (~8,300 lines). `APP_VERSION` constant = footer version
+  stamp; bump on every user-visible change + add a `CHANGELOG.md` entry.
 - `maps/main.png`, `maps/sub.png`, `maps/overrun.png` — battlefield map images.
+- `test/` — dependency-free test harness + suite (`node test/run.js`); the pre-commit gate.
+- `database.rules.json` — Firebase RTDB security rules (deploy manually; see
+  `docs/firebase-rules-audit.md`). `firebase.json` / `.firebaserc` support `firebase deploy`.
+- `.github/workflows/ci.yml` — runs the test suite on push/PR.
+- `CHANGELOG.md`, `RUNBOOK.md` — release notes + incident/rollback procedures.
 
 ## Branch policy
 
