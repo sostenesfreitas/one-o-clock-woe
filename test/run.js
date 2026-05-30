@@ -195,18 +195,18 @@ t("GL chain: page rolls over within a bucket (5 ppl, rate 1)", () => {
   eq(badgesFor(html, "c4"), ["หน้า 1 · ชิ้น 4"], "4th on page 1");
   eq(badgesFor(html, "c5"), ["หน้า 2 · ชิ้น 1"], "5th rolls to page 2");
 });
-t("GL chain: white page anchored to card ITEMS (pool), not card people", () => {
+t("GL chain: white starts on its OWN page block (after cards block)", () => {
   reset(app, mkMembers(["c1", "c2", "w1"]));
   app.state.auctionGL.rates.white = 7;
-  app.state.auctionGL.cards = 2;                              // 2 card ITEMS -> pool offset 2 (main1+sub1)
-  app.state.auctionGL.white = 10;                            // white items exist
+  app.state.auctionGL.cards = 2;                              // cards block = page 1 (2 items)
+  app.state.auctionGL.white = 10;                            // white block starts fresh page 2
   app.state.auctionGL.assignments.main.cards = ["c1", "c2"];
-  app.state.auctionGL.assignments.main.white = ["w1"];        // white starts at item 3 (after 2 cards)
+  app.state.auctionGL.assignments.main.white = ["w1"];
   const html = app.call("buildAuctionView", "gl");
   eq(badgesFor(html, "c2"), ["หน้า 1 · ชิ้น 2"], "card chain");
   eq(badgesFor(html, "w1"),
-     ["หน้า 1 · ชิ้น 3-4", "หน้า 2 · ชิ้น 1-4", "หน้า 3 · ชิ้น 1"],
-     "white rate7 from item 3 spanning pages 1-3");
+     ["หน้า 2 · ชิ้น 1-4", "หน้า 3 · ชิ้น 1-3"],
+     "white rate7 starts page 2 (its own block), spans pages 2-3");
 });
 t("GL chain: editing the rate CHANGES the chain (regression guard)", () => {
   reset(app, mkMembers(["w1"]));
@@ -280,14 +280,16 @@ t("GL worked example: cards5 illu2 white10 black10 → per-type pages + total", 
   reset(app, []);
   Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10, bonusPercent: 0 });
   const pm = pageMapOf("gl");
+  // Each item type starts on its OWN fresh page block (no cross-type sharing):
+  // cards 5 → p1-2; illu 2 → p3; white 10 → p4-6; black 10 → p7-9.
   eq(typeRange(pm, "cards"), [1, 2], "cards p1-2");
-  eq(typeRange(pm, "illusion"), [2, 2], "illu p2");
-  eq(typeRange(pm, "white"), [2, 5], "white p2-5");
-  eq(typeRange(pm, "black"), [5, 7], "black p5-7");
+  eq(typeRange(pm, "illusion"), [3, 3], "illu p3 (own block)");
+  eq(typeRange(pm, "white"), [4, 6], "white p4-6 (own block)");
+  eq(typeRange(pm, "black"), [7, 9], "black p7-9 (own block)");
   eq(pm.totalItems, 27, "total items");
-  eq(pm.totalPages, 7, "total pages");
+  eq(pm.totalPages, 9, "total pages = last page used (blocks leave gaps)");
 });
-t("GL invariant: max endPage === ceil(totalItems/4) (no gap/double-count)", () => {
+t("GL invariant: totalPages === max endPage across all buckets", () => {
   reset(app, []);
   Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10, bonusPercent: 0 });
   const d = app.call("computeAuction", "gl");
@@ -297,6 +299,15 @@ t("GL invariant: max endPage === ceil(totalItems/4) (no gap/double-count)", () =
     if (it.sub.page.endPage)  maxEnd = Math.max(maxEnd, it.sub.page.endPage);
   });
   eq(maxEnd, d.pageMap.totalPages, "max endPage == totalPages");
+});
+t("GL each item type starts on a fresh page (no cross-type page sharing)", () => {
+  reset(app, []);
+  // cards 4 → all on page 1; illu must start page 2 (NOT share page 1 slot 3).
+  Object.assign(app.state.auctionGL, { cards: 4, illusion: 2, white: 0, black: 0, bonusPercent: 0 });
+  const d = app.call("computeAuction", "gl");
+  const cards = d.items.find(i => i.key === "cards"), illu = d.items.find(i => i.key === "illusion");
+  eq([cards.main.page.startPage, cards.sub.page.endPage], [1, 1], "cards 4 → all page 1");
+  eq(illu.main.page.startPage, 2, "illu starts fresh page 2");
 });
 t("GL 70/30 boundary: sub continues main's partial page (white=10)", () => {
   reset(app, []);
@@ -315,12 +326,13 @@ t("GL 70/30 exact-fill: main fills a page → sub starts fresh (white=6)", () =>
   eq(w.sub.page.startPage, w.main.page.endPage + 1, "sub starts fresh page 2");
   eq(w.sub.page.startSlot, 1, "sub at slot 1");
 });
-t("Overrun: each item type independent, starts page 1", () => {
+t("Overrun: each item type on its own fresh page block (continuous day)", () => {
   reset(app, []);
   Object.assign(app.state.auctionOverrun, { cards: 5, illusion: 0, white: 10, black: 0 });
   const pm = pageMapOf("overrun");
+  // cards 5 → p1-2; white starts fresh page 3 (zero-item illusion is skipped, no offset).
   eq(typeRange(pm, "cards"), [1, 2], "cards p1-2");
-  eq(typeRange(pm, "white"), [1, 3], "white independent p1-3");
+  eq(typeRange(pm, "white"), [3, 5], "white starts fresh page 3 after cards block");
 });
 t("page-map is RATE-INDEPENDENT (editing rate doesn't move pages)", () => {
   reset(app, []);
@@ -330,12 +342,12 @@ t("page-map is RATE-INDEPENDENT (editing rate doesn't move pages)", () => {
   const after = JSON.stringify(pageMapOf("gl").perType.find(t => t.key === "white"));
   eq(after, before, "white page range unchanged by rate edit");
 });
-t("page-map: zero-item type skipped; all-zero → 0 pages", () => {
+t("page-map: zero-item type skipped (no page consumed); all-zero → 0 pages", () => {
   reset(app, []);
   Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 8, black: 0, bonusPercent: 0 });
   const pm = pageMapOf("gl");
   eq(typeRange(pm, "cards"), [null, null], "no cards → null range");
-  eq(typeRange(pm, "white"), [1, 2], "white at page 1 (cards contribute 0 offset)");
+  eq(typeRange(pm, "white"), [1, 2], "white at page 1 (empty earlier types consume no page)");
   reset(app, []);
   eq(pageMapOf("gl").totalPages, 0, "all-zero → 0 pages");
 });
@@ -344,7 +356,33 @@ t("badge re-anchor: white person shows real page with cards column empty of peop
   Object.assign(app.state.auctionGL, { cards: 5, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
   app.state.auctionGL.assignments.main.white = ["w1"]; // cards has 5 ITEMS but no people
   const html = app.call("buildAuctionView", "gl");
-  eq(badgesFor(html, "w1"), ["หน้า 2 · ชิ้น 2-4"], "anchored after 5 card items (cards column empty)");
+  // cards block = pages 1-2 → white block starts fresh page 3, even with no card people.
+  eq(badgesFor(html, "w1"), ["หน้า 3 · ชิ้น 1-3"], "white on its own block (page 3) regardless of card people");
+});
+
+console.log("\n[auction column coverage — fill progress vs pool pages]");
+function coveragesOf(html) { return [...html.matchAll(/ac-coverage [^"]*">([^<]+)</g)].map(m => m[1].trim()); }
+t("under-filled column shows pages covered + items/pages remaining", () => {
+  reset(app, mkMembers(["w1"]));
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  app.state.auctionGL.assignments.main.white = ["w1"]; // rate 3 → need 3 of pool 7
+  const cov = coveragesOf(app.call("buildAuctionView", "gl"));
+  eq(cov[0], "👥 ลากถึงหน้า 1 · ขาดอีก 4 ชิ้น (1 หน้า)", "white main under-filled");
+  eq(cov[1], "ยังไม่ลากใคร — ต้องครอบ 3 ชิ้น", "white sub untouched");
+});
+t("exactly-filled column shows ครบ", () => {
+  reset(app, mkMembers(["w1"]));
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  app.state.auctionGL.rates.white = 7;                 // need 7 == pool 7
+  app.state.auctionGL.assignments.main.white = ["w1"];
+  eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ ลากครบทุกหน้าแล้ว", "exact");
+});
+t("over-filled column shows เกิน", () => {
+  reset(app, mkMembers(["w1", "w2"]));
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  app.state.auctionGL.rates.white = 7;                 // 2 ppl × 7 = 14 > pool 7
+  app.state.auctionGL.assignments.main.white = ["w1", "w2"];
+  eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ ครบแล้ว · เกินมา 7 ชิ้น", "over by 7");
 });
 
 console.log("\n[version stamp]");

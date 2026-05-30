@@ -1080,6 +1080,15 @@
     background: rgba(88,166,255,0.08); border-radius: 5px;
   }
   .ac-pagemap.empty { color: var(--muted); font-weight: 400; background: transparent; }
+  /* Coverage line: how far the dragged people fill the column's pool pages */
+  .ac-coverage {
+    font-size: 11px; font-weight: 700; text-align: center;
+    padding: 2px 4px; margin-top: 3px; border-radius: 5px;
+  }
+  .ac-coverage.none  { color: var(--muted); font-weight: 400; }
+  .ac-coverage.short { color: #fb923c; background: rgba(249,115,22,0.10); }
+  .ac-coverage.ok    { color: var(--success); background: rgba(34,197,94,0.10); }
+  .ac-coverage.over  { color: var(--accent); background: rgba(88,166,255,0.10); }
   .auction-pagemap-strip {
     margin: 0 14px 12px; padding: 10px 14px;
     background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
@@ -6433,21 +6442,18 @@ function computeAuction(kind) {
       pageOffset: startCursor - 1
     };
   };
-  if (hasSubField) {
-    // GL: ONE continuous chain — cards.main, cards.sub, illusion.main, ... black.sub.
-    // (sub continues in main's partial page; matches the per-person badge chain.)
-    let offset = 0;
-    items.forEach(it => {
-      it.main.page = pagesFromCursor(offset + 1, it.main.pool); offset += it.main.pool;
-      it.sub.page  = pagesFromCursor(offset + 1, it.sub.pool);  offset += it.sub.pool;
-    });
-  } else {
-    // Overrun: each item type is an independent page run starting at page 1.
-    items.forEach(it => {
-      it.main.page = pagesFromCursor(1, it.main.pool);
-      it.sub.page  = pagesFromCursor(1, 0);
-    });
-  }
+  // Each item TYPE occupies its OWN page block: the next type always starts on a
+  // fresh page (in the in-game auction, every item type begins on a new page, so
+  // its pages are a fixed position). Within a type, main → sub run continuously
+  // (sub fills main's last partial page). One path for GL + Overrun — Overrun
+  // just has sub.pool = 0. Page numbers come from item COUNTS only, not the rate.
+  const ceilToPageBoundary = (n) => Math.ceil(n / PP) * PP;
+  let offset = 0;
+  items.forEach(it => {
+    it.main.page = pagesFromCursor(offset + 1, it.main.pool); offset += it.main.pool;
+    it.sub.page  = pagesFromCursor(offset + 1, it.sub.pool);  offset += it.sub.pool;
+    offset = ceilToPageBoundary(offset);   // next item type → fresh page
+  });
   // Per-type ruler (combine main+sub items per type) + whole-day total.
   const perType = items.map(it => {
     const m = it.main.page, s = it.sub.page;
@@ -6456,7 +6462,14 @@ function computeAuction(kind) {
     return { key: it.key, label: it.label, items: it.total, startPage, endPage };
   });
   const totalItems = items.reduce((sum, it) => sum + it.total, 0);
-  const pageMap = { perType, totalItems, totalPages: Math.ceil(totalItems / PP) };
+  // Total pages = the last page actually used (gaps exist because each type
+  // starts fresh, so this is NOT ceil(totalItems/4)).
+  let totalPages = 0;
+  items.forEach(it => {
+    if (it.main.page.endPage) totalPages = Math.max(totalPages, it.main.page.endPage);
+    if (it.sub.page.endPage)  totalPages = Math.max(totalPages, it.sub.page.endPage);
+  });
+  const pageMap = { perType, totalItems, totalPages };
 
   return { kind, members, people, percent, rate, base, items, assignments, hasSubField, pageMap };
 }
@@ -6804,6 +6817,26 @@ function buildAuctionView(kind) {
         + `${(data.hasSubField && field === "sub" && pg.startSlot > 1) ? ` · เริ่มช่อง ${pg.startSlot}` : ""}`
         + ` · ${pg.items} ชิ้น`
       : `📄 ไม่มีของ`;
+    // Coverage: how far the people DRAGGED IN so far fill this column's pool,
+    // vs the target pages above — so the admin sees what's still missing without
+    // counting. side.need = count × rate (items the assigned people will take).
+    let coverageChip = "", coverageCls = "";
+    if (side.pool > 0 && pg && pg.startCursor != null) {
+      if (side.count === 0) {
+        coverageChip = `ยังไม่ลากใคร — ต้องครอบ ${side.pool} ชิ้น`;
+        coverageCls = "none";
+      } else if (side.need >= side.pool) {
+        const over = side.need - side.pool;
+        coverageChip = over > 0 ? `✅ ครบแล้ว · เกินมา ${over} ชิ้น` : `✅ ลากครบทุกหน้าแล้ว`;
+        coverageCls = over > 0 ? "over" : "ok";
+      } else {
+        const coveredEndPage = Math.ceil((pg.startCursor + side.need - 1) / AUCTION_ITEMS_PER_PAGE);
+        const remain = side.pool - side.need;
+        const remainPages = Math.max(0, pg.endPage - coveredEndPage);
+        coverageChip = `👥 ลากถึงหน้า ${coveredEndPage} · ขาดอีก ${remain} ชิ้น${remainPages > 0 ? ` (${remainPages} หน้า)` : ""}`;
+        coverageCls = "short";
+      }
+    }
     return `
       <div class="auction-column" style="--col:${COL_STYLES[it.key]}">
         <div class="ac-head">
@@ -6825,6 +6858,7 @@ function buildAuctionView(kind) {
           </div>
         </div>
         <div class="ac-pagemap ${side.pool > 0 ? "" : "empty"}">${pageChip}</div>
+        ${coverageChip ? `<div class="ac-coverage ${coverageCls}">${coverageChip}</div>` : ""}
         <div class="ac-droplist"
              ondragover="dragOverEl(event)"
              ondragleave="dragLeaveEl(event)"
