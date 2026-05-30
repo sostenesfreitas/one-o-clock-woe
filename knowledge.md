@@ -3,15 +3,24 @@
 Deeper reference. Use this when `CLAUDE.md` isn't enough — it expands on
 state shape, sync flow, and the trickier corners of the single-file app.
 
-## File anatomy (`index.html`, ~6,300 lines)
+## File anatomy (`index.html`, ~8,230 lines)
 
 | Range | Contents |
 |---|---|
 | 1–9 | `<head>`, meta, title |
-| 10–2204 | `<style>` block — all CSS, organized by `/* ===== Section ===== */` |
-| 2205–2210 | Firebase compat SDK script tags |
-| 2211–2305 | `<body>` markup — header, sidebar, main grid, dialogs, toast |
-| 2306–6321 | `<script>` — constants, state, helpers, renderers, sync, init |
+| 10–~2200 | `<style>` block — all CSS, organized by `/* ===== Section ===== */` |
+| ~2205–2210 | Firebase compat SDK script tags |
+| ~2211–2305 | `<body>` markup — header, sidebar, main grid, dialogs, toast |
+| ~2306–8290 | `<script>` — constants, state, helpers, renderers, sync, init |
+
+> Line numbers below are approximate and **drift on every edit** — always
+> `grep -n` for the symbol before trusting an offset. Key anchors at the time
+> of writing: `let state` ~2687, `AUCTION_DEFAULT_RATES` ~4564,
+> `AUCTION_ITEMS_PER_PAGE` ~4576, `isAdmin()` ~4742, `getAuctionRates` ~6265,
+> `computeAuction` ~6275, `setAuctionRate` ~6470, `buildAuctionView` ~6544,
+> `buildAuctionCol` (chain) ~6645, `arGetDateRange` ~6900,
+> `buildAuctionRequestHtml` ~7129, `arRequestBlockReason` ~7165,
+> `render()` ~8108, `normalizeAuctionState` ~8228, boot block ~8207.
 
 Use this lookup before grep:
 
@@ -75,8 +84,13 @@ Where `AuctionState` is:
 
 ```js
 {
-  cards: number, illusion: number, white: number, black: number,
-  bonusPercent: number,
+  cards: number, illusion: number, white: number, black: number,  // base drop
+  bonusPercent: number,                                           // GL bonus %
+  rates: { card: number, illusion: number, white: number, black: number },
+  // ^ admin-editable per-person allocation (จำนวนของที่ได้รับต่อคน), min 1.
+  //   Note the SINGULAR "card" key (matches ITEM_META.rateKey), while the
+  //   base/assignment keys are PLURAL "cards". getAuctionRates(kind) reads
+  //   these with a fallback to AUCTION_DEFAULT_RATES.
   assignments: {
     main: { cards: memberId[], illusion: [], white: [], black: [] },
     sub:  { cards: memberId[], illusion: [], white: [], black: [] }
@@ -84,8 +98,10 @@ Where `AuctionState` is:
 }
 ```
 
-`normalizeAuctionState()` (`index.html:6269`) migrates legacy flat shapes
-(pre-main/sub split) into the current shape on load.
+`normalizeAuctionState(obj, kind)` (`index.html` ~8228) migrates legacy flat
+shapes (pre-main/sub split) into the current shape on load, and backfills /
+validates `rates` (any missing or <1 value falls back to the mode default).
+Pass `kind` (`"gl"` | `"overrun"`) so the right defaults are used.
 
 ## Sync model
 
@@ -174,6 +190,54 @@ load() ──▶ initFirebase() ──▶ onAuthStateChanged
 - `setupTooltip()`, `showTooltipFor()`, `pinTooltipFor()` — disabled
   no-ops. Tooltip system was removed; the stubs stay so call sites
   compile.
+
+## Auction (GL / Overrun) — rates, math, page chain
+
+- **Per-person rates are admin-editable + synced.** `getAuctionRates(kind)`
+  returns the live `{card,illusion,white,black}` (falling back to
+  `AUCTION_DEFAULT_RATES`); `setAuctionRate(kind, rateKey, value)` is
+  `isAdmin()`-gated, clamps to ≥1, mutates `state.auction*.rates`, and persists
+  via `save()` → the existing `auction_gl` / `auction_overrun` Firebase push
+  (no new listener needed — `rates` rides inside the same object).
+- **`computeAuction(kind)`** computes per-item totals. GL applies the bonus
+  (cards+illusion ×2 when %>0, feathers ×(1+%/100)) then splits each item
+  **70/30** main/sub (`Math.floor(total*0.7)`); Overrun has no sub field
+  (`hasSubField=false`). Shortage per side = `pool − count×rate`.
+- **Auction-page CHAIN numbering** (`buildAuctionCol`, ~6645) — the subtle part:
+  - **GL** = ONE continuous chain across all 8 buckets in fixed order
+    (cards-main → cards-sub → illusion-main → … → black-sub). Each bucket's
+    `chainOffset` = Σ(earlier buckets' `count × that bucket's rate`).
+  - **Overrun** = chain resets to 0 **per column** (cards/illusion/white/black
+    independent).
+  - A person's allocation = `rate` items, split into per-page segments of
+    `AUCTION_ITEMS_PER_PAGE` (=4): `page = ceil(cursor/4)`, slots local 1–4.
+  - **Because the chain reads `getAuctionRates()`, editing a rate changes the
+    page layout.** This interaction is the highest-value thing to test —
+    `test/run.js` locks it down ("editing the rate CHANGES the chain").
+- **Event-day request gate** (`arRequestBlockReason`, ~7165) — single source of
+  truth used by both `arOpenRequestModal` and `arCreateRequest`. Allows a
+  request only when: date == today (BKK), `isEventDay(today)` is truthy, the
+  request `mode` matches that day's event (GL ↔ อังคาร/พฤหัส, Overrun ↔
+  อาทิตย์), and the member isn't on leave. `arGetDateRange()` returns only
+  `[today]` (no advance window).
+
+## Testing (`test/`, dependency-free)
+
+- **`node test/run.js`** — parse check + full behavior/simulation suite. Exit 1
+  on any failure → use it as the pre-commit gate. `node test/parse-check.js`
+  runs just the inline-script syntax check.
+- **`test/harness.js`** loads the REAL inline `<script>` from `index.html` into
+  a Node `vm` context with light DOM/Firebase/localStorage stubs. Function
+  declarations leak onto the context global (callable directly); `let state` /
+  `const`s are bridged out via a small `__T_*` shim injected right before the
+  boot `load();` line. `setAdmin(bool)` / `setToday(iso)` override `isAdmin` /
+  `todayBkkISO` for deterministic tests.
+- Coverage today: event-day gate, editable rates (defaults/override/clamp/
+  admin-guard), `normalizeAuctionState` migration, 70/30 + shortage math, and
+  GL+Overrun page-chain numbering with custom rates.
+- **When you change auction or request behavior, add/extend a test** in
+  `test/run.js` in the same commit (CLAUDE.md rule). Harness stub gaps (e.g. a
+  missing DOM method) are fixed in `harness.js`, not worked around in tests.
 
 ## Common pitfalls
 

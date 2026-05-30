@@ -1,6 +1,10 @@
 # CodeGraph local index — tooling, rebuilt per machine, not for the repo
 .codegraph/
 
+# npm — package.json exists only to run the zero-dependency test suite
+node_modules/
+package-lock.json
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

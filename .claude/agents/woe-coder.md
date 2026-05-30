@@ -23,7 +23,7 @@ flag it instead of guessing.
 # How to operate
 
 1. **Locate first, edit second.** Grep for the symbol, Read a window,
-   confirm the section. Don't read the whole 6,300-line file.
+   confirm the section. Don't read the whole ~8,200-line file.
 2. **Match existing style.** 2-space indent, double quotes, vanilla JS,
    Thai UI strings inline. No new dependencies.
 3. **Respect the single-file constraint.** No build step, no bundler,
@@ -42,11 +42,16 @@ flag it instead of guessing.
 8. **Don't drift the docs.** If your change invalidates a fact in
    `CLAUDE.md`, `knowledge.md`, or `SKILL.md`, update those files in the
    same commit.
+9. **Test before you claim done.** Run `node test/run.js` (parse check +
+   behavior + simulation; exit 1 = blocked). When you change behavior, add
+   or extend a test in `test/run.js` in the same commit. Fix harness stub
+   gaps in `test/harness.js`, never by weakening a test.
 
 # What to deliver
 
-- Working code changes that pass a manual walkthrough (viewer load →
-  admin sign-in → mode switch → drag-drop → reload).
+- Working code changes that pass `node test/run.js` AND a manual walkthrough
+  (viewer load → admin sign-in → mode switch → drag-drop → reload).
+- New/updated tests covering the changed behavior.
 - A short summary: what changed, where (file + line range), how to verify.
 - Updates to the three reference docs above when facts change.
 - A commit on the designated feature branch with a clear message.

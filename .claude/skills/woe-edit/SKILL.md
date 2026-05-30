@@ -1,13 +1,14 @@
 ---
 name: woe-edit
-description: Use when editing index.html in the woe-party repo — the single-file ~6,300-line app that holds all UI, styles, and logic. Triggers on tasks like "add a page", "fix a render bug", "change auction layout", "add a Firebase field", "tweak responsive CSS", or any work that touches index.html. Covers safe-navigation patterns and the data/sync model so edits don't break adjacent features.
+description: Use when editing index.html in the woe-party repo — the single-file ~8,200-line app that holds all UI, styles, and logic. Triggers on tasks like "add a page", "fix a render bug", "change auction layout", "add a Firebase field", "tweak responsive CSS", or any work that touches index.html. Covers safe-navigation patterns, the data/sync model, and the test suite so edits don't break adjacent features.
 ---
 
 # Editing `index.html` safely
 
-This repo is a single static HTML file (~6,300 lines) — no build, no
-framework, no test suite. All edits land in `index.html`. This skill keeps
-you from breaking adjacent features.
+This repo is a single static HTML file (~8,200 lines) — no build, no
+framework. All app code lands in `index.html`. There IS a dependency-free
+test suite (`node test/run.js`) — run it before every commit. This skill
+keeps you from breaking adjacent features.
 
 For full architecture, read `knowledge.md`. For project conventions, read
 `CLAUDE.md`. Don't re-read those when this skill is sufficient.
@@ -104,9 +105,23 @@ Always use the BKK helpers (`bkkNow`, `todayBkkISO`, `bkkDow`,
 `isEventDay`, `thisMondayISO`) near `index.html:2382-2415`. Raw `new Date()`
 gives wrong results outside Asia/Bangkok.
 
+## Auction rates + event-day gate (recent features)
+
+- **Per-person rates** are admin-editable and synced: `getAuctionRates(kind)`
+  reads live `{card,illusion,white,black}` (fallback `AUCTION_DEFAULT_RATES`);
+  `setAuctionRate(kind,rateKey,value)` is `isAdmin()`-gated + clamps ≥1. Rates
+  live on `state.auction{GL,Overrun}.rates` and ride the existing Firebase push.
+- The rate feeds **auction-page chain numbering** (`buildAuctionCol`). If you
+  touch rates or the chain, the regression tests in `test/run.js` must stay
+  green — see `knowledge.md` "Auction (GL / Overrun)".
+- **Auction Request** opens only on the current event day for that day's event
+  (`arRequestBlockReason` / `isEventDay`); `arGetDateRange()` returns `[today]`.
+
 ## Don't
 
-- Don't introduce a build step, npm, TypeScript, or a framework.
+- Don't introduce a build step, bundler, TypeScript, or a framework for the
+  **app**. (The `test/` harness is plain Node with zero dependencies — that's
+  allowed tooling, not a build step.)
 - Don't add external runtime dependencies beyond the existing Firebase
   compat SDK.
 - Don't commit Firebase admin SDK keys or service-account JSON. The
@@ -118,9 +133,16 @@ gives wrong results outside Asia/Bangkok.
 
 ## Verifying
 
-1. Open `index.html` in a browser (serve over `python3 -m http.server 8000`
+1. **Run the suite first:** `node test/run.js` (parse check + behavior +
+   simulation). Exit 1 = do not commit. Add/extend a test when you change
+   behavior.
+2. Open `index.html` in a browser (serve over `python3 -m http.server 8000`
    so Firebase auth popup works).
-2. Walk: viewer load → Google sign-in → mode switch → drag-drop → reload.
-3. Check the responsive breakpoints in DevTools (1100/700/480 px).
-4. There is no test suite. If you can't open a browser, say so explicitly
-   instead of claiming the change works.
+   - Note: Firebase auth is locked to the deployed domain; on `localhost` the
+     auth popup may hang. For logic checks prefer the test suite or
+     `preview_eval` calling functions directly (`computeAuction`,
+     `buildAuctionView`, `arRequestBlockReason`).
+3. Walk: viewer load → Google sign-in → mode switch → drag-drop → reload.
+4. Check the responsive breakpoints in DevTools (1100/700/480 px).
+5. If you can't open a browser, say so explicitly — but the suite still must
+   pass, and it doesn't need a browser.
