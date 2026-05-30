@@ -396,10 +396,10 @@ t("buildVersionStamp() returns v<APP_VERSION>", () => {
 
 console.log("\n[landing — front door wiring]");
 (function () {
-  const fs2 = require("fs"), path2 = require("path");
-  const root = path2.join(__dirname, "..");
-  const landing = fs2.readFileSync(path2.join(root, "index.html"), "utf8");
-  const appHtml = fs2.readFileSync(path2.join(root, "app.html"), "utf8");
+  const root = require("path").join(__dirname, "..");
+  const rd = (p) => require("fs").readFileSync(require("path").join(root, p), "utf8");
+  const landing = rd("index.html");
+  const appHtml = rd("app.html");
   t("landing index.html links into the app (app.html)", () => {
     ok(/href\s*=\s*["']app\.html["']/.test(landing), "expected a link to app.html");
   });
@@ -415,15 +415,14 @@ console.log("\n[landing — front door wiring]");
     ok(!landing.includes("initFirebase"), "landing must not boot the app");
   });
   t("logo asset exists and is reasonably sized (<500KB)", () => {
-    const p = path2.join(root, "assets", "one-o-clock.png");
-    ok(fs2.existsSync(p), "assets/one-o-clock.png missing");
-    ok(fs2.statSync(p).size / 1024 < 500, "logo should be <500KB");
+    const p = require("path").join(root, "assets", "one-o-clock.png");
+    ok(require("fs").existsSync(p), "assets/one-o-clock.png missing");
+    ok(require("fs").statSync(p).size / 1024 < 500, "logo should be <500KB");
   });
   t("VERSION COUPLING: app.html APP_VERSION === landing footer === CHANGELOG top", () => {
     const appV = (appHtml.match(/APP_VERSION\s*=\s*"([^"]+)"/) || [])[1];
     const landV = (landing.match(/v(\d{4}\.\d{2}\.\d{2}(?:\.\d+)?)/) || [])[1];
-    const changelog = fs2.readFileSync(path2.join(root, "CHANGELOG.md"), "utf8");
-    const clV = (changelog.match(/##\s*\[(\d{4}\.\d{2}\.\d{2}(?:\.\d+)?)\]/) || [])[1];
+    const clV = (rd("CHANGELOG.md").match(/##\s*\[(\d{4}\.\d{2}\.\d{2}(?:\.\d+)?)\]/) || [])[1];
     ok(appV, "APP_VERSION found in app.html");
     eq(landV, appV, "landing footer must equal APP_VERSION");
     eq(clV, appV, "top CHANGELOG entry must equal APP_VERSION");
