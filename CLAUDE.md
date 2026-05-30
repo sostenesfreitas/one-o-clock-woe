@@ -1,4 +1,8 @@
-# CLAUDE.md — Project rules for this repo
+# CLAUDE.md — WOE Party Organizer
+
+Project rules **and** memory for Claude Code. Focus: coding and editing the
+WoE party organizer app. Pair this with `knowledge.md` (deep architecture
+reference: state shape, sync flow, line map).
 
 ## 🛡️ QA review เป็นข้อบังคับ
 
@@ -6,11 +10,12 @@
 
 ### ขั้นตอนบังคับหลังเขียน code ทุกครั้ง
 
-1. **Syntax check** — รัน Node parse check ของ inline scripts ใน `index.html` ก่อน:
+1. **Syntax check** — รัน Node parse check ของ inline scripts ใน `index.html`
+   ก่อน (รันจาก repo root):
    ```bash
    node -e "
    const fs = require('fs');
-   const html = fs.readFileSync('/home/user/woe-party/index.html','utf8');
+   const html = fs.readFileSync('index.html','utf8');
    const re = /<script\b[^>]*>([\s\S]*?)<\/script>/g;
    let m, all = '';
    while ((m = re.exec(html))) {
@@ -18,13 +23,14 @@
      if (/\bsrc=/.test(tag)) continue;
      all += m[1] + '\n';
    }
-   try { new Function(all); console.log('OK'); }
-   catch(e){ console.error('PARSE ERROR:', e.message); }
+   try { new Function(all); console.log('PARSE OK'); }
+   catch(e){ console.error('PARSE ERROR:', e.message); process.exit(1); }
    "
    ```
    ถ้าเจอ `PARSE ERROR` → ห้ามคอมมิต แก้ก่อน
 
-2. **QA review skill** — เรียก `/code-review` ที่ effort `high` (ถ้าเป็นการแก้บัค) หรือ `medium`+ (ถ้าเป็น cleanup) ก่อน commit เสมอ
+2. **QA review skill** — เรียก `/code-review` ที่ effort `high` (ถ้าเป็นการแก้บัค)
+   หรือ `medium`+ (ถ้าเป็น cleanup) ก่อน commit เสมอ
    - ถ้ามี finding ระดับ correctness bug → ต้องแก้ก่อน commit
    - ถ้าเป็น cleanup/simplification → ตัดสินใจร่วมกับ user ว่าจะแก้รอบนี้หรือทิ้ง TODO
 
@@ -46,29 +52,110 @@
 
 ### กรณีพิเศษ
 
-- **Doc-only change** (README, CLAUDE.md, comments only) → skip syntax check ได้ แต่ยังต้องอ่านทบทวนเอง
+- **Doc-only change** (README, CLAUDE.md, knowledge.md, comments only) → skip
+  syntax check ได้ แต่ยังต้องอ่านทบทวนเอง
 - **Revert pure** (ย้อน commit เก่า) → skip QA review ได้ แต่ต้องบอก user ว่าย้อนอะไร
-- **Emergency hotfix** (กรณีคนใช้งานอยู่จริงๆ แล้วเกิด production down) → ทำ minimal fix, push, แล้วทำ QA review หลัง (post-mortem)
+- **Emergency hotfix** (กรณีคนใช้งานอยู่จริงๆ แล้วเกิด production down) → ทำ minimal
+  fix, push, แล้วทำ QA review หลัง (post-mortem)
 
 ---
 
-## Project context
+## What this project is
 
-**woe-party** — Single-file HTML app for organizing Ragnarok Online WoE (War of Emperium) parties and post-WoE auctions
+A single-file web app (`index.html`) that helps a Ragnarok Online guild
+organize War of Emperium (WoE) parties and run post-war loot auctions.
+Everything — markup, styles, logic — lives in one HTML file. It syncs in real
+time through Firebase so the guild leader edits and members watch live.
 
-- **Tech:** Vanilla JS + Firebase Realtime Database (compat SDK 10.7) + Firebase Auth — no build step, no module system, all in `index.html`
-- **Deploy:** GitHub Pages from `main` branch → https://cybodies.github.io/woe-party
-- **Timezone:** All "today" semantics in Asia/Bangkok (UTC+7) via `todayBkkISO()` / `bkkNow()` helpers
-- **Data shape gotcha:** Firebase RTDB drops trailing nulls from arrays and converts sparse arrays to objects. Always use `fbToFixedArray(v, len, fill)` when reading parties/slots from Firebase
-- **Admin:** `blankkardor@gmail.com` via Google OAuth (bootstrap) + `/admins/{email_with_dots_as_underscores}` for additional admins + `/users/{username}` for ID/password accounts created via the Users page (synthetic email `username@woe.local`)
+## Repo layout
 
-### Critical files
+```
+woe-party/
+├── index.html          # the entire app (~8,200 lines)
+├── maps/               # battlefield background images
+│   ├── main.png
+│   ├── sub.png
+│   └── overrun.png
+├── CLAUDE.md           # this file — rules + project memory
+├── knowledge.md        # deeper architecture reference (state, sync, line map)
+├── README.md           # user-facing description
+└── .claude/
+    ├── agents/woe-coder.md       # agent: implement features / fix bugs in index.html
+    └── skills/woe-edit/SKILL.md  # skill: safe-edit workflow for index.html
+```
 
-- `index.html` — entire app (~7000+ lines)
-- `maps/main.png`, `maps/sub.png`, `maps/overrun.png` — battlefield map images
+## Stack
 
-### Branch policy
+- **Vanilla JS** — no framework, no build step, no modules. One `<script>`.
+- **Firebase** Realtime Database + Auth + Storage (compat SDK 10.7).
+- **localStorage** for offline cache + per-device fallback.
+- **GitHub Pages** deploy from `main` → https://cybodies.github.io/woe-party
 
-- Develop on feature branch (current: `claude/github-connection-setup-tY5Pb`)
-- Fast-forward merge to `main` when user confirms — never force push
-- Never push to a different branch without explicit user permission
+## Key constants (top of script block)
+
+- `PARTIES = 16` — League party count.
+- `DEFAULT_SHEET` — legacy Google-Sheet import URL (optional roster bootstrap).
+- `ADMIN_EMAILS` — literal allowlist for admin gating.
+- `SYNC_KEYS` — whitelist of state keys mirrored to Firebase.
+
+## Pages / modes
+
+`state.mode` ∈ league · overrun · summary · auction-gl · auction-overrun ·
+roster · leave. Each renders from the same `state`; `switchMode()` repoints
+`state.parties` at the league or overrun array.
+
+## Firebase data model
+
+```
+/parties/league/{0..15}/{slots}
+/parties/overrun/{0..15}/{slots}
+/members/{id}
+/markers/{partyId}
+/auction_gl, /auction_overrun
+/leaves/{memberId}/{YYYY-MM-DD}
+/job_targets, /system
+/admins/{email_underscored}, /users/{username}
+```
+
+Firebase RTDB drops trailing nulls + converts sparse arrays to objects —
+always read back through `fbToFixedArray(v, len, fill)`.
+
+## Auth model
+
+- Anonymous sign-in for viewers; email/password (or Google bootstrap) for
+  admins. `isAdmin()` gates every write.
+- Admin bootstrap: `blankkardor@gmail.com` (Google OAuth). Additional admins
+  via `/admins/{email_with_dots_as_underscores}`. ID/password accounts created
+  in the Users page live at `/users/{username}` (synthetic email
+  `username@woe.local`).
+- Frontend gating is UX only — real enforcement is in Firebase DB rules.
+
+## Timezone
+
+All "today" logic uses Asia/Bangkok (UTC+7) via `todayBkkISO()` / `bkkNow()`.
+Never use `new Date()` directly for date math (off-by-one outside Bangkok).
+
+## Conventions
+
+- Thai-primary UI, English technical terms.
+- CSS vars for theming; mode-scoped `/* ===== ... ===== */` sections.
+- Inline `event.stopPropagation()` where the existing code does it.
+- Additive, surgical edits — don't reflow unrelated code.
+- Guard every Firebase write with `isAdmin()`; use `fbToFixedArray()` on reads.
+
+## Critical files
+
+- `index.html` — entire app (~8,200 lines).
+- `maps/main.png`, `maps/sub.png`, `maps/overrun.png` — battlefield map images.
+
+## Branch policy
+
+- Develop on a feature branch — never edit `main` directly.
+- Fast-forward merge to `main` only when the user confirms — never force push.
+- Never push to a different branch without explicit user permission.
+
+## Out of scope
+
+- No build tooling, frameworks, or npm dependencies.
+- No live game network/memory access (this is a planning tool only).
+- Don't weaken Firebase security rules to make a feature work.
