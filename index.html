@@ -1073,6 +1073,28 @@
   @media (max-width: 1200px) { .auction-columns { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 600px)  { .auction-columns { grid-template-columns: 1fr; } }
 
+  /* ===== Auction page-map (supply-based real auction pages) ===== */
+  .ac-pagemap {
+    font-size: 11px; font-weight: 700; color: var(--accent);
+    text-align: center; padding: 3px 4px; margin-top: 2px;
+    background: rgba(88,166,255,0.08); border-radius: 5px;
+  }
+  .ac-pagemap.empty { color: var(--muted); font-weight: 400; background: transparent; }
+  .auction-pagemap-strip {
+    margin: 0 14px 12px; padding: 10px 14px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  }
+  .auction-pagemap-strip.empty { color: var(--muted); font-size: 12px; text-align: center; }
+  .auction-pagemap-strip .apm-head { font-size: 13px; margin-bottom: 8px; }
+  .auction-pagemap-strip .apm-head b { color: var(--accent); }
+  .auction-pagemap-strip .apm-sub { color: var(--muted); font-weight: 400; font-size: 11px; }
+  .auction-pagemap-strip .apm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .auction-pagemap-strip .apm-chip {
+    font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;
+    color: var(--text); background: color-mix(in srgb, var(--col) 18%, transparent);
+    border: 1px solid var(--col);
+  }
+
   .auction-column {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -6392,7 +6414,51 @@ function computeAuction(kind) {
     };
   });
 
-  return { kind, members, people, percent, rate, base, items, assignments, hasSubField };
+  // ---- Real auction page-map (4 items/page) from the ITEM POOL, not assigned
+  // people. Shows today's page layout up front + anchors the per-person page
+  // badges to the real auction even when columns are underfilled. Page numbers
+  // depend on item COUNTS only — never on the editable per-person rate.
+  const PP = AUCTION_ITEMS_PER_PAGE;
+  const pagesFromCursor = (startCursor, count) => {
+    if (count <= 0) {
+      return { items: 0, startPage: null, endPage: null, startSlot: null,
+               startCursor: null, endCursor: null, pageOffset: startCursor - 1 };
+    }
+    const endCursor = startCursor + count - 1;
+    return {
+      items: count, startCursor, endCursor,
+      startPage: Math.ceil(startCursor / PP),
+      endPage:   Math.ceil(endCursor / PP),
+      startSlot: ((startCursor - 1) % PP) + 1,
+      pageOffset: startCursor - 1
+    };
+  };
+  if (hasSubField) {
+    // GL: ONE continuous chain — cards.main, cards.sub, illusion.main, ... black.sub.
+    // (sub continues in main's partial page; matches the per-person badge chain.)
+    let offset = 0;
+    items.forEach(it => {
+      it.main.page = pagesFromCursor(offset + 1, it.main.pool); offset += it.main.pool;
+      it.sub.page  = pagesFromCursor(offset + 1, it.sub.pool);  offset += it.sub.pool;
+    });
+  } else {
+    // Overrun: each item type is an independent page run starting at page 1.
+    items.forEach(it => {
+      it.main.page = pagesFromCursor(1, it.main.pool);
+      it.sub.page  = pagesFromCursor(1, 0);
+    });
+  }
+  // Per-type ruler (combine main+sub items per type) + whole-day total.
+  const perType = items.map(it => {
+    const m = it.main.page, s = it.sub.page;
+    const startPage = (m.startPage != null) ? m.startPage : s.startPage;
+    const endPage   = (s.endPage   != null) ? s.endPage   : m.endPage;
+    return { key: it.key, label: it.label, items: it.total, startPage, endPage };
+  });
+  const totalItems = items.reduce((sum, it) => sum + it.total, 0);
+  const pageMap = { perType, totalItems, totalPages: Math.ceil(totalItems / PP) };
+
+  return { kind, members, people, percent, rate, base, items, assignments, hasSubField, pageMap };
 }
 
 // All four mutators call render() (not just renderBattlefields) so the sidebar's
@@ -6676,31 +6742,11 @@ function buildAuctionView(kind) {
     //    each start at item #1). Within a column, items run sequentially across
     //    auction pages of 4 slots, splitting a person's allocation across pages
     //    when needed (e.g. Overrun white/black rate=10 → 1 คน กิน 3 หน้า).
-    const isGLChain = (data.kind === "gl");
-    let chainOffset = 0;
-    if (isGLChain) {
-      const a     = data.assignments;
-      const cRate = data.rate.card;
-      const iRate = data.rate.illusion;
-      const wRate = data.rate.white;
-      const bRate = data.rate.black;
-      const afterCardMain     = a.main.cards.length    * cRate;
-      const afterCardSub      = afterCardMain     + a.sub.cards.length    * cRate;
-      const afterIllusionMain = afterCardSub      + a.main.illusion.length * iRate;
-      const afterIllusionSub  = afterIllusionMain + a.sub.illusion.length  * iRate;
-      const afterWhiteMain    = afterIllusionSub  + a.main.white.length    * wRate;
-      const afterWhiteSub     = afterWhiteMain    + a.sub.white.length     * wRate;
-      const afterBlackMain    = afterWhiteSub     + a.main.black.length    * bRate;
-      chainOffset =
-          it.key === "cards"    && field === "main" ? 0
-        : it.key === "cards"    && field === "sub"  ? afterCardMain
-        : it.key === "illusion" && field === "main" ? afterCardSub
-        : it.key === "illusion" && field === "sub"  ? afterIllusionMain
-        : it.key === "white"    && field === "main" ? afterIllusionSub
-        : it.key === "white"    && field === "sub"  ? afterWhiteMain
-        : it.key === "black"    && field === "main" ? afterWhiteSub
-        : /* black sub */                              afterBlackMain;
-    }
+    // Per-person badge offset = where this bucket's items START in the real
+    // auction, taken from the pool-anchored page-map (computeAuction). This makes
+    // a person's page correct even when earlier columns are underfilled. GL chains
+    // across all 8 buckets by item pool; Overrun is independent (pageOffset 0).
+    const chainOffset = (side.page && typeof side.page.pageOffset === "number") ? side.page.pageOffset : 0;
     const rows = ids.map((memId, i) => {
       const m = findMember(memId);
       if (!m) return "";
@@ -6751,6 +6797,13 @@ function buildAuctionView(kind) {
                   : "ขน/คน";
     const poolLabel = !data.hasSubField ? "รวม"
                     : field === "main"  ? "หลัก70%" : "รอง30%";
+    // Real auction pages this column's item pool occupies (supply-based).
+    const pg = side.page;
+    const pageChip = (side.pool > 0 && pg && pg.startPage != null)
+      ? `📄 หน้า ${pg.startPage}${pg.endPage !== pg.startPage ? "–" + pg.endPage : ""}`
+        + `${(data.hasSubField && field === "sub" && pg.startSlot > 1) ? ` · เริ่มช่อง ${pg.startSlot}` : ""}`
+        + ` · ${pg.items} ชิ้น`
+      : `📄 ไม่มีของ`;
     return `
       <div class="auction-column" style="--col:${COL_STYLES[it.key]}">
         <div class="ac-head">
@@ -6771,6 +6824,7 @@ function buildAuctionView(kind) {
             <span class="ac-stat-val ac-status ${side.statusCls}">${side.status}</span>
           </div>
         </div>
+        <div class="ac-pagemap ${side.pool > 0 ? "" : "empty"}">${pageChip}</div>
         <div class="ac-droplist"
              ondragover="dragOverEl(event)"
              ondragleave="dragLeaveEl(event)"
@@ -6819,6 +6873,22 @@ function buildAuctionView(kind) {
       ${data.members.length ? `<div class="auction-columns">${subCols}</div>` : noMembersFallback}
     </div>` : "";
 
+  // Top page ruler — today's whole-day auction layout from the item pool.
+  const pm = data.pageMap;
+  const typeChips = pm.perType.filter(t => t.items > 0).map(t => {
+    const span = (t.startPage === t.endPage) ? `หน้า ${t.startPage}` : `หน้า ${t.startPage}–${t.endPage}`;
+    return `<span class="apm-chip" style="--col:${COL_STYLES[t.key]}">${t.label} ${span}</span>`;
+  }).join("");
+  let pageMapStrip;
+  if (pm.totalItems === 0) {
+    pageMapStrip = `<div class="auction-pagemap-strip empty">📄 ยังไม่ได้กรอกจำนวนของ — ใส่จำนวนของด้านบนก่อน แล้วระบบจะคำนวณหน้าประมูลให้</div>`;
+  } else {
+    const head = data.hasSubField
+      ? `📄 วันนี้รวม <b>${pm.totalItems}</b> ชิ้น = <b>${pm.totalPages}</b> หน้า <span class="apm-sub">(4 ชิ้น/หน้า · เรียงตามคอลัมน์)</span>`
+      : `📄 วันนี้รวม <b>${pm.totalItems}</b> ชิ้น <span class="apm-sub">(แต่ละชนิดเริ่มหน้า 1 · 4 ชิ้น/หน้า)</span>`;
+    pageMapStrip = `<div class="auction-pagemap-strip"><div class="apm-head">${head}</div><div class="apm-chips">${typeChips}</div></div>`;
+  }
+
   return `
     <div class="auction-view">
       <div class="auction-hero ${isGL ? "" : "overrun"}">
@@ -6856,6 +6926,8 @@ function buildAuctionView(kind) {
         </table>
         ${warning}
       </div>
+
+      ${pageMapStrip}
 
       ${searchSection}
 

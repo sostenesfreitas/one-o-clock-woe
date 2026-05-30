@@ -12,6 +12,13 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [2026.05.30]
 ### Added
+- **Auction page-map (supply-based):** each Auction GL/Overrun page now shows the
+  real in-game auction pages computed from the **item pool** — a top ruler
+  ("วันนี้รวม N ชิ้น = M หน้า" + page span per item type) and a "📄 หน้า X–Y" chip on
+  each column. Per-person page badges are re-anchored to the pool, so a dragged
+  person's page matches the real auction even when other columns aren't filled.
+  Page numbers depend on item counts only (rate-independent). GL is one continuous
+  run (sub continues main's partial page); Overrun is independent per item type.
 - **SDLC hardening (Phase 1):** versioned Firebase security rules
   (`database.rules.json` + `docs/firebase-rules-audit.md`), GitHub Actions CI running the
   test suite on push/PR, this changelog, a `RUNBOOK.md`, and a version stamp in the app
