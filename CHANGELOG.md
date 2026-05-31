@@ -10,6 +10,16 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.05.30.9]
+### Changed
+- **Auction page-map now packs items CONTINUOUSLY instead of starting each item type on a
+  fresh page.** The next item type begins right after the previous one's last slot on the
+  same page — e.g. การ์ด fills page 1, Illusion takes page 2 slots 1-2, then ขนขาว starts on
+  **page 2 slot 3** (not a fresh page 3). For Overrun with การ์ด 20 + Illusion 2, ขนขาว now
+  starts **page 6 slot 3**. This reverses the per-type fresh-page rule from 2026.05.30.3 to
+  match the in-game auction's actual behavior. One shared code path fixes GL + Overrun; the
+  per-column page chip, the top page-map strip, and the per-person page badges all follow.
+
 ## [2026.05.30.8]
 ### Fixed
 - **Per-column page chip shows the exact slot range, not just the page.** A partial page

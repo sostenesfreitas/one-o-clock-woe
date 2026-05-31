@@ -4620,7 +4620,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.05.30.8";
+const APP_VERSION = "2026.05.30.9";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -6477,17 +6477,16 @@ function computeAuction(kind) {
       pageOffset: startCursor - 1
     };
   };
-  // Each item TYPE occupies its OWN page block: the next type always starts on a
-  // fresh page (in the in-game auction, every item type begins on a new page, so
-  // its pages are a fixed position). Within a type, main → sub run continuously
-  // (sub fills main's last partial page). One path for GL + Overrun — Overrun
-  // just has sub.pool = 0. Page numbers come from item COUNTS only, not the rate.
-  const ceilToPageBoundary = (n) => Math.ceil(n / PP) * PP;
+  // Items pack CONTINUOUSLY across pages: the next item type starts right after the
+  // previous type's last slot, NOT on a fresh page. E.g. cards fill page 1, illusion
+  // takes page 2 slots 1-2, then white starts on page 2 slot 3 (same page). Within a
+  // type, main then sub run continuously (sub fills main's last partial page). One
+  // path for GL + Overrun (Overrun just has sub.pool = 0). Pages come from item
+  // COUNTS only, not the rate.
   let offset = 0;
   items.forEach(it => {
     it.main.page = pagesFromCursor(offset + 1, it.main.pool); offset += it.main.pool;
     it.sub.page  = pagesFromCursor(offset + 1, it.sub.pool);  offset += it.sub.pool;
-    offset = ceilToPageBoundary(offset);   // next item type → fresh page
   });
   // Per-type ruler (combine main+sub items per type) + whole-day total.
   const perType = items.map(it => {
