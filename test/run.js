@@ -528,6 +528,25 @@ console.log("\n[search box scroll-jump guard]");
   });
 })();
 
+console.log("\n[per-column page chip — slot range]");
+t("partial page shows slot range, not the whole page", function () {
+  reset(app, mkMembers(["m1", "m2"]));
+  Object.assign(app.state.auctionOverrun, { cards: 20, illusion: 2, white: 0, black: 0, bonusPercent: 0 });
+  (function () { var A = app.state.auctionOverrun.assignments; if (A && A.main && A.main.illusion) A.main.illusion = ["m1", "m2"]; else if (A && A.illusion) A.illusion = ["m1", "m2"]; })();
+  const html = app.call("buildAuctionView", "overrun");
+  const chips = [...html.matchAll(/ac-pagemap[^>]*>([^<]+)</g)].map(function (m) { return m[1]; });
+  ok(chips.some(function (cc) { return cc.indexOf("หน้า 6") >= 0 && cc.indexOf("ชิ้น 1-2") >= 0; }),
+     "illusion=2 on page 6 must show page 6 slots 1-2; got: " + JSON.stringify(chips));
+});
+t("single-item column shows a single slot", function () {
+  reset(app, mkMembers(["w1"]));
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 1, black: 0, bonusPercent: 0, splitMainPercent: 100 });
+  (function () { var A = app.state.auctionGL.assignments; if (A && A.main && A.main.white) A.main.white = ["w1"]; })();
+  const html = app.call("buildAuctionView", "gl");
+  const chips = [...html.matchAll(/ac-pagemap[^>]*>([^<]+)</g)].map(function (m) { return m[1]; });
+  ok(chips.some(function (cc) { return cc.indexOf("หน้า 1 · ชิ้น 1 ") >= 0; }), "got: " + JSON.stringify(chips));
+});
+
 console.log("\n[version stamp]");
 t("APP_VERSION exists and is calendar-versioned YYYY.MM.DD[.n]", () => {
   ok(typeof app.appVersion === "string", "APP_VERSION should be a string");

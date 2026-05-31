@@ -4620,7 +4620,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.05.30.7";
+const APP_VERSION = "2026.05.30.8";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -6895,11 +6895,21 @@ function buildAuctionView(kind) {
                                         : ("รอง" + (100 - data.splitMainPercent) + "%");
     // Real auction pages this column's item pool occupies (supply-based).
     const pg = side.page;
-    const pageChip = (side.pool > 0 && pg && pg.startPage != null)
-      ? `📄 หน้า ${pg.startPage}${pg.endPage !== pg.startPage ? "–" + pg.endPage : ""}`
-        + `${(data.hasSubField && field === "sub" && pg.startSlot > 1) ? ` · เริ่มช่อง ${pg.startSlot}` : ""}`
-        + ` · ${pg.items} ชิ้น`
-      : `📄 ไม่มีของ`;
+    // Show the exact slot range, not just the page, so a partial page reads
+    // correctly (e.g. 2 items on page 6 = "หน้า 6 ชิ้น 1-2", not "ทั้งหน้า 6").
+    const PP_chip = AUCTION_ITEMS_PER_PAGE;
+    let pageChip;
+    if (side.pool > 0 && pg && pg.startPage != null) {
+      const endSlot = ((pg.endCursor - 1) % PP_chip) + 1;
+      if (pg.startPage === pg.endPage) {
+        const slotTxt = pg.startSlot === endSlot ? `ชิ้น ${pg.startSlot}` : `ชิ้น ${pg.startSlot}-${endSlot}`;
+        pageChip = `📄 หน้า ${pg.startPage} · ${slotTxt} · รวม ${pg.items} ชิ้น`;
+      } else {
+        pageChip = `📄 หน้า ${pg.startPage} (ช่อง ${pg.startSlot})–${pg.endPage} (ช่อง ${endSlot}) · รวม ${pg.items} ชิ้น`;
+      }
+    } else {
+      pageChip = `📄 ไม่มีของ`;
+    }
     // Coverage: how far the people DRAGGED IN so far fill this column's pool,
     // vs the target pages above — so the admin sees what's still missing without
     // counting. side.need = count × rate (items the assigned people will take).

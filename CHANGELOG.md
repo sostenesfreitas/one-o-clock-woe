@@ -10,6 +10,13 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.05.30.8]
+### Fixed
+- **Per-column page chip shows the exact slot range, not just the page.** A partial page
+  read ambiguously (2 items on page 6 showed “หน้า 6 · 2 ชิ้น”, looking like the whole page).
+  It now reads “หน้า 6 · ชิ้น 1-2 · รวม 2 ชิ้น” (and “หน้า X (ช่อง a)–Y (ช่อง b)” when it spans
+  pages), matching the per-person badges below it.
+
 ## [2026.05.30.7]
 ### Fixed
 - **Auction search box no longer jumps to the top while typing.** `auctionSearchInput`
