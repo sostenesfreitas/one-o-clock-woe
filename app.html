@@ -4623,7 +4623,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.05.30.10";
+const APP_VERSION = "2026.05.30.11";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -7163,6 +7163,16 @@ function arGetMyRequests(memberId) {
   return out.sort((a, b) => (b.requestedAt || 0) - (a.requestedAt || 0));
 }
 
+/** The member's current ACTIVE request for this event (pending or approved), or
+ *  null. Rejected/withdrawn don't count — those let the member ask again. This is
+ *  the single source of truth for the "one item per person per event" rule. */
+function arActiveRequestFor(memberId, date, mode) {
+  if (!memberId) return null;
+  return arGetRequests(date, mode).find(r =>
+    r.memberId === memberId && r.status !== "rejected" && r.status !== "withdrawn"
+  ) || null;
+}
+
 /** Returns true if the request was kicked off (modal can close), false on
  *  any synchronous validation failure (modal should stay open so the user
  *  doesn't lose their selections). The async write itself may still fail
@@ -7177,14 +7187,19 @@ function arCreateRequest({ date, mode, items, note }) {
   // today's event — see arRequestBlockReason).
   const block = arRequestBlockReason(memberId, date, mode);
   if (block) { toast(block, "error"); return false; }
-  if (!Array.isArray(items) || items.length === 0) { toast("เลือกของอย่างน้อย 1 อย่าง", "error"); return false; }
+  if (!Array.isArray(items) || items.length === 0) { toast("เลือกของ 1 อย่าง", "error"); return false; }
+  // One item TYPE per person per event (the modal is single-select; guard here too).
+  if (items.length > 1) { toast("ขอได้แค่ 1 อย่างต่อกิจ — เลือกอย่างเดียว", "error"); return false; }
 
-  // Block duplicate: same member + same date+mode + overlapping items
-  const existing = arGetRequests(date, mode).filter(r =>
-    r.memberId === memberId && r.status !== "rejected" && r.status !== "withdrawn"
-  );
-  const conflict = existing.find(r => (r.items || []).some(it => items.includes(it)));
-  if (conflict) { toast("คุณขอของบางอย่างไปแล้ว ไปดูในคำขอของฉัน", "error"); return false; }
+  // One ACTIVE request per person per event: if they already have a pending or
+  // approved request for this date+mode, they must withdraw the old one before
+  // asking for something else. (Rejected/withdrawn don't count.)
+  const active = arActiveRequestFor(memberId, date, mode);
+  if (active) {
+    const cur = (active.items || []).map(k => (AR_ITEM_META[k] ? AR_ITEM_META[k].label : k)).join(", ");
+    toast(`คุณขอ "${cur}" ไว้แล้ว — ถอนของเก่าก่อนถึงจะขอใหม่ได้ (ดูในคำขอของฉัน)`, "error");
+    return false;
+  }
 
   const id = "req_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7);
   const computedField = arDetectField(memberId, mode);
@@ -7207,6 +7222,7 @@ function arCreateRequest({ date, mode, items, note }) {
       toast(`ส่งไม่สำเร็จ: ${e.message}. ตรวจ Firebase Rules ที่ /auction_requests`, "error");
       console.error("[auction-request] create failed", e);
     });
+  return true;   // all synchronous checks passed — let arSubmitModal close the modal
 }
 
 async function arApproveRequest(date, mode, requestId) {
@@ -7403,8 +7419,10 @@ function arCloseModal() {
 }
 function arToggleModalItem(item) {
   if (!_arModalState) return;
-  if (_arModalState.items.has(item)) _arModalState.items.delete(item);
-  else                                _arModalState.items.add(item);
+  // Single-select: one item type per request. Clicking the chosen item clears it;
+  // clicking another replaces the choice (radio behavior, not multi-tick).
+  if (_arModalState.items.has(item)) _arModalState.items.clear();
+  else _arModalState.items = new Set([item]);
   render();
 }
 function arSetModalNote(v) {
@@ -7697,7 +7715,7 @@ function arBuildModal() {
     const meta = AR_ITEM_META[k];
     const sel = items.has(k);
     return `<div class="ar-item-row ${sel ? "selected" : ""}" onclick="arToggleModalItem('${k}')">
-      <span style="font-size:18px">${sel ? "☑" : "☐"}</span>
+      <span style="font-size:18px">${sel ? "◉" : "○"}</span>
       <span>${meta.label}</span>
       <span class="ar-routing ${field === "sub" ? "sub" : ""}">ระบบจะใส่: ${fieldTxt}</span>
     </div>`;
@@ -7706,7 +7724,7 @@ function arBuildModal() {
   return `<div class="ar-modal-backdrop" onclick="if(event.target===this)arCloseModal()">
     <div class="ar-modal">
       <h3>🙋 ขอประมูล — ${mode === "gl" ? "GL" : "Overrun"} วันที่ ${date}</h3>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">เลือกของที่ต้องการ (ติ๊กได้หลายอย่าง)</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">เลือกของ 1 อย่าง (ขอได้คนละ 1 ชนิดต่อกิจ)</div>
       ${itemRows}
       <div style="font-size:12px;color:var(--muted);margin:10px 0 4px">หมายเหตุ (ไม่บังคับ):</div>
       <textarea rows="2" maxlength="200" oninput="arSetModalNote(this.value)" placeholder="เช่น ขอใบเดียวพอ">${escapeHtml(note || "")}</textarea>

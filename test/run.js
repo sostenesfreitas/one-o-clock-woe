@@ -536,6 +536,46 @@ t("clearing the day removes rejected history too (same-day scope)", () => {
   eq(app.call("arGetRequests", date, "gl").length, 0, "no requests of any status remain after day clear");
 });
 
+console.log("\n[one item per person per event — request limit]");
+// Rule: a member may hold only ONE active (pending|approved) request per event
+// (date+mode). Rejected/withdrawn don't count, so they can ask again after a no.
+// arActiveRequestFor is the single source of truth (pure over state.auctionRequests).
+function seedAR(gl) { app.state.auctionRequests = { "2026-06-02": { gl } }; }
+const activeFor = (mid, mode) => app.call("arActiveRequestFor", mid, "2026-06-02", mode || "gl");
+t("no request → no active (member may request)", () => {
+  seedAR({});
+  isNull(activeFor("m1"), "nothing active");
+});
+t("a pending request blocks (counts as active)", () => {
+  seedAR({ r1: { id: "r1", memberId: "m1", items: ["white"], status: "pending", requestedAt: 1 } });
+  ok(activeFor("m1") && activeFor("m1").id === "r1", "pending is active");
+});
+t("an approved request blocks (counts as active)", () => {
+  seedAR({ r2: { id: "r2", memberId: "m1", items: ["cards"], status: "approved", requestedAt: 1 } });
+  ok(activeFor("m1") && activeFor("m1").id === "r2", "approved is active");
+});
+t("rejected/withdrawn do NOT block (member may ask again)", () => {
+  seedAR({ r3: { id: "r3", memberId: "m1", items: ["black"], status: "rejected", requestedAt: 1 } });
+  isNull(activeFor("m1"), "rejected is not active");
+  seedAR({ r4: { id: "r4", memberId: "m1", items: ["white"], status: "withdrawn", requestedAt: 1 } });
+  isNull(activeFor("m1"), "withdrawn is not active");
+});
+t("another member's request doesn't block me; rule is mode-scoped", () => {
+  seedAR({ r5: { id: "r5", memberId: "m2", items: ["white"], status: "pending", requestedAt: 1 } });
+  isNull(activeFor("m1"), "other member's request is not mine");
+  // a GL-active request must not register as Overrun-active
+  app.state.auctionRequests = { "2026-06-02": { gl: { rg: { id: "rg", memberId: "m1", items: ["white"], status: "pending", requestedAt: 1 } } } };
+  ok(activeFor("m1", "gl"), "active in gl");
+  isNull(activeFor("m1", "overrun"), "not active in overrun (per-mode)");
+});
+t("request modal is single-select (radio), not multi-tick", () => {
+  const src = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+  const m = /function arToggleModalItem\(item\)\s*\{[\s\S]*?\n\}/.exec(src);
+  ok(m, "arToggleModalItem found");
+  ok(/new Set\(\[item\]\)/.test(m[0]), "toggle replaces selection (single-select)");
+  ok(!/\.items\.add\(/.test(m[0]), "toggle must NOT add to a multi-select set");
+});
+
 console.log("\n[css coverage — themed controls have their CSS]");
 (function () {
   const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
