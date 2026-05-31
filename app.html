@@ -4598,7 +4598,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.05.30.5";
+const APP_VERSION = "2026.05.30.6";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -7502,7 +7502,7 @@ function buildAuctionRequestHtml() {
   ` : "";
 
   // ---- Admin queue ----
-  const adminQueue = admin ? arBuildAdminQueue(date) : "";
+  const adminQueue = admin ? arBuildAdminQueue(date, eventMode) : "";
 
   // ---- Modal ----
   const modal = _arModalState ? arBuildModal() : "";
@@ -7584,7 +7584,7 @@ function arPromptReject(date, mode, requestId) {
   arRejectRequest(date, mode, requestId, reason);
 }
 
-function arBuildAdminQueue(date) {
+function arBuildAdminQueue(date, eventMode) {
   const all = ((state.auctionRequests || {})[date] || {});
   const pendingGl      = arGetRequests(date, "gl").filter(r => r.status === "pending");
   const pendingOverrun = arGetRequests(date, "overrun").filter(r => r.status === "pending");
@@ -7609,10 +7609,10 @@ function arBuildAdminQueue(date) {
 
   const bulkBar = `
     <div class="ar-bulk-bar">
-      <button class="primary" ${!pendingGl.length ? "disabled" : ""}
-        onclick="arBulkApprove('${date}','gl')">🤖 จัดสรร GL อัตโนมัติ</button>
-      <button class="primary" ${!pendingOverrun.length ? "disabled" : ""}
-        onclick="arBulkApprove('${date}','overrun')">🤖 จัดสรร Overrun อัตโนมัติ</button>
+      ${eventMode === "gl" ? `<button class="primary" ${!pendingGl.length ? "disabled" : ""}
+        onclick="arBulkApprove('${date}','gl')">🤖 จัดสรร GL อัตโนมัติ</button>` : ""}
+      ${eventMode === "overrun" ? `<button class="primary" ${!pendingOverrun.length ? "disabled" : ""}
+        onclick="arBulkApprove('${date}','overrun')">🤖 จัดสรร Overrun อัตโนมัติ</button>` : ""}
       <div style="flex:1"></div>
       <button onclick="arAutoClearPast()">🧹 ล้างวันที่ผ่านมา</button>
     </div>`;

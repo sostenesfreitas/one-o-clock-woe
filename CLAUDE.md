@@ -85,8 +85,11 @@ woe-party/
 ├── knowledge.md        # deeper architecture reference (state, sync, line map)
 ├── README.md           # user-facing description
 └── .claude/
-    ├── agents/woe-coder.md       # agent: implement features / fix bugs in app.html
-    └── skills/woe-edit/SKILL.md  # skill: safe-edit workflow for app.html
+    ├── agents/woe-coder.md             # agent: implement features / fix bugs in app.html
+    ├── agents/woe-qa-reviewer.md       # agent: read-only pre-deploy QA verdict
+    ├── skills/woe-edit/SKILL.md        # skill: safe-edit workflow for app.html
+    ├── skills/woe-feature-map/SKILL.md # skill: trace all surfaces a feature touches
+    └── skills/woe-qa/SKILL.md          # skill: mandatory pre-deploy QA gate
 ```
 
 ## Stack

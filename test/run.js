@@ -463,6 +463,39 @@ t("GL view renders the editable split control + dynamic field labels", () => {
   ok(!or.includes('data-auction-split-kind'), "Overrun has no split control");
 });
 
+console.log("\n[admin allocate gating — buttons follow the day's event]");
+// The admin "จัดสรรอัตโนมัติ" (arBulkApprove) buttons must match the day's event:
+// GL day → only the gl button; Overrun day → only overrun; non-event day → neither.
+// Match by ASCII onclick (Thai-proof). "ล้างวันที่ผ่านมา" (arAutoClearPast) always stays.
+function adminQueueHtml(isoDate) {
+  app.setAdmin(true);
+  app.setToday(isoDate);
+  return app.call("buildAuctionRequestHtml");
+}
+const glBtn = /onclick="arBulkApprove\('[^']*','gl'\)"/;
+const orBtn = /onclick="arBulkApprove\('[^']*','overrun'\)"/;
+t("GL day (Tue): only the GL allocate button renders", () => {
+  reset(app, []);
+  const h = adminQueueHtml("2026-06-02"); // Tuesday
+  ok(glBtn.test(h), "gl allocate button present");
+  ok(!orBtn.test(h), "overrun allocate button absent");
+  ok(h.includes("arAutoClearPast()"), "clear-old button stays");
+});
+t("Overrun day (Sun): only the Overrun allocate button renders", () => {
+  reset(app, []);
+  const h = adminQueueHtml("2026-06-07"); // Sunday
+  ok(orBtn.test(h), "overrun allocate button present");
+  ok(!glBtn.test(h), "gl allocate button absent");
+  ok(h.includes("arAutoClearPast()"), "clear-old button stays");
+});
+t("Non-event day (Wed): neither allocate button; clear-old stays", () => {
+  reset(app, []);
+  const h = adminQueueHtml("2026-06-03"); // Wednesday
+  ok(!glBtn.test(h), "no gl allocate button");
+  ok(!orBtn.test(h), "no overrun allocate button");
+  ok(h.includes("arAutoClearPast()"), "clear-old button still present");
+});
+
 console.log("\n[version stamp]");
 t("APP_VERSION exists and is calendar-versioned YYYY.MM.DD[.n]", () => {
   ok(typeof app.appVersion === "string", "APP_VERSION should be a string");

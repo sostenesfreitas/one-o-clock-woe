@@ -10,6 +10,19 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.05.30.6]
+### Fixed
+- **Admin "จัดสรรอัตโนมัติ" buttons now follow the day's event.** On the ขอประมูล admin
+  queue, only the current event's allocate button shows — GL on อังคาร/พฤหัส, Overrun on
+  อาทิตย์, and **neither** on a non-event day (previously both GL + Overrun always showed).
+  Matches the event-day lock already enforced on the guest request side. "🧹 ล้างวันที่
+  ผ่านมา" stays available regardless. (`arBuildAdminQueue` now takes `eventMode`.)
+### Added
+- **`woe-feature-map` skill** — a pre-edit checklist that traces every surface a feature
+  touches (guest/admin/viewer render, GL/Overrun branches, state+sync, the gate on all
+  actors, tests) so a cross-cutting rule can't be applied to one surface and missed on its
+  twin (the bug above is its worked example).
+
 ## [2026.05.30.5]
 ### Added
 - **Editable สนามหลัก/สนามรอง split % for the GL auction.** Admins can set what
