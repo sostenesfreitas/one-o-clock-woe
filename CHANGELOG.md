@@ -10,6 +10,17 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.05.30.7]
+### Fixed
+- **Auction search box no longer jumps to the top while typing.** `auctionSearchInput`
+  restored focus/scroll in a `setTimeout`, so the page painted at the top for one frame
+  (the jump) before snapping back. It now restores focus + caret + scroll synchronously
+  right after the re-render — the same proven pattern as `setAuctionField`/`setAuctionRate`.
+- **GL split % input now matches the dark/gold theme.** Its CSS (`.auction-split-input`
+  + related) had silently failed to land, so it rendered as a plain white box. Added the
+  themed styles plus a `[css coverage]` test group that fails if a themed control's class
+  is in the markup but has no matching CSS rule.
+
 ## [2026.05.30.6]
 ### Fixed
 - **Admin "จัดสรรอัตโนมัติ" buttons now follow the day's event.** On the ขอประมูล admin

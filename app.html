@@ -972,6 +972,28 @@
     color: #000;
     border-color: #fbbf24;
   }
+  /* GL main/sub split % control */
+  .auction-split-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 2px 0 4px;
+  }
+  .auction-split-row .label { color: var(--muted); font-size: 13px; }
+  .auction-split-row .label b { color: var(--accent); }
+  .auction-split-input {
+    width: 70px; padding: 6px 10px; font-size: 16px; font-weight: 700; text-align: center;
+    background: var(--panel-2); border: 1px solid var(--border-2); border-radius: 8px;
+    color: var(--accent-2); font-variant-numeric: tabular-nums;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .auction-split-input:hover { border-color: var(--accent-2); }
+  .auction-split-input:focus {
+    outline: none; border-color: var(--accent-2);
+    box-shadow: 0 0 0 3px rgba(255,179,71,0.18);
+  }
+  .auction-split-static {
+    color: var(--accent-2); font-size: 16px; font-weight: 700;
+    padding: 4px 10px; border-radius: 8px; background: var(--panel-2);
+  }
+  .auction-split-note { color: var(--muted); font-size: 11px; margin-top: 2px; }
 
   .auction-summary-table {
     width: 100%;
@@ -4598,7 +4620,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.05.30.6";
+const APP_VERSION = "2026.05.30.7";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -4735,23 +4757,24 @@ function commitPartiesNow() {
 let _auctionSearch = "";
 function auctionSearchInput(v) {
   _auctionSearch = (v || "").trim().toLowerCase();
-  // Remember the user's current scroll position so the re-render doesn't
-  // jump them back to the top of the page (browsers auto-scroll a focused
-  // element into view, and renderBattlefields rebuilds the entire #center
-  // innerHTML which makes that auto-scroll fire). preventScroll on focus
-  // is the canonical fix; scrollTo restores any drift that still happened.
+  // Re-render, then restore focus + caret + scroll SYNCHRONOUSLY (before the
+  // browser paints) — the same pattern as setAuctionField/setAuctionRate. The old
+  // setTimeout-based restore let the page paint at the top first (the "jump"),
+  // then snapped back; doing it in the same task removes that flash entirely.
+  let caret = null;
+  const focused = document.activeElement;
+  if (focused && focused.classList && focused.classList.contains("auction-search-input")) {
+    try { caret = focused.selectionStart; } catch (e) {}
+  }
   const scrollX = window.scrollX, scrollY = window.scrollY;
   if (typeof renderBattlefields === "function") renderBattlefields();
-  // Restore focus on the input after re-render, without scrolling it into view
-  setTimeout(() => {
-    const el = document.querySelector(".auction-search-input");
-    if (el) {
-      try { el.focus({ preventScroll: true }); } catch(e) { el.focus(); }
-      try { el.setSelectionRange(el.value.length, el.value.length); } catch(e){}
-    }
-    // Belt-and-suspenders for browsers that ignore preventScroll
-    window.scrollTo(scrollX, scrollY);
-  }, 0);
+  const el = document.querySelector(".auction-search-input");
+  if (el) {
+    try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+    const pos = (caret != null) ? Math.min(caret, el.value.length) : el.value.length;
+    try { el.setSelectionRange(pos, pos); } catch (e) {}
+  }
+  window.scrollTo(scrollX, scrollY);
 }
 
 /* =====================================================================

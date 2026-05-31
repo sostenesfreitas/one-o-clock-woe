@@ -496,6 +496,38 @@ t("Non-event day (Wed): neither allocate button; clear-old stays", () => {
   ok(h.includes("arAutoClearPast()"), "clear-old button still present");
 });
 
+console.log("\n[css coverage — themed controls have their CSS]");
+(function () {
+  const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+  // Guard against "markup shipped but CSS missing" — e.g. the split % input rendering
+  // as a plain white box because its CSS edit silently failed. If a themed class is in
+  // the markup, it MUST have a matching CSS rule.
+  const pairs = [
+    ["auction-split-input",   /class="auction-split-input"/,   /\.auction-split-input\s*\{/],
+    ["auction-split-row",     /class="auction-split-row"/,     /\.auction-split-row\s*\{/],
+    ["auction-split-note",    /class="auction-split-note"/,    /\.auction-split-note\s*\{/],
+    ["ac-pagemap",            /class="ac-pagemap/,             /\.ac-pagemap\s*\{/],
+    ["ac-coverage",           /class="ac-coverage/,            /\.ac-coverage\s*\{/],
+    ["auction-pagemap-strip", /class="auction-pagemap-strip/,  /\.auction-pagemap-strip\s*\{/],
+  ];
+  pairs.forEach(function (p) {
+    t("CSS exists for ." + p[0] + " (used in markup)", function () {
+      if (p[1].test(appHtml)) ok(p[2].test(appHtml), "." + p[0] + " is in markup but has no CSS rule");
+    });
+  });
+})();
+
+console.log("\n[search box scroll-jump guard]");
+(function () {
+  const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+  const m = /function auctionSearchInput\(v\) \{[\s\S]*?\n\}\r?\n/.exec(appHtml);
+  t("auctionSearchInput exists", function () { ok(m, "function not found"); });
+  t("search restores scroll/focus SYNCHRONOUSLY (no setTimeout — prevents the jump)", function () {
+    ok(m && !/setTimeout\s*\(/.test(m[0]), "auctionSearchInput must not defer the restore in a setTimeout() call");
+    ok(m && /window\.scrollTo\(scrollX, scrollY\)/.test(m[0]), "must restore scroll synchronously");
+  });
+})();
+
 console.log("\n[version stamp]");
 t("APP_VERSION exists and is calendar-versioned YYYY.MM.DD[.n]", () => {
   ok(typeof app.appVersion === "string", "APP_VERSION should be a string");
