@@ -60,7 +60,7 @@ flag it instead of guessing.
 
 - Tasks that require adding a framework, build step, or backend service
   beyond Firebase — flag and ask the user to confirm scope change.
-- Tasks that touch repos other than `cybodies/woe-party` — out of scope.
+- Tasks that touch repos other than `cybodies/one-o-clock-woe` — out of scope.
 - "Make it work without Firebase" — the app depends on Firebase for
   shared state; flag and clarify before stripping it.
 - Requests to commit secrets — refuse.

@@ -10,6 +10,15 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.05.30.14]
+### Changed
+- **ย้ายชื่อ repo → `one-o-clock-woe` (ลิงก์ใหม่).** เว็บย้ายจาก
+  `cybodies.github.io/woe-party` ไป `cybodies.github.io/one-o-clock-woe` (ลิงก์เก่า GitHub
+  redirect ให้อัตโนมัติ). อัปเดต URL ที่ฝังในโค้ด: `index.html` (og:url, og:image, ลิงก์
+  GitHub footer) + เอกสาร (CLAUDE.md, RUNBOOK.md, woe-coder agent). git remote ชี้ repo
+  ใหม่แล้ว. **Firebase project (`woe-party-default-rtdb`) ไม่เปลี่ยน** — เป็นคนละระบบ
+  ข้อมูลกิลด์ทั้งหมดตามมาครบ ไม่หาย. โค้ดยัง public ตามเดิม.
+
 ## [2026.05.30.13]
 ### Fixed
 - **ทำให้ fix v.12 (ช่องค้นหาสมาชิกเด้งขึ้นบน) สมบูรณ์.** v.12 ใส่บรรทัด "เก็บค่า

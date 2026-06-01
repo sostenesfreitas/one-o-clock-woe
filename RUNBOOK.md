@@ -1,6 +1,6 @@
 # RUNBOOK — woe-party incidents & releases
 
-Single static app on GitHub Pages (`main` → https://cybodies.github.io/woe-party) backed by
+Single static app on GitHub Pages (`main` → https://cybodies.github.io/one-o-clock-woe) backed by
 Firebase RTDB. Used live during WoE (อังคาร/พฤหัส = GL, อาทิตย์ = Overrun, ~21:00 BKK).
 Keep fixes minimal during an event; do the full QA pass after.
 
@@ -23,7 +23,7 @@ without it:
    entry.
 3. Fast-forward merge to `main`, push. GitHub Actions runs the suite; GitHub Pages
    redeploys automatically (~1–2 min).
-4. Hard-refresh https://cybodies.github.io/woe-party and confirm the footer shows the new
+4. Hard-refresh https://cybodies.github.io/one-o-clock-woe and confirm the footer shows the new
    `v<version>` (proves the deploy + that users aren't on a stale cache).
 
 ## Rollback the app (bad deploy)
