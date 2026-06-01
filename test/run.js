@@ -594,6 +594,7 @@ console.log("\n[css coverage — themed controls have their CSS]");
     // so the "used" probe matches the JS string literal form, not class="…".
     ["rc-ring",   /"rc-ring"/,        /\.rc-ring\s*\{/],
     ["rc-handle", /"rc-handle move"/, /\.rc-handle\s*\{/],
+    ["map-filter-chip", /"map-filter-chip/, /\.map-filter-chip\s*\{/],
   ];
   pairs.forEach(function (p) {
     t("CSS exists for ." + p[0] + " (used in markup)", function () {
@@ -690,6 +691,57 @@ t("toggleRangeCircles flips the per-viewer on/off flag", () => {
   eq(app.call("rangeCirclesOn"), !start, "flipped");
   app.call("toggleRangeCircles");
   eq(app.call("rangeCirclesOn"), start, "flipped back");
+});
+
+console.log("\n[map filter — multi-select]");
+// The map filter is now a SET of party/group ids (empty = show all). Multi-select
+// chips let you view several parties together. Per-viewer, not synced. Pure helpers
+// (mapFilterVisible/_toggleInSet) + the toggle/clear setters leak to the vm global.
+t("mapFilterVisible: empty set shows all; non-empty shows only its ids", () => {
+  ok(app.call("mapFilterVisible", new Set(), 4), "empty → visible");
+  ok(app.call("mapFilterVisible", new Set([4, 5]), 4), "4 in {4,5} → visible");
+  ok(!app.call("mapFilterVisible", new Set([4, 5]), 6), "6 not in {4,5} → hidden");
+  ok(app.call("mapFilterVisible", null, 9), "missing set → visible (defensive)");
+});
+t("toggleMapFilterMain adds/removes ids; supports several at once", () => {
+  app.call("clearMapFilterMain");
+  app.call("toggleMapFilterMain", 4);
+  app.call("toggleMapFilterMain", 5);
+  eq(app.call("mapFilterMainIds"), [4, 5], "4 and 5 both active");
+  app.call("toggleMapFilterMain", 4);
+  eq(app.call("mapFilterMainIds"), [5], "toggling 4 again removes it");
+});
+t("clearMapFilterMain / toggling 0 resets to all (empty set)", () => {
+  app.call("clearMapFilterMain");
+  app.call("toggleMapFilterMain", 7);
+  eq(app.call("mapFilterMainIds"), [7], "seeded");
+  app.call("clearMapFilterMain");
+  eq(app.call("mapFilterMainIds"), [], "clear → empty (all)");
+  app.call("toggleMapFilterMain", 7);
+  app.call("toggleMapFilterMain", 0);   // 0 = clear-all sentinel
+  eq(app.call("mapFilterMainIds"), [], "toggle 0 clears the set");
+});
+t("Main / Sub / Overrun filters are independent", () => {
+  app.call("clearMapFilterMain"); app.call("clearMapFilterSub"); app.call("clearMapFilterOverrun");
+  app.call("toggleMapFilterMain", 3);
+  app.call("toggleMapFilterSub", 11);
+  app.call("toggleMapFilterOverrun", 2);
+  eq(app.call("mapFilterMainIds"), [3], "main independent");
+  eq(app.call("mapFilterSubIds"), [11], "sub independent");
+  eq(app.call("mapFilterOverrunIds"), [2], "overrun independent");
+});
+t("buildMapHtml renders multi-select chips with the active ones lit", () => {
+  app.setAdmin(true);
+  app.state.mode = "league";
+  app.call("clearMapFilterMain");
+  app.call("toggleMapFilterMain", 4);
+  app.call("toggleMapFilterMain", 5);
+  const html = app.call("buildMapHtml", 1);
+  ok(html.includes("map-filter-chips"), "chip container present");
+  ok(!html.includes("map-filter-select"), "old dropdown gone");
+  ok(/map-filter-chip active"[^>]*toggleMapFilterMain\(4\)/.test(html), "chip 4 active");
+  ok(/map-filter-chip active"[^>]*toggleMapFilterMain\(5\)/.test(html), "chip 5 active");
+  ok(/map-filter-chip"[^>]*toggleMapFilterMain\(6\)/.test(html), "chip 6 NOT active");
 });
 
 console.log("\n[version stamp]");

@@ -2074,6 +2074,17 @@
   .rc-handle:hover { fill: var(--gold-2, #f0d896); }
   /* Map header range toggle, lit when circles are on */
   .map-title .rc-toggle-on { background: var(--gold, #d9b56b); color: #1a1500; }
+  /* Multi-select map filter chips — click several party/group chips to view them
+     together; empty = all. Active chips get their team color inline (see buildMapHtml). */
+  .map-filter-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .map-filter-chip {
+    padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--panel);
+    color: var(--text); font-size: 11px; font-weight: 600;
+    cursor: pointer; line-height: 1.6;
+  }
+  .map-filter-chip:hover { border-color: var(--accent); }
+  .map-filter-chip.active { border-color: var(--accent); background: var(--accent); color: #fff; }
   .map-arrows line {
     stroke-width: 2.5;
     stroke-dasharray: 6 4;
@@ -2960,26 +2971,49 @@ let drag = { type: null, payload: null };
 // — listeners check this and defer their render until the drag finishes.
 let _isDragging = false;
 let _pendingRenderAfterDrag = false;
-// Map filter state — when non-zero, the corresponding map renders only
-// the selected team's marker + arrow, hiding everyone else. Each
-// battlefield card has its OWN filter (Main 1-8 and Sub 9-16 chosen
-// independently); Overrun keeps its own filter across the 4 groups.
-// Reset to 0 ("all") on every page load (in-memory only).
-let _mapFilterMain    = 0;   // 0 = all, otherwise party id 1-8
-let _mapFilterSub     = 0;   // 0 = all, otherwise party id 9-16
-let _mapFilterOverrun = 0;   // 0 = all, otherwise group id 1-4
-function setMapFilterMain(val) {
-  _mapFilterMain = parseInt(val, 10) || 0;
-  if (typeof renderMarkers === "function") renderMarkers();
+// Map filter state — a SET of ids to show; EMPTY set = show ALL (preserves the
+// old "0 = all" semantics). Multi-select: click several party/group chips to view
+// them together (e.g. ตี้ 4 + 5 on the Main map). Each battlefield card has its
+// OWN filter (Main 1-8, Sub 9-16, Overrun groups 1-4 chosen independently).
+// Per-viewer + in-memory only — reset to empty (all) on every page load, NOT synced.
+let _mapFilterMain    = new Set();   // empty = all; else party ids 1-8
+let _mapFilterSub     = new Set();   // empty = all; else party ids 9-16
+let _mapFilterOverrun = new Set();   // empty = all; else group ids 1-4
+
+// Pure: should `id` render given a filter set? Empty/missing set = everyone visible.
+function mapFilterVisible(set, id) { return !set || set.size === 0 || set.has(id); }
+// Pure: toggle one id in a set; a falsy/0 id clears the whole set ("show all").
+function _toggleInSet(set, id) {
+  const n = parseInt(id, 10);
+  if (!n) { set.clear(); return; }
+  if (set.has(n)) set.delete(n); else set.add(n);
 }
-function setMapFilterSub(val) {
-  _mapFilterSub = parseInt(val, 10) || 0;
-  if (typeof renderMarkers === "function") renderMarkers();
+// Sorted-array getters (for tests + chip rendering convenience).
+function mapFilterMainIds()    { return [..._mapFilterMain].sort((a, b) => a - b); }
+function mapFilterSubIds()     { return [..._mapFilterSub].sort((a, b) => a - b); }
+function mapFilterOverrunIds() { return [..._mapFilterOverrun].sort((a, b) => a - b); }
+
+function toggleMapFilterMain(id) {
+  _toggleInSet(_mapFilterMain, id);
+  if (typeof render === "function") render(); else if (typeof renderMarkers === "function") renderMarkers();
 }
-function setMapFilterOverrun(val) {
-  _mapFilterOverrun = parseInt(val, 10) || 0;
-  if (typeof renderOverrunMarkers === "function") renderOverrunMarkers();
+function toggleMapFilterSub(id) {
+  _toggleInSet(_mapFilterSub, id);
+  if (typeof render === "function") render(); else if (typeof renderMarkers === "function") renderMarkers();
 }
+function toggleMapFilterOverrun(id) {
+  _toggleInSet(_mapFilterOverrun, id);
+  if (typeof render === "function") render(); else if (typeof renderOverrunMarkers === "function") renderOverrunMarkers();
+}
+function clearMapFilterMain()    { _mapFilterMain.clear();    if (typeof render === "function") render(); }
+function clearMapFilterSub()     { _mapFilterSub.clear();     if (typeof render === "function") render(); }
+function clearMapFilterOverrun() { _mapFilterOverrun.clear(); if (typeof render === "function") render(); }
+
+// Back-compat shims: route a single id through the toggle logic. The only original
+// callers were the now-replaced dropdowns; kept defensively.
+function setMapFilterMain(val)    { _mapFilterMain.clear();    _toggleInSet(_mapFilterMain, val);    if (typeof renderMarkers === "function") renderMarkers(); }
+function setMapFilterSub(val)     { _mapFilterSub.clear();     _toggleInSet(_mapFilterSub, val);     if (typeof renderMarkers === "function") renderMarkers(); }
+function setMapFilterOverrun(val) { _mapFilterOverrun.clear(); _toggleInSet(_mapFilterOverrun, val); if (typeof renderOverrunMarkers === "function") renderOverrunMarkers(); }
 // Range-circle overlay (GL Main map). Per-viewer view state — NOT synced, so each
 // person toggles their own view (same pattern as the map filters above).
 let _rangeCirclesOn = false;
@@ -3602,10 +3636,10 @@ function renderMarkers() {
     if (!wrap) continue;
     wrap.querySelectorAll(".marker").forEach(n => n.remove());
     const range = mapNum === 1 ? [1,2,3,4,5,6,7,8] : [9,10,11,12,13,14,15,16];
-    const filter = mapNum === 1 ? _mapFilterMain : _mapFilterSub;
+    const filterSet = mapNum === 1 ? _mapFilterMain : _mapFilterSub;
     for (const i of range) {
       // Per-map filter — when set, only render the selected party's marker.
-      if (filter && i !== filter) continue;
+      if (!mapFilterVisible(filterSet, i)) continue;
       const pos = state.markers[i] || { x: 50, y: 50, path: [] };
       const p = state.parties.find(p => p.id === i);
       const filled = p && p.slots.some(s => s);
@@ -3742,7 +3776,7 @@ function renderArrows(mapNum) {
   svg.innerHTML = "";
   const ns = "http://www.w3.org/2000/svg";
   const range = mapNum === 1 ? [1,2,3,4,5,6,7,8] : [9,10,11,12,13,14,15,16];
-  const filter = mapNum === 1 ? _mapFilterMain : _mapFilterSub;
+  const filterSet = mapNum === 1 ? _mapFilterMain : _mapFilterSub;
 
   // One arrowhead definition per team color (so each team's arrowhead is colored)
   const defs = document.createElementNS(ns, "defs");
@@ -3757,7 +3791,7 @@ function renderArrows(mapNum) {
   svg.appendChild(defs);
 
   for (const i of range) {
-    if (filter && i !== filter) continue;
+    if (!mapFilterVisible(filterSet, i)) continue;
     const m = state.markers[i];
     if (!m || !m.path || m.path.length === 0) continue;
     const color = teamColor(i);
@@ -3857,7 +3891,7 @@ function renderOverrunMarkers() {
       state.overrunMarkers[i] = { x: 25 + col * 50, y: 35 + row * 35, path: [] };
     }
     // Map filter — when set, only render the selected group's marker.
-    if (_mapFilterOverrun && i !== _mapFilterOverrun) continue;
+    if (!mapFilterVisible(_mapFilterOverrun, i)) continue;
     const pos = state.overrunMarkers[i];
     const g = OVERRUN_GROUPS[i - 1];
     const total = g.ids.reduce((s, id) => {
@@ -3910,7 +3944,7 @@ function renderOverrunArrows() {
 
   if (!state.overrunMarkers) return;
   for (let i = 1; i <= 4; i++) {
-    if (_mapFilterOverrun && i !== _mapFilterOverrun) continue;
+    if (!mapFilterVisible(_mapFilterOverrun, i)) continue;
     const m = state.overrunMarkers[i];
     if (!m || !m.path || m.path.length === 0) continue;
     const color = OVERRUN_GROUPS[i - 1].color;
@@ -4558,20 +4592,23 @@ function buildOverrunMapHtml() {
   // Overrun map filter — 4 colored groups (Red/Yellow/Green/Blue). Same
   // shared-dropdown pattern: selecting a group hides the other three
   // markers + arrows on the map.
-  const filterOpts = ['<option value="0">🔍 ทุกกลุ่ม</option>']
-    .concat(OVERRUN_GROUPS.map((g, idx) => {
+  // Multi-select group chips (same pattern as the League maps): "ทุกกลุ่ม" clears,
+  // each group chip toggles + lights up in its group color.
+  const allActiveOv = _mapFilterOverrun.size === 0 ? " active" : "";
+  const filterChips =
+    `<button class="map-filter-chip${allActiveOv}" onclick="clearMapFilterOverrun()" title="แสดงทุกกลุ่ม">🔍 ทุกกลุ่ม</button>` +
+    OVERRUN_GROUPS.map((g, idx) => {
       const groupId = idx + 1;
-      const selected = _mapFilterOverrun === groupId ? " selected" : "";
-      return `<option value="${groupId}"${selected}>● ${escapeHtml(g.name)} Party</option>`;
-    })).join("");
+      const on = _mapFilterOverrun.has(groupId);
+      const style = on ? ` style="background:${g.color};border-color:${g.color};color:#fff"` : "";
+      return `<button class="map-filter-chip${on ? " active" : ""}" onclick="toggleMapFilterOverrun(${groupId})"${style} title="${escapeHtml(g.name)} Party">● ${escapeHtml(g.name)}</button>`;
+    }).join("");
   return `
     <div class="map-card" style="margin-top:10px">
       <div class="map-title overrun-map">
         <span>🗺️ Overrun Map · 4 ปาร์ตี้ใหญ่</span>
         <span class="actions">
-          <select class="map-filter-select" onchange="setMapFilterOverrun(this.value)" title="โฟกัสที่กลุ่มเดียว — ซ่อนกลุ่มอื่น">
-            ${filterOpts}
-          </select>
+          <span class="map-filter-chips" title="ติ๊กได้หลายกลุ่มพร้อมกัน">${filterChips}</span>
           <button onclick="toggleMapFullscreen(3)" class="btn-expand-3" title="ขยายเต็มจอ">⛶ Expand</button>
           <button onclick="clearArrows(3)" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>
           <!-- Map image embedded as static asset; upload removed -->
@@ -4594,14 +4631,20 @@ function buildMapHtml(mapNum) {
   // Main map while leaving the Sub map showing everyone (or vice versa).
   const range          = mapNum === 1 ? [1,2,3,4,5,6,7,8] : [9,10,11,12,13,14,15,16];
   const currentFilter  = mapNum === 1 ? _mapFilterMain : _mapFilterSub;
-  const setterFnName   = mapNum === 1 ? "setMapFilterMain" : "setMapFilterSub";
-  const filterOpts = ['<option value="0">🔍 ทุกตี้</option>']
-    .concat(range.map(partyId => {
+  const toggleFnName   = mapNum === 1 ? "toggleMapFilterMain" : "toggleMapFilterSub";
+  const clearFnName    = mapNum === 1 ? "clearMapFilterMain"  : "clearMapFilterSub";
+  // Multi-select filter chips: "ทุกตี้" (active when the set is empty) + one chip
+  // per party. Active chips get their team color so they match their map markers.
+  const allActive = currentFilter.size === 0 ? " active" : "";
+  const filterChips =
+    `<button class="map-filter-chip${allActive}" onclick="${clearFnName}()" title="แสดงทุกตี้">🔍 ทุกตี้</button>` +
+    range.map(partyId => {
       const p = (state.partiesLeague || [])[partyId - 1];
       const nm = (p && p.name) ? p.name : ("ตี้ " + partyId);
-      const selected = currentFilter === partyId ? " selected" : "";
-      return `<option value="${partyId}"${selected}>ตี้ ${partyId} — ${escapeHtml(nm)}</option>`;
-    })).join("");
+      const on = currentFilter.has(partyId);
+      const style = on ? ` style="background:${teamColor(partyId)};border-color:${teamColor(partyId)};color:#fff"` : "";
+      return `<button class="map-filter-chip${on ? " active" : ""}" onclick="${toggleFnName}(${partyId})"${style} title="${escapeHtml(nm)}">${partyId}</button>`;
+    }).join("");
   // Range-circle controls — GL Main map (mapNum 1) only. Toggle for everyone; the
   // reset button appears only when circles are on AND the viewer is an admin.
   const rangeCircleBtns = mapNum === 1
@@ -4614,9 +4657,7 @@ function buildMapHtml(mapNum) {
       <div class="map-title ${cls}">
         <span>${icon} ${title} (ตี้ ${mapNum===1?'1–8':'9–16'})</span>
         <span class="actions">
-          <select class="map-filter-select" onchange="${setterFnName}(this.value)" title="โฟกัสที่ตี้เดียว — ซ่อนคนอื่น">
-            ${filterOpts}
-          </select>
+          <span class="map-filter-chips" title="ติ๊กได้หลายตี้พร้อมกัน">${filterChips}</span>
           ${rangeCircleBtns}
           <button onclick="toggleMapFullscreen(${mapNum})" class="btn-expand-${mapNum}" title="ขยายเต็มจอ">⛶ Expand</button>
           <button onclick="clearArrows(${mapNum})" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>
@@ -4832,7 +4873,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.05.30.15";
+const APP_VERSION = "2026.05.30.16";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
