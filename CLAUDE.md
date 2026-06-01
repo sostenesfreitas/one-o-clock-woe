@@ -97,7 +97,7 @@ woe-party/
 - **Vanilla JS** — no framework, no build step, no modules. One `<script>`.
 - **Firebase** Realtime Database + Auth + Storage (compat SDK 10.7).
 - **localStorage** for offline cache + per-device fallback.
-- **GitHub Pages** deploy from `main` → https://cybodies.github.io/woe-party
+- **GitHub Pages** deploy from `main` → https://cybodies.github.io/one-o-clock-woe
 
 ## Key constants (top of script block)
 
