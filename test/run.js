@@ -826,6 +826,16 @@ console.log("\n[landing — front door wiring]");
     eq(landV, appV, "landing footer must equal APP_VERSION");
     eq(clV, appV, "top CHANGELOG entry must equal APP_VERSION");
   });
+  t("GL 2-plan: bottom marker store + Firebase wired", () => {
+    ok(/markersBottom:\s*\{\}/.test(appHtml), "state.markersBottom declared");
+    ok(/ref\("markers_bottom"\)\.on\("value"/.test(appHtml), "markers_bottom listener present");
+    ok(/ref\("markers_bottom"\)\.set/.test(appHtml), "markers_bottom pushed in fbPushAll");
+  });
+  t("GL 2-plan: 4 league cards + same image + store helper", () => {
+    ok(/buildMapHtml\(4\)/.test(appHtml) && /buildMapHtml\(5\)/.test(appHtml), "cards 4 & 5 emitted");
+    ok(/4:\s*"maps\/main\.png"/.test(appHtml) && /5:\s*"maps\/sub\.png"/.test(appHtml), "EMBEDDED_MAPS 4/5 reuse same images");
+    ok(/function leagueMarkerStore/.test(appHtml), "leagueMarkerStore helper exists");
+  });
   t("parties: auto-sanitize must NOT write back to Firebase (silent-wipe guard)", () => {
     // Fix A: the members + /parties listeners used to .set() the sanitized parties
     // back, so a sanitize against stale/racey data silently PERSISTED a wipe of

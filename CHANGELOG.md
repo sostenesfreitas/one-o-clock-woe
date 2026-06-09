@@ -10,6 +10,14 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.09.2]
+### Added
+- **แผนเกิดบน/เกิดล่าง — แมพ Guild League เป็น 4 การ์ด.** GL สปอว์นได้ทั้งฝั่งบน/ล่าง เลยต้องวาง 2 แผน.
+  เพิ่มการ์ด Main+Sub อีกชุด (mapNum 4/5, "เกิดล่าง") ใช้ **ทีมชุดเดิม + รูปแมพเดิม** แต่มีหมุด/ลูกศรแยกของ
+  ตัวเอง: `state.markersBottom` sync ผ่าน Firebase node ใหม่ `markers_bottom` (ทำตาม pattern `overrun_markers`).
+  หมุดเดิมกลายเป็นแผน "เกิดบน". วงระยะ/ฟิลเตอร์ตี้/สมาชิกในตี้ ใช้ร่วมกันทั้ง 2 แผน. การจัดตี้ (`commitPartiesNow`)
+  ไม่กระทบ. helper `leagueMarkerStore/leagueMapIsMain/leagueMapPlan` เลือก store/range ตาม mapNum.
+
 ## [2026.06.09.1]
 ### Fixed
 - **ชื่อที่จัดเข้าตี้ "เด้ง"/หายเอง (เงียบๆ ไม่มี toast/audit).** จัดตี้ไว้ เข้าออกหลายรอบก็อยู่ แต่บางทีเปิด
