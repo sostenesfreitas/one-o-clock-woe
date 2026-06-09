@@ -72,6 +72,11 @@
       ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
+    "markers_bottom": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+    },
+
     "overrun_markers": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
