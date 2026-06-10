@@ -810,6 +810,193 @@ t("buildVersionStamp() returns v<APP_VERSION>", () => {
   eq(app.call("buildVersionStamp"), "v" + app.appVersion);
 });
 
+console.log("\n[roster self-edit — guest claims own row]");
+(function () {
+  const CLAIM_KEY = "roo_party_claimed_member";
+  const MEMBERS = [
+    { id: "m1", name: "Alice", job: "Priest", discord: "@alice", discordId: "111", cp: 1000, updatedAt: 100, updatedBy: "" },
+    { id: "m2", name: "Bob",   job: "Knight", discord: "@bob",   discordId: "222", cp: 2000, updatedAt: 200, updatedBy: "" },
+  ];
+  let writes = [];
+  // update() must return a thenable: the app chains .then/.catch on writes
+  const refStub = { child(id) { return { update(payload) { writes.push({ id, payload }); return Promise.resolve(); } }; } };
+  function setup(adminFlag, claimedId) {
+    app.setAdmin(adminFlag);
+    app.setRosterCache(JSON.parse(JSON.stringify(MEMBERS)));
+    app.setMembersRef(refStub);
+    app.state.mode = "roster";   // reject paths call renderBattlefields() — keep it on the cheap page
+    if (claimedId) app.ctx.localStorage.setItem(CLAIM_KEY, claimedId);
+    else app.ctx.localStorage.removeItem(CLAIM_KEY);
+    writes = [];
+  }
+
+  t("rosterCanEdit: admin any row · guest only claimed row · unclaimed none", () => {
+    setup(true, "");
+    ok(app.call("rosterCanEdit", "m1") && app.call("rosterCanEdit", "m2"), "admin edits any row");
+    setup(false, "m1");
+    ok(app.call("rosterCanEdit", "m1"), "guest edits own claimed row");
+    ok(!app.call("rosterCanEdit", "m2"), "guest cannot edit other row");
+    setup(false, "");
+    ok(!app.call("rosterCanEdit", "m1"), "unclaimed guest edits nothing");
+  });
+  t("dangling claim (member gone) → rosterClaimedMember null, claim NOT auto-cleared", () => {
+    setup(false, "ghost");
+    isNull(app.call("rosterClaimedMember"), "dangling claim resolves to null");
+    ok(!app.call("rosterCanEdit", "m1"), "and cannot edit others");
+    eq(app.ctx.localStorage.getItem(CLAIM_KEY), "ghost", "localStorage keeps the claim (roster may not be loaded yet)");
+  });
+  t("guest write to NON-claimed row is blocked (no Firebase write)", () => {
+    setup(false, "m1");
+    app.call("rosterUpdate", "m2", "cp", "555");
+    app.call("rosterUpdate", "m2", "name", "Hacked");
+    app.call("rosterSaveMine", "m2");
+    eq(writes.length, 0, "no write may reach Firebase");
+  });
+  t("guest edit on own row writes field + updatedAt + updatedBy=claimed name", () => {
+    setup(false, "m1");
+    app.call("rosterUpdate", "m1", "discord", "  @newalice  ");
+    eq(writes.length, 1);
+    eq(writes[0].id, "m1");
+    eq(writes[0].payload.discord, "@newalice", "trimmed");
+    eq(writes[0].payload.updatedBy, "👤 Alice", "updatedBy = 👤-prefixed claimed name (guest marker)");
+    ok(typeof writes[0].payload.updatedAt === "number", "updatedAt stamped");
+  });
+  t("admin edit works on any row; updatedBy falls back to 'admin' (no _fbUser in harness)", () => {
+    setup(true, "");
+    app.call("rosterUpdate", "m2", "name", "Bobby");
+    eq(writes.length, 1);
+    eq(writes[0].payload.name, "Bobby");
+    eq(writes[0].payload.updatedBy, "admin");
+  });
+  t("blank name: guest rejected, admin allowed (ghost-row machinery handles)", () => {
+    setup(false, "m1");
+    app.call("rosterUpdate", "m1", "name", "   ");
+    eq(writes.length, 0, "guest blank name rejected");
+    setup(true, "");
+    app.call("rosterUpdate", "m1", "name", "");
+    eq(writes.length, 1, "admin may clear name");
+  });
+  t("cp: strips non-digits, clamps to 100,000,000", () => {
+    setup(false, "m1");
+    app.call("rosterUpdate", "m1", "cp", "12,345");
+    eq(writes[0].payload.cp, 12345);
+    app.call("rosterUpdate", "m1", "cp", "999999999999");
+    eq(writes[1].payload.cp, 100000000, "clamped to cap");
+  });
+  t("over-long text field rejected at 64 chars — no silent truncate", () => {
+    setup(false, "m1");
+    app.call("rosterUpdate", "m1", "discord", "x".repeat(65));
+    eq(writes.length, 0, "65 chars rejected");
+    app.call("rosterUpdate", "m1", "discord", "x".repeat(64));
+    eq(writes.length, 1, "64 chars accepted");
+  });
+  t("rosterSaveMine without a real DOM draft rejects blank name — no write", () => {
+    setup(false, "m1");
+    app.call("rosterSaveMine", "m1");   // harness DOM stub yields empty values → blank-name reject
+    eq(writes.length, 0, "no write without a valid draft");
+  });
+  t("rosterClampFields: slices strings to caps, clamps cp into [0, 100M]", () => {
+    const lim = app.rosterLimits;
+    const out = app.call("rosterClampFields", {
+      name: "x".repeat(99), job: "ok", discord: "y".repeat(80), discordId: "1".repeat(40),
+      cp: 999999999999, updatedAt: 5, updatedBy: "z"
+    });
+    eq(out.name.length, lim.fields.name);
+    eq(out.discord.length, lim.fields.discord);
+    eq(out.discordId.length, lim.fields.discordId);
+    eq(out.cp, lim.cp, "cp clamped to cap");
+    eq(app.call("rosterClampFields", { cp: -500 }).cp, 0, "negative cp → 0");
+    eq(app.call("rosterClampFields", { cp: "1500" }).cp, 1500, "string cp coerced");
+    eq(out.job, "ok", "short fields untouched");
+  });
+  t("rows HTML: guest sees DRAFT inputs + 💾 only on claimed row, others static, no delete", () => {
+    setup(false, "m1");
+    const html = app.call("buildRosterRowsHtml");
+    const rows = html.split("<tr").filter(r => r.includes("data-id="));
+    const r1 = rows.find(r => r.includes('data-id="m1"'));
+    const r2 = rows.find(r => r.includes('data-id="m2"'));
+    ok(r1.includes('class="r-mine"'), "own row carries r-mine");
+    ok(r1.includes('data-rme="name"') && r1.includes('data-rme="job"') && r1.includes('data-rme="cp"'), "own row has draft inputs");
+    ok(r1.includes("rosterSaveMine('m1')"), "own row has the save button");
+    ok(!r1.includes("rosterUpdate("), "own row does NOT auto-save per field");
+    ok(!r2.includes("<input") && !r2.includes("<select"), "other row has no editable controls");
+    ok(r2.includes("r-cell-static"), "other row renders static cells");
+    ok(!html.includes("rosterDelete"), "guest never sees delete");
+  });
+  t("rows HTML: admin keeps realtime inputs everywhere, no r-mine/save, has delete", () => {
+    setup(true, "");
+    const html = app.call("buildRosterRowsHtml");
+    ok(html.includes("rosterUpdate('m1','name'") && html.includes("rosterUpdate('m2','name'"), "all rows editable");
+    ok(!html.includes("r-mine"), "no r-mine for admin");
+    ok(!html.includes("rosterSaveMine"), "no save button for admin");
+    ok(html.includes("rosterDelete"), "delete present");
+  });
+  t("updatedBy renders (escaped) in Last Update cell", () => {
+    setup(true, "");
+    const withBy = JSON.parse(JSON.stringify(MEMBERS));
+    withBy[0].updatedBy = "<img src=x>";
+    app.setRosterCache(withBy);
+    const html = app.call("buildRosterRowsHtml");
+    ok(html.includes("r-updated-by"), "updatedBy cell rendered");
+    ok(!html.includes("<img src=x>"), "updatedBy is HTML-escaped");
+  });
+  t("claim UI: chooser when unclaimed · chip when claimed · chooser again when dangling", () => {
+    setup(false, "");
+    let html = app.call("buildRosterClaimHtml");
+    ok(html.includes("rosterClaimSelect"), "chooser shown when unclaimed");
+    ok(html.includes("Alice") && html.includes('value="m1"'), "members listed");
+    ok(html.includes("ยืนยัน"), "confirm button labelled ยืนยัน");
+    setup(false, "m1");
+    html = app.call("buildRosterClaimHtml");
+    ok(html.includes("แก้ในชื่อ") && html.includes("Alice"), "chip shows claimed name");
+    ok(html.includes("claimSetMember('')"), "เปลี่ยน/ออก wired");
+    setup(false, "ghost");
+    html = app.call("buildRosterClaimHtml");
+    ok(html.includes("rosterClaimSelect"), "dangling claim falls back to chooser");
+  });
+  t("claimOptionsHtml: ghost rows (blank name) are not selectable", () => {
+    const html = app.call("claimOptionsHtml", [
+      { id: "g1", name: "", job: "Knight" },
+      { id: "g2", name: "   ", job: "Priest" },
+      { id: "m9", name: "Cara", job: "" },
+    ]);
+    ok(!html.includes("g1") && !html.includes("g2"), "blank-name rows filtered out");
+    ok(html.includes('value="m9"') && html.includes("Cara (?)"), "named row kept with ? job");
+  });
+  t("database.rules.json: /members/$mid shape-locked (validators + $other:false + leaf locks)", () => {
+    const rules = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "..", "database.rules.json"), "utf8"));
+    const mid = rules.rules.members["$mid"];
+    ok(mid && typeof mid[".write"] === "string", "members.$mid .write kept");
+    for (const k of ["name", "job", "discord", "discordId", "cp", "updatedAt", "updatedBy", "onLeaveLeague", "onLeaveOverrun"]) {
+      ok(mid[k] && typeof mid[k][".validate"] === "string", "validator for " + k);
+      // Deep-write lock: /members/$mid/<field>/<child> must be denied — a
+      // parent .validate is NOT evaluated for writes below it (RTDB footgun)
+      eq(mid[k]["$x"][".validate"], false, k + " has a child-write lock");
+    }
+    eq(mid["$other"][".validate"], false, "$other:false — unknown keys rejected (all 9 writer keys are whitelisted)");
+    ok(mid.name[".validate"].indexOf("length >= 1") === -1 && mid.name[".validate"].indexOf("length > 0") === -1,
+       "name validator must allow '' (dedupe ghost rows)");
+  });
+  t("rules limits === client constants (drift tripwire)", () => {
+    const rules = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "..", "database.rules.json"), "utf8"));
+    const mid = rules.rules.members["$mid"];
+    const lim = app.rosterLimits;
+    for (const k of ["name", "job", "discord", "discordId"]) {
+      const m = mid[k][".validate"].match(/length <= (\d+)/);
+      ok(m, k + " has a length cap");
+      eq(Number(m[1]), lim.fields[k], k + " cap matches client");
+    }
+    const cpm = mid.cp[".validate"].match(/newData\.val\(\) <= (\d+)/);
+    ok(cpm, "cp has an upper bound");
+    eq(Number(cpm[1]), lim.cp, "cp cap matches client");
+  });
+  t("draft hold is wired into safeRender (remote re-render can't wipe typing)", () => {
+    const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+    ok(/_rosterMineDirty && state\.mode === "roster"/.test(appHtml), "safeRender holds while draft open");
+    ok(appHtml.includes("_rosterMineDirty = false;  // any full roster rebuild discards the draft"), "flag reset on full rebuild");
+  });
+})();
+
 console.log("\n[landing — front door wiring]");
 (function () {
   const root = require("path").join(__dirname, "..");

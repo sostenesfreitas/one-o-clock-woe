@@ -10,6 +10,48 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.10.1]
+### Added
+- **Roster self-service: สมาชิก (Guest) แก้ข้อมูลแถวตัวเองได้ครบทุกช่อง — ชื่อ / Job / Discord / Discord ID / CP.**
+  กด "เลือกชื่อตัวเอง" บน toolbar (ระบบ claim เดียวกับหน้า "ขอประมูล" — จำใน browser, sync กันสองหน้า) แล้วแถวตัวเอง
+  จะ highlight เขียว; แถวคนอื่น read-only. **Job/CP ที่เดิม guest แก้ได้ทุกแถว ถูกจำกัดเหลือแถวตัวเอง**
+  (ตั้งใจ — กันเคสมือบอนแบบ Overrun). ทุกการแก้ stamp `updatedBy` (ชื่อที่ claim / อีเมล admin) โชว์ใต้ Last Update.
+  หมายเหตุ: claim เป็น localStorage ฝั่ง client = UX gate **ไม่ใช่ security boundary** (Database Rules อนุญาต authed
+  update `/members/$mid` อยู่แล้วตั้งแต่เดิม) — `updatedBy` ให้ social accountability + client validation คุม input.
+- **ปุ่ม 💾 เซฟ สำหรับแถวตัวเอง (draft mode).** ช่องของ guest ไม่เซฟทีละช่องตอน blur แล้ว — พิมพ์รวมแล้วกดปุ่มเดียว
+  เขียนทั้ง 5 ฟิลด์เป็น write เดียว + toast "✅ เซฟแล้ว"; ปุ่มเปลี่ยนสีเมื่อมีแก้ค้าง (dirty). ระหว่าง draft เปิดอยู่
+  ระบบพัก re-render จาก Firebase snapshot (pattern เดียวกับ `_isDragging`) กันพิมพ์ค้างแล้วโดนลบ; ช่องค้นหา
+  carry draft ข้าม rebuild. ฝั่ง admin คงพฤติกรรมเดิม (แก้ปุ๊บเซฟปั๊บทุกแถว). ปุ่มยืนยัน claim ใช้คำว่า "ยืนยัน"
+  (เดิม "บันทึก") กันสับสนกับปุ่มเซฟข้อมูล.
+### Security
+- **database.rules.json: `/members/$mid` ถูก shape-lock เต็มรูปแบบ** — `.validate` ราย field (string ≤64/≤32,
+  cp number 0..100M, updatedAt number, onLeave* boolean), `"$other": false` ปัด key แปลกปลอม (กัน storage abuse —
+  ปลอดภัยเพราะ writer ทุกตัวใช้ 9 keys ที่ validate ครบ; `.validate` ไม่ retroactive กับข้อมูลเก่า มีผลเฉพาะ write ใหม่)
+  และ lock ลูกใต้ทุก field (`"$x": false`) ปิดช่อง RTDB ที่ parent `.validate` ไม่ถูก evaluate เวลาเขียนลึกกว่า field
+  (เช่นเขียน `/name/child` เปลี่ยน string เป็น object ได้). `name` ยอมรับ `""` (dedupe ghost rows — ห้ามว่างเฉพาะ
+  ฝั่ง client). Security review (2 มุม: client XSS/authz + rules adversarial) = **SAFE TO PUBLISH**, ปิด stored-XSS
+  เก่าผ่าน string cp ไปด้วย. **ยังไม่ deploy — ต้อง publish ใน Firebase console หรือ `firebase deploy --only database`
+  แล้วเทสใน rules simulator ก่อน** (เคสทดสอบ: anon เขียน `cp="abc"` → Deny, เขียน object ลง `name` → Deny).
+- **updatedBy ฝั่ง guest ติด prefix "👤"** — admin stamp (อีเมล) ไม่มีทางขึ้นต้นด้วย 👤 ดังนั้น guest ที่เปลี่ยนชื่อ
+  ตัวเองเป็นอีเมล admin จะปลอม stamp ให้ดูเหมือน admin ผ่าน UI ไม่ได้.
+### Fixed
+(จาก /code-review 7 มุม ก่อน merge)
+- **ทุก writer ของ `/members` clamp payload ตาม rules + ติด `.catch` แจ้ง toast** (`rosterClampFields` /
+  `rosterWriteFailed`): เดิม เพิ่มสมาชิก/Import/Dedupe/Migrate ส่งค่าเกิน validator ได้ → หลัง publish rules
+  write จะโดนปัดตกแบบเงียบ หรือ abort batch กลางคัน (เช่น Discord ID 18 หลักหลุดไปช่อง CP ใน Sheet).
+- **Migrate ไม่ลบ discord/discordId อีกแล้ว** — เดิม `.set()` ด้วย payload ไม่ครบ field ทับทั้ง node
+  (คลิกเดียวลบข้อมูล Discord ทั้ง guild ได้); ตอนนี้ส่งครบ + stamp `updatedBy`.
+- **updatedAt↔updatedBy ต้องคู่กันเสมอ**: Import/Dedupe เดิม stamp เวลาใหม่แต่คงชื่อคนแก้เก่า → โทษคนผิด
+  (misattribution); ตอนนี้ทุก write ที่แตะ `updatedAt` stamp ผู้กระทำจริงผ่าน `rosterActorName()`.
+- **Ghost rows (ชื่อว่าง) ไม่โผล่ใน dropdown เลือกชื่อ** — เดิมเลือกได้แล้วได้แถวนิรนาม `updatedBy:"guest"`.
+- **ค่าที่เลือกค้างใน dropdown เลือกชื่อ รอด re-render** — เดิมโดนรีเซ็ตทุกครั้งที่มีคนแก้ข้อมูล (คืนวอร์แทบเลือกไม่ทัน).
+- **Guest แก้แถวที่เพิ่งถูกลบ → เห็น error จริง** ไม่ใช่หน้าจอโชว์ค่าที่ไม่ได้เซฟ (`.catch` + re-render resync).
+- ป้าย "admin only" บนหัวคอลัมน์ Job ที่ผิดมาตลอด (job แก้ได้โดย guest อยู่แล้ว) — เอา badge ชุดนี้ออก + ลบ CSS
+  `.badge` ที่ตายแล้ว; loader/dedupe/migrate coerce `cp` เป็น number กัน legacy string CP ชน rules validate.
+- Cleanup: claim เป็น concept กลาง (`claimGetMemberId`/`claimSetMember` + `claimOptionsHtml` ใช้ร่วม 2 หน้า,
+  `ar*` เป็น alias เดิม), แยก `rosterActorName`/`rosterStaticCell` แทนโค้ดซ้ำ, test กัน limits drift
+  (client constants ต้องเท่ากับตัวเลขใน rules เสมอ).
+
 ## [2026.06.09.3]
 ### Fixed
 - **ปุ่ม "📷 Upload" ในการ์ดแมพ League กดแล้ว error (`setMapBg is not defined`).** handler `setMapBg`/`uploadMapToStorage`

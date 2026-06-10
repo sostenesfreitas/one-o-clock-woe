@@ -690,17 +690,6 @@
     color: var(--text);
     background: var(--bg-2);
   }
-  .roster-table th .badge {
-    margin-left: 6px;
-    background: rgba(248,81,73,0.15);
-    color: var(--danger);
-    padding: 1px 6px;
-    border-radius: 8px;
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: none;
-    letter-spacing: 0;
-  }
   .roster-table td {
     padding: 6px 10px;
     border-bottom: 1px solid var(--border);
@@ -763,6 +752,36 @@
   .roster-table .r-cell-static.r-discord { color: #a78bfa; font-family: monospace; font-size: 12px; }
   .roster-table .r-cell-static.r-discord-id { color: #fbbf24; font-size: 12px; }
   .roster-table .r-updated-at { color: var(--muted); font-size: 11px; font-family: monospace; white-space: nowrap; }
+  .roster-table .r-updated-by {
+    color: var(--muted); opacity: 0.85; font-size: 10px;
+    max-width: 110px; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Self-edit: guest's own (claimed) row */
+  .roster-table tr.r-mine td { background: rgba(16,185,129,0.07); }
+  .roster-table tr.r-mine td.r-rk { color: #10b981; font-weight: 700; }
+  .roster-table .r-cell-static.r-cp-static {
+    text-align: right; font-family: monospace; font-weight: 700; color: #fbbf24;
+  }
+  .roster-claim { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .roster-claim-chip { color: #10b981; font-size: 13px; }
+  .roster-claim select { max-width: 260px; }
+  .roster-table button.r-save {
+    background: rgba(16,185,129,0.12);
+    border: 1px solid #10b981;
+    color: #10b981;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .roster-table button.r-save:hover { background: rgba(16,185,129,0.25); }
+  .roster-table button.r-save.dirty {
+    background: #10b981;
+    color: #06130d;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(16,185,129,0.55);
+  }
   .roster-table button.r-del {
     background: transparent;
     border: 1px solid var(--border);
@@ -2354,6 +2373,10 @@
     .roster-table input.r-input { font-size: 12px; padding: 5px 7px; width: calc(100% - 80px); }
     .roster-table input.r-input.r-cp { text-align: left; }
     .roster-table .r-cell-static { display: inline-block; vertical-align: middle; }
+    .roster-table .r-cell-static.r-cp-static { text-align: left; }
+    .roster-table tbody tr.r-mine { border-left: 2px solid #10b981; }
+    .roster-claim { width: 100%; }
+    .roster-claim select { flex: 1; max-width: none; min-width: 0; }
     .roster-toolbar { flex-direction: column; align-items: stretch; gap: 6px; }
     .roster-toolbar input.r-search { min-width: 0; }
     .roster-toolbar button { padding: 8px 10px; font-size: 12px; }
@@ -3036,6 +3059,10 @@ function setDragging(on) {
 // drop target out from under the user.
 function safeRender() {
   if (_isDragging) { _pendingRenderAfterDrag = true; return; }
+  // Hold remote re-renders while a roster self-edit draft is open — an
+  // innerHTML rebuild would wipe the guest's unsaved typing. Save / claim
+  // change / tab switch all call render() directly, which still rebuilds.
+  if (_rosterMineDirty && state.mode === "roster") return;
   if (typeof render === "function") render();
 }
 // Bind at document level so we catch ALL drags (including HTML5 default dragend
@@ -4896,7 +4923,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.09.3";
+const APP_VERSION = "2026.06.10.1";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -5528,8 +5555,9 @@ function fbSubscribeAll() {
         job:         r.job         || "",
         discord:     r.discord     || "",
         discordId: r.discordId || "",
-        cp:          r.cp          || 0,
-        updatedAt:   r.updatedAt   || 0
+        cp:          Number(r.cp)  || 0,
+        updatedAt:   r.updatedAt   || 0,
+        updatedBy:   r.updatedBy   || ""
       }))
       .sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
     _fbApplyingRemote = true;
@@ -6285,12 +6313,18 @@ function migrateToFirebase() {
   let memberCount = 0;
   (state.members || []).forEach(m => {
     if (!m.id || !m.name) return;
-    _fbDB.ref("members/" + m.id).set({
+    // .set() REPLACES the node — include every field state.members mirrors
+    // (discord/discordId), or a migrate click would erase them for all
+    // members. onLeave* flags are daily-transient and acceptable to drop.
+    _fbDB.ref("members/" + m.id).set(rosterClampFields({
       name: m.name,
       job: m.job || "",
-      cp: m.cp || 0,
-      updatedAt: Date.now()
-    });
+      discord: m.discord || "",
+      discordId: m.discordId || "",
+      cp: Number(m.cp) || 0,
+      updatedAt: Date.now(),
+      updatedBy: rosterActorName()
+    })).catch(rosterWriteFailed);
     memberCount++;
   });
   // Push parties + auction
@@ -6307,31 +6341,174 @@ function rosterAdd() {
   const job         = prompt(`Job (ปล่อยว่างได้ — เลือกจาก dropdown หลังเพิ่ม):\n\n${JOB_LIST.join(" / ")}`, "") || "";
   const discord     = prompt("Discord username (เช่น @johnny):", "") || "";
   const discordId   = prompt("Discord ID:", "") || "";
-  _fbMembersRef.push({
+  _fbMembersRef.push(rosterClampFields({
     name:        name.trim(),
     job:         job.trim(),
     discord:     discord.trim(),
     discordId: discordId.trim(),
     cp:          0,
-    updatedAt:   Date.now()
-  });
+    updatedAt:   Date.now(),
+    updatedBy:   rosterActorName()
+  })).catch(rosterWriteFailed);
+}
+
+/* ----- Roster self-edit (claim) -----
+ * A guest "claims" their own row via the same localStorage claim as the
+ * Auction Request page (claimGetMemberId / claimSetMember — ar* aliases keep
+ * the auction wiring unchanged) and may then edit ALL fields of THAT row
+ * only; admin edits any row. This gate is UX, not a security boundary —
+ * Database Rules already allow any authed user to .update() an existing
+ * /members/$mid (create/delete stay admin). Every edit stamps updatedBy
+ * for social accountability.
+ *
+ * Guest editing is DRAFT-based: inputs on the claimed row don't write
+ * per-field; the user presses 💾 เซฟ (rosterSaveMine) which writes all five
+ * fields in ONE update. Admin keeps per-field realtime saves (rosterUpdate). */
+function rosterClaimedMember() {
+  // Deliberately resolves against rosterCache (NOT findMember/state.members):
+  // the claim chip must agree with the rendered table even before the first
+  // Firebase snapshot, when state.members may hold stale localStorage data.
+  const id = claimGetMemberId();
+  // No auto-clear when not found: rosterCache may simply not be loaded yet
+  // (first snapshot pending) — render as unclaimed and let the listener
+  // re-render resolve it.
+  return id ? (rosterCache.find(r => r.id === id) || null) : null;
+}
+function rosterCanEdit(id) {
+  return isAdmin() || claimGetMemberId() === id;
+}
+
+const ROSTER_FIELD_MAX   = { name: 64, job: 64, discord: 64, discordId: 32 };
+const ROSTER_FIELD_LABEL = { name: "ชื่อ", job: "Job", discord: "Discord", discordId: "Discord ID" };
+const ROSTER_CP_MAX      = 100000000;  // 100M — sanity cap, mirrors rules .validate
+
+/** Actor for updatedBy stamps: admin → email, guest → "👤 " + claimed name.
+ *  The 👤 prefix marks guest-supplied stamps — an admin email stamp can never
+ *  start with 👤, so a guest renaming themselves to an admin's email cannot
+ *  forge an admin-looking entry through the UI. */
+function rosterActorName() {
+  if (isAdmin()) return String((_fbUser && _fbUser.email) || "admin").slice(0, 64);
+  return "👤 " + String((rosterClaimedMember() || {}).name || "guest").slice(0, 61);
+}
+
+/** Clamp a member payload to the shapes database.rules.json .validate accepts.
+ *  Bulk writers (add / import / dedupe / migrate) CLAMP instead of reject so
+ *  one out-of-spec cell can never abort a batch or silently kill a write;
+ *  the interactive paths (rosterUpdate / rosterSaveMine) reject with a toast
+ *  instead so nothing is changed behind the user's back. */
+function rosterClampFields(obj) {
+  const out = Object.assign({}, obj);
+  for (const k in ROSTER_FIELD_MAX) {
+    if (typeof out[k] === "string" && out[k].length > ROSTER_FIELD_MAX[k]) {
+      out[k] = out[k].slice(0, ROSTER_FIELD_MAX[k]);
+    }
+  }
+  if ("cp" in out) out.cp = Math.min(ROSTER_CP_MAX, Math.max(0, Number(out.cp) || 0));
+  return out;
+}
+
+/** Shared rejection handler for /members writes — a denied write must never
+ *  be silent (e.g. row deleted concurrently → rules reject the update while
+ *  the input still shows the typed value as if it saved). */
+function rosterWriteFailed(e) {
+  console.warn("[roster] write failed", e);
+  toast("เซฟไม่สำเร็จ: " + ((e && (e.message || e.code)) || e), "error");
+  renderBattlefields();  // resync UI with what's actually in Firebase
 }
 
 function rosterUpdate(id, field, value) {
   if (!_fbMembersRef) return;
-  // Frontend gating: name/discord/discordId restricted to admin; job + cp
-  // open to everyone with auth (matching the relaxed permissions on those
-  // subpaths in Database Rules — players need to be able to swap their own
-  // job mid-event without bothering an admin).
-  if ((field === "name" || field === "discord" || field === "discordId") && !isAdmin()) {
-    toast("เพิ่ม/แก้ ชื่อ + Discord ทำได้เฉพาะ Admin", "error");
+  if (!rosterCanEdit(id)) {
+    toast("แก้ได้เฉพาะแถวของตัวเอง — กด \"เลือกชื่อตัวเอง\" ก่อน", "error");
     renderBattlefields();
     return;
   }
   let val;
-  if (field === "cp") val = Math.max(0, parseInt(String(value).replace(/[^0-9]/g, ""), 10) || 0);
-  else val = String(value).trim();
-  _fbMembersRef.child(id).update({ [field]: val, updatedAt: Date.now() });
+  if (field === "cp") {
+    val = Math.max(0, parseInt(String(value).replace(/[^0-9]/g, ""), 10) || 0);
+    if (val > ROSTER_CP_MAX) {
+      val = ROSTER_CP_MAX;
+      toast("CP เกินเพดาน — ปรับเป็น " + ROSTER_CP_MAX.toLocaleString(), "");
+    }
+  } else {
+    val = String(value).trim();
+    const max = ROSTER_FIELD_MAX[field] || 64;
+    if (val.length > max) {
+      toast(`ยาวเกินไป (จำกัด ${max} ตัวอักษร)`, "error");
+      renderBattlefields();
+      return;
+    }
+    // Blank name would orphan the row from the claim chooser — admins may
+    // still clear it (the ghost-row dedupe machinery handles those).
+    if (field === "name" && !val && !isAdmin()) {
+      toast("ชื่อห้ามว่าง", "error");
+      renderBattlefields();
+      return;
+    }
+  }
+  _fbMembersRef.child(id).update({ [field]: val, updatedAt: Date.now(), updatedBy: rosterActorName() })
+    .catch(rosterWriteFailed);
+}
+
+/* Draft state for the claimed row. While a draft is open, remote snapshot
+ * re-renders are HELD (see safeRender) so they can't wipe in-progress
+ * typing — same idea as the _isDragging guard. Direct render() calls
+ * (tab switch, claim change) still rebuild and discard the draft. */
+let _rosterMineDirty = false;
+function rosterMarkMineDirty() {
+  _rosterMineDirty = true;
+  const btn = document.getElementById("rosterSaveBtn");
+  if (btn) { btn.classList.add("dirty"); btn.textContent = "💾 เซฟ (มีแก้)"; }
+}
+function rosterMineDraft() {
+  const row = document.querySelector(".roster-table tr.r-mine");
+  if (!row) return null;
+  const pick = f => { const el = row.querySelector(`[data-rme="${f}"]`); return el ? el.value : ""; };
+  return { name: pick("name"), job: pick("job"), discord: pick("discord"), discordId: pick("discordId"), cp: pick("cp") };
+}
+function rosterApplyMineDraft(d) {
+  const row = document.querySelector(".roster-table tr.r-mine");
+  if (!row) { _rosterMineDirty = false; return; }   // row filtered out → draft gone
+  for (const f in d) {
+    const el = row.querySelector(`[data-rme="${f}"]`);
+    if (el) el.value = d[f];
+  }
+  rosterMarkMineDirty();
+}
+function rosterSaveMine(id) {
+  if (!_fbMembersRef) return;
+  if (!rosterCanEdit(id)) {
+    toast("แก้ได้เฉพาะแถวของตัวเอง — กด \"เลือกชื่อตัวเอง\" ก่อน", "error");
+    renderBattlefields();
+    return;
+  }
+  const d = rosterMineDraft();
+  if (!d) return;
+  const name = String(d.name).trim();
+  if (!name) { toast("ชื่อห้ามว่าง", "error"); return; }  // keep the draft so it can be fixed
+  for (const f of ["name", "job", "discord", "discordId"]) {
+    if (String(d[f]).trim().length > ROSTER_FIELD_MAX[f]) {
+      toast(`${ROSTER_FIELD_LABEL[f]} ยาวเกิน ${ROSTER_FIELD_MAX[f]} ตัวอักษร`, "error");
+      return;
+    }
+  }
+  let cp = Math.max(0, parseInt(String(d.cp).replace(/[^0-9]/g, ""), 10) || 0);
+  if (cp > ROSTER_CP_MAX) {
+    cp = ROSTER_CP_MAX;
+    toast("CP เกินเพดาน — ปรับเป็น " + ROSTER_CP_MAX.toLocaleString(), "");
+  }
+  _rosterMineDirty = false;  // release the render hold; the listener refresh shows the saved row
+  _fbMembersRef.child(id).update({
+    name,
+    job:       String(d.job).trim(),
+    discord:   String(d.discord).trim(),
+    discordId: String(d.discordId).trim(),
+    cp,
+    updatedAt: Date.now(),
+    // Guest renaming themselves: stamp the NEW name (not the stale cache
+    // one), with the same 👤 guest-marker prefix as rosterActorName()
+    updatedBy: isAdmin() ? rosterActorName() : "👤 " + name.slice(0, 61)
+  }).then(() => toast("✅ เซฟแล้ว", "success")).catch(rosterWriteFailed);
 }
 
 function rosterDelete(id) {
@@ -6400,21 +6577,27 @@ function rosterImportFromSheet() {
           // Merge-only update: skip empty fields so an empty sheet cell
           // doesn't wipe a manually-entered Discord/Discord ID/CP value.
           // For new rows (no dup), we still seed empty defaults below.
-          const upd = { name: m.name, job: m.job, updatedAt: Date.now() };
+          // updatedBy = the admin running the import — never leave a stale
+          // member stamp paired with a fresh import timestamp (misattribution)
+          const upd = { name: m.name, job: m.job, updatedAt: Date.now(), updatedBy: rosterActorName() };
           if (m.discord)    upd.discord   = m.discord;
           if (m.discordId)  upd.discordId = m.discordId;
           if (m.cp > 0)     upd.cp        = m.cp;
-          await _fbMembersRef.child(dup.id).update(upd);
+          await _fbMembersRef.child(dup.id).update(rosterClampFields(upd));
           updated++;
         } else {
-          const payload = {
+          // Clamp BEFORE write: one out-of-spec sheet cell (e.g. an 18-digit
+          // Discord ID landing in the CP column) must not abort the batch
+          // against the rules validators.
+          const payload = rosterClampFields({
             name:      m.name,
             job:       m.job,
             discord:   m.discord   || "",
             discordId: m.discordId || "",
             cp:        m.cp || 0,
-            updatedAt: Date.now()
-          };
+            updatedAt: Date.now(),
+            updatedBy: rosterActorName()
+          });
           const ref = _fbMembersRef.push();
           await ref.set(payload);
           // Track so subsequent rows in this batch don't re-add the same name+job
@@ -6457,21 +6640,26 @@ async function rosterDedupe(silent) {
       const sb = (b.discord ? 1000000 : 0) + (b.cp || 0);
       return sb > sa ? b : a;
     });
-    // Optionally merge any discord/discordId/cp into best if best is missing them
-    const mergedPayload = {
+    // Optionally merge any discord/discordId/cp into best if best is missing
+    // them. Clamped: legacy rows can predate the rules validators, and one
+    // over-long field must not kill the merge loop. updatedAt is refreshed,
+    // so updatedBy must be too — stamp the admin running the dedupe (never
+    // pair a fresh timestamp with a stale member name).
+    const mergedPayload = rosterClampFields({
       name:      best.name,
       job:       best.job,
       discord:   best.discord   || group.find(g => g.discord)?.discord     || "",
       discordId: best.discordId || group.find(g => g.discordId)?.discordId || "",
-      cp:        Math.max(...group.map(g => g.cp || 0)),
-      updatedAt: Date.now()
-    };
-    await _fbMembersRef.child(best.id).update(mergedPayload);
+      cp:        Math.max(...group.map(g => Number(g.cp) || 0)),
+      updatedAt: Date.now(),
+      updatedBy: rosterActorName()
+    });
+    await _fbMembersRef.child(best.id).update(mergedPayload).catch(rosterWriteFailed);
     merged++;
     // Remove all others
     for (const m of group) {
       if (m.id === best.id) continue;
-      await _fbMembersRef.child(m.id).remove();
+      await _fbMembersRef.child(m.id).remove().catch(rosterWriteFailed);
       removed++;
     }
   }
@@ -6485,9 +6673,12 @@ let _rosterSortDir = "asc";    // "asc" | "desc"
 
 function rosterSearchInput(v) {
   _rosterSearch = (v || "").trim().toLowerCase();
-  // Re-render only the table body to keep input focus
+  // Re-render only the table body to keep input focus; carry the self-edit
+  // draft across the rebuild so searching can't wipe unsaved typing.
+  const draft = _rosterMineDirty ? rosterMineDraft() : null;
   const tbody = document.querySelector(".roster-table tbody");
   if (tbody) tbody.innerHTML = buildRosterRowsHtml();
+  if (draft) rosterApplyMineDraft(draft);
 }
 
 /** Click a header → sort by that column. Click again on the same column
@@ -6525,6 +6716,7 @@ function rosterApplySort(list) {
 
 function buildRosterRowsHtml() {
   const admin = isAdmin();
+  const claimedId = admin ? "" : arGetClaimedMemberId();
   const search = _rosterSearch;
   const filtered = !search ? rosterCache
     : rosterCache.filter(m =>
@@ -6542,42 +6734,66 @@ function buildRosterRowsHtml() {
     }
     return `<tr><td colspan="8" class="roster-empty">ไม่พบ "${escapeHtml(search)}"</td></tr>`;
   }
-  return rosterApplySort(filtered).map((m, i) => `
-    <tr data-id="${m.id}">
+  return rosterApplySort(filtered).map((m, i) => {
+    // Self-edit rendering, three modes per cell:
+    //   admin → live input  (onchange → rosterUpdate, per-field realtime save)
+    //   mine  → DRAFT input (data-rme + dirty mark; saved by the 💾 button)
+    //   else  → static text (guests used to edit job/cp on ANY row —
+    //           intentionally restricted to own-row with this feature)
+    const mine = !admin && m.id === claimedId;
+    return `
+    <tr data-id="${m.id}"${mine ? ' class="r-mine"' : ""}>
       <td class="r-rk">${i + 1}</td>
       <td data-label="ชื่อ">${admin
         ? `<input class="r-input" value="${escapeHtml(m.name)}" onchange="rosterUpdate('${m.id}','name',this.value)" />`
-        : `<div class="r-cell-static">${escapeHtml(m.name)}</div>`}</td>
+        : mine
+        ? `<input class="r-input" data-rme="name" value="${escapeHtml(m.name)}" oninput="rosterMarkMineDirty()" />`
+        : rosterStaticCell("", m.name)}</td>
       <td data-label="Job">${(() => {
-        // Job dropdown is editable by anyone with auth (admin or guest) —
-        // matches the relaxed Database Rule on /members/$id/job. Players
-        // can self-update mid-event without admin intervention.
         const cur = m.job || "";
+        if (!admin && !mine) return rosterStaticCell("r-job", cur);
         const inList = JOB_LIST.includes(cur);
         const opts = JOB_LIST.map(j =>
           `<option value="${j}" ${j === cur ? "selected" : ""}>${j}</option>`).join("");
         const customOpt = (cur && !inList)
           ? `<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)} (custom)</option>`
           : `<option value="" ${!cur ? "selected" : ""}>— เลือก Job —</option>`;
-        return `<select class="r-input r-job-select" onchange="rosterUpdate('${m.id}','job',this.value)">
+        return `<select class="r-input r-job-select"${mine
+          ? ' data-rme="job" onchange="rosterMarkMineDirty()"'
+          : ` onchange="rosterUpdate('${m.id}','job',this.value)"`}>
           ${customOpt}${opts}
         </select>`;
       })()}</td>
       <td data-label="Discord">${admin
         ? `<input class="r-input" value="${escapeHtml(m.discord || "")}" placeholder="@username" onchange="rosterUpdate('${m.id}','discord',this.value)" />`
-        : `<div class="r-cell-static r-discord">${m.discord ? escapeHtml(m.discord) : '<span style="color:var(--muted)">—</span>'}</div>`}</td>
+        : mine
+        ? `<input class="r-input" data-rme="discord" value="${escapeHtml(m.discord || "")}" placeholder="@username" oninput="rosterMarkMineDirty()" />`
+        : rosterStaticCell("r-discord", m.discord)}</td>
       <td data-label="Discord ID">${admin
         ? `<input class="r-input" value="${escapeHtml(m.discordId || "")}" placeholder="Discord ID" onchange="rosterUpdate('${m.id}','discordId',this.value)" />`
-        : `<div class="r-cell-static r-discord-id">${m.discordId ? escapeHtml(m.discordId) : '<span style="color:var(--muted)">—</span>'}</div>`}</td>
-      <td data-label="CP">
-        <input class="r-input r-cp" type="text" inputmode="numeric" pattern="[0-9]*"
-               value="${m.cp || 0}" onchange="rosterUpdate('${m.id}','cp',this.value)" />
-      </td>
-      <td data-label="Last Update" class="r-updated-at">${fmtUpdatedAt(m.updatedAt)}</td>
+        : mine
+        ? `<input class="r-input" data-rme="discordId" value="${escapeHtml(m.discordId || "")}" placeholder="Discord ID" oninput="rosterMarkMineDirty()" />`
+        : rosterStaticCell("r-discord-id", m.discordId)}</td>
+      <td data-label="CP">${admin
+        ? `<input class="r-input r-cp" type="text" inputmode="numeric" pattern="[0-9]*"
+               value="${m.cp || 0}" onchange="rosterUpdate('${m.id}','cp',this.value)" />`
+        : mine
+        ? `<input class="r-input r-cp" data-rme="cp" type="text" inputmode="numeric" pattern="[0-9]*"
+               value="${m.cp || 0}" oninput="rosterMarkMineDirty()" />`
+        : rosterStaticCell("r-cp-static", (m.cp || 0).toLocaleString())}</td>
+      <td data-label="Last Update" class="r-updated-at">${fmtUpdatedAt(m.updatedAt)}${m.updatedBy ? `<div class="r-updated-by" title="แก้ล่าสุดโดย ${escapeHtml(m.updatedBy)}">${escapeHtml(m.updatedBy)}</div>` : ""}</td>
       <td class="r-actions">${admin
         ? `<button class="r-del" onclick="rosterDelete('${m.id}')" title="ลบ">×</button>`
+        : mine
+        ? `<button class="r-save" id="rosterSaveBtn" onclick="rosterSaveMine('${m.id}')" title="เซฟข้อมูลของฉัน">💾 เซฟ</button>`
         : ""}</td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
+}
+
+/** Read-only roster cell: escaped value, or a muted dash when empty. */
+function rosterStaticCell(cls, val) {
+  return `<div class="r-cell-static${cls ? " " + cls : ""}">${val ? escapeHtml(String(val)) : '<span style="color:var(--muted)">—</span>'}</div>`;
 }
 
 /* Job-breakdown section — merged from the old Members tab. Shows job count,
@@ -6649,7 +6865,28 @@ function buildJobBreakdownSection() {
     </div>`;
 }
 
+/* Claim chip / chooser for guests on the Roster toolbar. Reuses the same
+ * localStorage claim as the Auction Request page (claimSetMember calls
+ * render()), so claiming on either page claims on both — one identity. */
+function buildRosterClaimHtml() {
+  const me = rosterClaimedMember();
+  if (me) {
+    return `<span class="roster-claim">
+      <span class="roster-claim-chip">👤 แก้ในชื่อ: <b>${escapeHtml(me.name)}</b>${me.job ? ` (${escapeHtml(me.job)})` : ""}</span>
+      <button class="ghost" onclick="claimSetMember('')">เปลี่ยน / ออก</button>
+    </span>`;
+  }
+  return `<span class="roster-claim">
+    <select id="rosterClaimSelect" class="r-input">
+      <option value="">— เลือกชื่อตัวเอง เพื่อแก้ข้อมูล —</option>
+      ${claimOptionsHtml(rosterCache)}
+    </select>
+    <button onclick="claimSetMember(document.getElementById('rosterClaimSelect').value)">ยืนยัน</button>
+  </span>`;
+}
+
 function buildRosterHtml() {
+  _rosterMineDirty = false;  // any full roster rebuild discards the draft
   const admin = isAdmin();
   if (!firebaseConfigured()) {
     return `
@@ -6684,17 +6921,17 @@ function buildRosterHtml() {
           <button class="primary" onclick="rosterAdd()">➕ เพิ่มสมาชิก</button>
           <button onclick="rosterImportFromSheet()" title="ดึง Name / Job / Discord / Discord ID / CP จาก Google Sheet">📥 Import จาก Sheet</button>
           <button onclick="rosterDedupe()" title="รวมแถวซ้ำ (ชื่อ + Job เดียวกัน)">🧹 ล้างของซ้ำ</button>
-        ` : `<span style="color:var(--muted);font-size:12px">🔒 Read-only — เฉพาะ CP ที่แก้ได้</span>`}
+        ` : buildRosterClaimHtml()}
       </div>
       <div class="roster-table-wrap">
         <table class="roster-table">
           <thead>
             <tr>
               <th style="width:36px">#</th>
-              <th class="r-th-sort" onclick="rosterSort('name')">ชื่อ${rosterSortArrow("name")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
-              <th class="r-th-sort" onclick="rosterSort('job')">Job${rosterSortArrow("job")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
-              <th class="r-th-sort" onclick="rosterSort('discord')">Discord${rosterSortArrow("discord")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
-              <th class="r-th-sort" onclick="rosterSort('discordId')">Discord ID${rosterSortArrow("discordId")}${!admin ? '<span class="badge">admin only</span>' : ""}</th>
+              <th class="r-th-sort" onclick="rosterSort('name')">ชื่อ${rosterSortArrow("name")}</th>
+              <th class="r-th-sort" onclick="rosterSort('job')">Job${rosterSortArrow("job")}</th>
+              <th class="r-th-sort" onclick="rosterSort('discord')">Discord${rosterSortArrow("discord")}</th>
+              <th class="r-th-sort" onclick="rosterSort('discordId')">Discord ID${rosterSortArrow("discordId")}</th>
               <th class="r-th-sort" style="width:140px;text-align:right" onclick="rosterSort('cp')">CP${rosterSortArrow("cp")}</th>
               <th class="r-th-sort" style="width:110px" onclick="rosterSort('updatedAt')">Last Update${rosterSortArrow("updatedAt")}</th>
               <th style="width:50px"></th>
@@ -6705,7 +6942,7 @@ function buildRosterHtml() {
         <div class="roster-status">
           ${admin
             ? "🟢 Admin · กรอกได้ทุกช่อง · บันทึก Realtime"
-            : "🔵 Viewer · กรอกได้แค่ CP · บันทึก Realtime"}
+            : "🔵 Member · เลือกชื่อตัวเอง → แก้ข้อมูลแถวตัวเอง → กด 💾 เซฟ"}
         </div>
       </div>
     </div>`;
@@ -7485,13 +7722,29 @@ const AR_ITEM_META = {
 let _arSelectedDate = null;
 let _arModalState   = null;  // { date, mode, items: Set, note } when modal open
 
-function arGetClaimedMemberId() {
+/* Canonical claim helpers — the claim is a cross-page member identity used
+ * by BOTH the Auction Request page and the Roster self-edit feature. The
+ * ar* names are kept as aliases so the existing auction wiring (inline
+ * onclick strings included) keeps working. */
+function claimGetMemberId() {
   return localStorage.getItem(AR_CLAIMED_KEY) || "";
 }
-function arSetClaimedMember(id) {
+function claimSetMember(id) {
   if (id) localStorage.setItem(AR_CLAIMED_KEY, id);
   else    localStorage.removeItem(AR_CLAIMED_KEY);
   render();
+}
+function arGetClaimedMemberId() { return claimGetMemberId(); }
+function arSetClaimedMember(id) { claimSetMember(id); }
+
+/** Shared <option> list for the claim choosers (Roster + Auction Request).
+ *  Ghost rows (blank name — deliberately kept for dedupe) are NOT selectable:
+ *  claiming one would let edits ride an anonymous "guest" updatedBy stamp. */
+function claimOptionsHtml(members) {
+  return (members || [])
+    .filter(m => (m.name || "").trim())
+    .map(m => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)} (${escapeHtml(m.job || "?")})</option>`)
+    .join("");
 }
 
 /** Has the member registered leave for the given date in /leaves/?
@@ -7868,13 +8121,11 @@ function buildAuctionRequestHtml() {
         <label>เลือกชื่อ:</label>
         <select id="arClaimSelect">
           <option value="">— เลือกชื่อ —</option>
-          ${(state.members || [])
+          ${claimOptionsHtml((state.members || [])
             .slice()
-            .sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"))
-            .map(m => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.name)} (${escapeHtml(m.job || "?")})</option>`)
-            .join("")}
+            .sort((a, b) => (a.name || "").localeCompare(b.name || "", "th")))}
         </select>
-        <button onclick="arSetClaimedMember(document.getElementById('arClaimSelect').value)">บันทึก</button>
+        <button onclick="arSetClaimedMember(document.getElementById('arClaimSelect').value)">ยืนยัน</button>
       </div>
     </div>
   `;
@@ -8716,7 +8967,16 @@ function renderBattlefields() {
   if (state.mode === "overrun") {
     center.innerHTML = buildOverrunHtml();
   } else if (state.mode === "roster") {
+    // Preserve the unclaimed guest's in-progress chooser pick across the
+    // full re-renders that fire on every /members snapshot (busy nights
+    // re-render every few seconds while everyone updates CP).
+    const prevClaimSel = document.getElementById("rosterClaimSelect");
+    const prevClaimVal = prevClaimSel ? prevClaimSel.value : "";
     center.innerHTML = buildRosterHtml();
+    if (prevClaimVal) {
+      const sel = document.getElementById("rosterClaimSelect");
+      if (sel) sel.value = prevClaimVal;
+    }
   } else if (state.mode === "summary") {
     center.innerHTML = buildSummaryHtml();
   } else if (state.mode === "auction-gl") {

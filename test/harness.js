@@ -95,6 +95,9 @@ function loadApp() {
   globalThis.__T_setAdmin  = function(v){ isAdmin = function(){ return !!v; }; };
   globalThis.__T_setToday  = function(v){ todayBkkISO = function(){ return v; }; };
   globalThis.__T_save = function(){ try { save(); } catch(e){} };
+  globalThis.__T_setRosterCache = function(v){ rosterCache = v; };
+  globalThis.__T_setMembersRef  = function(r){ _fbMembersRef = r; };
+  globalThis.__T_ROSTER_LIMITS  = { fields: ROSTER_FIELD_MAX, cp: ROSTER_CP_MAX };
 })();
 `;
   const marker = "\nload();";
@@ -171,6 +174,9 @@ function loadApp() {
     setAdmin: context.__T_setAdmin,
     setToday: context.__T_setToday,
     setSearch: context.__T_setSearch,
+    setRosterCache: context.__T_setRosterCache,
+    setMembersRef: context.__T_setMembersRef,
+    rosterLimits: context.__T_ROSTER_LIMITS,
     // app functions (resolved live so isAdmin/today overrides take effect)
     call: (name, ...args) => need(name)(...args),
     fn: (name) => need(name),
