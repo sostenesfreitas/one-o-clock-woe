@@ -2183,6 +2183,7 @@
   }
   .map-filter-chip:hover { border-color: var(--accent); }
   .map-filter-chip.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .map-readonly-hint { color: var(--muted); font-size: 11px; white-space: nowrap; align-self: center; }
   .map-arrows line {
     stroke-width: 2.5;
     stroke-dasharray: 6 4;
@@ -3840,6 +3841,8 @@ function renderRangeCircles(mapNum) {
 // the radius = distance from center to cursor (in % of wrap width). Admin-only —
 // the handles are only rendered for admins, and the push is admin-gated anyway.
 function attachRangeCircleDrag(handle, wrap, idx, kind, mapNum) {
+  // Admin-only — same hard gate as attachMarkerDrag (see comment there).
+  if (!isAdmin()) { handle.style.cursor = "default"; return; }
   let dragging = false;
   const onDown = (e) => {
     e.preventDefault();
@@ -3970,6 +3973,7 @@ function renderArrows(mapNum) {
 }
 
 function clearArrows(mapNum) {
+  if (!isAdmin()) { toast("Admin only", "error"); return; }
   if (mapNum === 3) {
     if (!state.overrunMarkers) state.overrunMarkers = {};
     for (let i = 1; i <= OVERRUN_GROUPS.length; i++) {
@@ -4118,6 +4122,8 @@ function renderOverrunArrows() {
 }
 
 function attachMarkerDragOverrun(el, wrap, idx) {
+  // Admin-only — same hard gate as attachMarkerDrag (see comment there).
+  if (!isAdmin()) { el.style.cursor = "default"; return; }
   let dragging = false, moved = false, shiftHeld = false;
   let startX, startY, startLeft, startTop, startPosX, startPosY;
 
@@ -4198,6 +4204,12 @@ function attachMarkerDragOverrun(el, wrap, idx) {
 }
 
 function attachMarkerDrag(el, wrap, idx, mapNum) {
+  // Hard gate: marker interactions (drag = waypoint, click = clear path,
+  // right-click = undo) all mutate marker state — admin-only. Rules already
+  // block the persist for guests, but without this gate a guest's drag
+  // "works" on their own screen then silently vanishes on the next snapshot
+  // (UX-misleading). Guests get a pure read-only view + filters.
+  if (!isAdmin()) { el.style.cursor = "default"; return; }
   let dragging = false;
   let moved = false;
   let shiftHeld = false;
@@ -4822,7 +4834,9 @@ function buildOverrunMapHtml() {
         <span class="actions">
           <span class="map-filter-chips" title="ติ๊กได้หลายกลุ่มพร้อมกัน">${filterChips}</span>
           <button onclick="toggleMapFullscreen(3)" class="btn-expand-3" title="ขยายเต็มจอ">⛶ Expand</button>
-          <button onclick="clearArrows(3)" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>
+          ${(typeof isAdmin === "function" && isAdmin())
+            ? `<button onclick="clearArrows(3)" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>`
+            : `<span class="map-readonly-hint" title="หมุด/ลูกศรจัดการได้เฉพาะ Admin — guest ใช้ filter ดูได้อย่างเดียว">🔒 ดูอย่างเดียว</span>`}
           ${buildMapUploadBtns(3)}
         </span>
       </div>
@@ -4874,7 +4888,9 @@ function buildMapHtml(mapNum) {
           <span class="map-filter-chips" title="ติ๊กได้หลายตี้พร้อมกัน">${filterChips}</span>
           ${rangeCircleBtns}
           <button onclick="toggleMapFullscreen(${mapNum})" class="btn-expand-${mapNum}" title="ขยายเต็มจอ">⛶ Expand</button>
-          <button onclick="clearArrows(${mapNum})" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>
+          ${(typeof isAdmin === "function" && isAdmin())
+            ? `<button onclick="clearArrows(${mapNum})" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>`
+            : `<span class="map-readonly-hint" title="หมุด/ลูกศรจัดการได้เฉพาะ Admin — guest ใช้ filter ดูได้อย่างเดียว">🔒 ดูอย่างเดียว</span>`}
           ${buildMapUploadBtns(mapNum)}
         </span>
       </div>
@@ -5132,7 +5148,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.12.3";
+const APP_VERSION = "2026.06.12.4";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;

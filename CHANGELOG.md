@@ -10,6 +10,15 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.12.4]
+### Fixed
+- **หน้าแมพ: hard-gate หมุด/ลูกศร/วงระยะ เป็น admin-only — guest เหลือ filter/ระยะ/Expand (ดูอย่างเดียว).**
+  เดิม guest ลาก/คลิก/คลิกขวาหมุดได้บนจอตัวเอง (rules บล็อกตอน persist อยู่แล้ว → ภาพหลอก: เห็นว่าขยับได้
+  แต่หายเองตอน snapshot ใหม่ + คลิกหมุดเฉยๆ = ล้างเส้นทางบนจอตัวเอง). ตอนนี้ listener ไม่ถูก attach เลย
+  สำหรับ non-admin (`attachMarkerDrag` / `attachMarkerDragOverrun` / `attachRangeCircleDrag` guard ที่ต้นฟังก์ชัน
+  + `clearArrows` มี gate), ปุ่ม 🗑 Clear arrows ซ่อนจาก guest แทนด้วยป้าย "🔒 ดูอย่างเดียว" ทั้งการ์ด League
+  ทั้ง 4 และ Overrun. ปิด soft-gate ที่ note ไว้ตอน audit 2026-06-09.
+
 ## [2026.06.12.3]
 ### Changed
 - **Job Breakdown: เช็คแบบเป๊ะ ๆ — มี ≠ เป้า คือเตือนทันที ไม่มี "ใกล้เคียง" อีกแล้ว.**

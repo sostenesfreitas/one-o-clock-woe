@@ -1003,6 +1003,50 @@ console.log("\n[roster self-edit — guest claims own row]");
   });
 })();
 
+console.log("\n[map admin gate — guests view-only, filters allowed]");
+(function () {
+  t("buildMapHtml: guest gets no Clear-arrows, sees read-only hint, keeps filters/ระยะ/Expand", () => {
+    app.setAdmin(false);
+    const html = app.call("buildMapHtml", 1);
+    ok(!html.includes("clearArrows("), "no clear button for guest");
+    ok(html.includes("ดูอย่างเดียว"), "read-only hint shown");
+    ok(html.includes("map-filter-chip"), "party filters kept");
+    ok(html.includes("toggleRangeCircles"), "ระยะ toggle kept");
+    ok(html.includes("toggleMapFullscreen(1)"), "Expand kept");
+  });
+  t("buildMapHtml: admin keeps Clear arrows, no hint", () => {
+    app.setAdmin(true);
+    const html = app.call("buildMapHtml", 1);
+    ok(html.includes("clearArrows(1)"), "clear button for admin");
+    ok(!html.includes("ดูอย่างเดียว"), "no hint for admin");
+  });
+  t("buildOverrunHtml: same gate on the Overrun map card", () => {
+    app.setAdmin(false);
+    let html = app.call("buildOverrunHtml");
+    ok(!html.includes("clearArrows(3)") && html.includes("ดูอย่างเดียว"), "guest gated");
+    ok(html.includes("toggleMapFilterOverrun"), "overrun filters kept for guest");
+    app.setAdmin(true);
+    html = app.call("buildOverrunHtml");
+    ok(html.includes("clearArrows(3)"), "admin keeps clear button");
+  });
+  t("clearArrows: guest is a no-op (paths untouched), admin clears", () => {
+    app.setAdmin(false);
+    app.state.overrunMarkers = { 1: { x: 1, y: 1, path: [{ x: 0, y: 0 }] } };
+    app.call("clearArrows", 3);
+    eq(app.state.overrunMarkers[1].path.length, 1, "guest cannot clear");
+    app.setAdmin(true);
+    app.call("clearArrows", 3);
+    eq(app.state.overrunMarkers[1].path.length, 0, "admin clears");
+  });
+  t("all 3 drag attachers are admin-gated at the top (static)", () => {
+    const src = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+    for (const fn of ["attachMarkerDrag", "attachMarkerDragOverrun", "attachRangeCircleDrag"]) {
+      const m = src.match(new RegExp("function " + fn + "\\([^)]*\\) \\{[\\s\\S]{0,800}"));
+      ok(m && /if \(!isAdmin\(\)\)/.test(m[0]), fn + " has isAdmin gate near top");
+    }
+  });
+})();
+
 console.log("\n[landing — front door wiring]");
 (function () {
   const root = require("path").join(__dirname, "..");
