@@ -88,8 +88,10 @@ Where `AuctionState` is:
 
 ```js
 {
-  cards: number, illusion: number, white: number, black: number,  // base drop
-  bonusPercent: number,                                           // GL bonus %
+  cards: number, illusion: number, white: number, black: number,
+  // ^ FINAL item counts, entered by admin as-is. (The old GL ×-bonus
+  //   system + its bonusPercent field were removed 2026-06; normalize
+  //   strips bonusPercent from legacy saves.)
   rates: { card: number, illusion: number, white: number, black: number },
   // ^ admin-editable per-person allocation (จำนวนของที่ได้รับต่อคน), min 1.
   //   Note the SINGULAR "card" key (matches ITEM_META.rateKey), while the
@@ -231,8 +233,9 @@ load() ──▶ initFirebase() ──▶ onAuthStateChanged
   `isAdmin()`-gated, clamps to ≥1, mutates `state.auction*.rates`, and persists
   via `save()` → the existing `auction_gl` / `auction_overrun` Firebase push
   (no new listener needed — `rates` rides inside the same object).
-- **`computeAuction(kind)`** computes per-item totals. GL applies the bonus
-  (cards+illusion ×2 when %>0, feathers ×(1+%/100)) then splits each item by an
+- **`computeAuction(kind)`** computes per-item totals. Totals = the entered
+  counts 1:1 (the GL ×-bonus multiplier was removed 2026-06 — admins type
+  post-bonus quantities directly). GL then splits each item by an
   **admin-editable main %** (`state.auctionGL.splitMainPercent`, default 70):
   `mainPool = Math.ceil(total * mainPct/100)` so the leftover on an uneven split goes
   to **สนามหลัก**; `subPool = total − mainPool`. Read it via `getAuctionSplitPercent(kind)`

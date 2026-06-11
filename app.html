@@ -80,7 +80,6 @@
   body.viewer-mode .dim-sub-clear,
   body.viewer-mode .sidebar h3 button,
   body.viewer-mode .auction-input-card input,
-  body.viewer-mode .auction-percent-row,
   body.viewer-mode .filters .toggle {
     pointer-events: none;
     opacity: 0.45;
@@ -966,7 +965,6 @@
     color: var(--accent);
     display: flex; align-items: center; gap: 8px;
   }
-  .auction-section.bonus h3 { color: #fbbf24; }
 
   .auction-inputs {
     display: grid;
@@ -1071,33 +1069,6 @@
     box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15);
   }
 
-  .auction-percent-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  .auction-percent-row .label {
-    color: var(--muted); font-size: 12px;
-  }
-  .auction-percent-btn {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 5px 14px;
-    border-radius: 16px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all .15s;
-  }
-  .auction-percent-btn:hover { border-color: #fbbf24; }
-  .auction-percent-btn.active {
-    background: linear-gradient(135deg, #f59e0b, #fbbf24);
-    color: #000;
-    border-color: #fbbf24;
-  }
   /* GL main/sub split % control */
   .auction-split-row {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 2px 0 4px;
@@ -2439,8 +2410,6 @@
     .auction-sub-boxes { grid-template-columns: 1fr !important; }
     .auction-summary-table { font-size: 11px; }
     .auction-summary-table th, .auction-summary-table td { padding: 5px 4px; }
-    .auction-percent-row { flex-wrap: wrap; gap: 6px; }
-    .auction-percent-btn { padding: 4px 10px; font-size: 11px; }
     .auction-input-card input { font-size: 18px; padding: 8px 10px; }
 
     /* Roster table: card layout per row on mobile — each row stacks vertically
@@ -2651,10 +2620,6 @@
     .auction-assigned-row .aar-page { font-size: 9px; padding: 1px 5px; }
     .auction-assigned-row .aar-del { padding: 4px 8px; font-size: 16px; }   /* bigger tap target */
 
-    /* Percent buttons: stretch to fit but keep tap target */
-    .auction-percent-row { gap: 6px; }
-    .auction-percent-btn { padding: 6px 12px; font-size: 12px; }
-
     /* Search input full width */
     .auction-search-input { max-width: 100%; padding: 8px 10px; font-size: 13px; }
 
@@ -2719,7 +2684,6 @@
     .auction-column .ac-head { font-size: 12px; padding: 7px 10px; }
     .auction-column .ac-stats .ac-stat-val { font-size: 11px; }
     /* Make tap targets bigger */
-    .auction-percent-btn { padding: 6px 12px; }
     .auction-column .ac-actions button { padding: 7px 8px; font-size: 11px; }
     .roster-table button.r-del { width: 34px; height: 34px; font-size: 16px; }
     .member-row { padding: 8px 10px; min-height: 40px; }
@@ -2914,7 +2878,7 @@ let state = {
   // `range_circles` Firebase node; admin drags to move / resize. See initRangeCircles.
   rangeCircles: [],
   jobTargets: {},
-  auctionGL: { cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0, splitMainPercent: 70,
+  auctionGL: { cards: 0, illusion: 0, white: 0, black: 0, splitMainPercent: 70,
     assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } },
   auctionOverrun: { cards: 0, illusion: 0, white: 0, black: 0,
     assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } },
@@ -5028,7 +4992,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.11.1";
+const APP_VERSION = "2026.06.11.2";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -5053,7 +5017,6 @@ const AUCTION_DEFAULT_RATES = {
   gl:      { card: 1, illusion: 1, white: 3,  black: 5  },
   overrun: { card: 1, illusion: 1, white: 10, black: 10 }
 };
-const AUCTION_PERCENTS = [0, 50, 70, 100];
 const AUCTION_ITEMS_PER_PAGE = 4;  // Overrun auction-house page size
 
 // Canonical job list shown in the Roster Job dropdown. Any existing job that
@@ -7102,11 +7065,10 @@ function getAuctionSplitPercent(kind) {
   return (typeof v === "number" && isFinite(v) && v >= 0 && v <= 100) ? Math.round(v) : 70;
 }
 
-/** Compute effective totals + per-person allocation + shortage/leftover.
- *  GL bonus formula (derived from base × multiplier — no separate inputs):
- *    - % > 0: cards + illusion ×2 (so bonus = base), feathers ×(1 + %/100)
- *    - % = 0: no bonus at all (bonus = 0 for all)
- *  Overrun: no bonus ever.
+/** Compute totals + per-person allocation + shortage/leftover.
+ *  Item counts are entered as FINAL totals — the old GL ×-bonus system
+ *  (cards/illusion ×2, feathers ×(1+%/100)) was retired 2026-06; admins
+ *  now type the post-bonus quantities themselves.
  *
  *  Demand is computed from the per-column assignment counts, not the total
  *  member list — user drags names into Card / Illusion / ขาว / ดำ columns
@@ -7133,27 +7095,8 @@ function computeAuction(kind) {
   });
   if (assignmentsDirty) save();
 
-  let base, percent;
-  if (kind === "gl") {
-    const a = state.auctionGL;
-    base = { cards: a.cards|0, illusion: a.illusion|0, white: a.white|0, black: a.black|0 };
-    percent = a.bonusPercent|0;
-  } else {
-    const a = state.auctionOverrun;
-    base = { cards: a.cards|0, illusion: a.illusion|0, white: a.white|0, black: a.black|0 };
-    percent = 0;
-  }
-
-  const bonusActive       = percent > 0;
-  const effBonusCards     = bonusActive ? base.cards    : 0;  // ×2 total = +base
-  const effBonusIllusion  = bonusActive ? base.illusion : 0;  // ×2 like cards
-  const effBonusWhite     = bonusActive ? Math.round(base.white * percent / 100) : 0;
-  const effBonusBlack     = bonusActive ? Math.round(base.black * percent / 100) : 0;
-
-  const totalCards    = base.cards    + effBonusCards;
-  const totalIllusion = base.illusion + effBonusIllusion;
-  const totalWhite    = base.white    + effBonusWhite;
-  const totalBlack    = base.black    + effBonusBlack;
+  const src = kind === "gl" ? state.auctionGL : state.auctionOverrun;
+  const totals = { cards: src.cards|0, illusion: src.illusion|0, white: src.white|0, black: src.black|0 };
 
   // GL splits each item between main+sub by an admin-editable percent (default
   // 70). The remainder on an uneven split goes to MAIN (ceil), so the leftover
@@ -7182,8 +7125,6 @@ function computeAuction(kind) {
     white:    { label: "🪶 ขนขาว",         rateKey: "white",    unit: "ขน"   },
     black:    { label: "🪶 ขนดำ",          rateKey: "black",    unit: "ขน"   }
   };
-  const totals    = { cards: totalCards, illusion: totalIllusion, white: totalWhite, black: totalBlack };
-  const bonusVals = { cards: effBonusCards, illusion: effBonusIllusion, white: effBonusWhite, black: effBonusBlack };
   const items = ["cards","illusion","white","black"].map(key => {
     const total    = totals[key];
     const mainPool = splitMain(total);
@@ -7195,7 +7136,7 @@ function computeAuction(kind) {
       label: meta.label,
       unit:  meta.unit,
       rate:  itemRate,
-      total, base: base[key], bonus: bonusVals[key],
+      total,
       main: buildSide("main", key, mainPool, itemRate),
       sub:  buildSide("sub",  key, subPool,  itemRate)
     };
@@ -7248,7 +7189,7 @@ function computeAuction(kind) {
   });
   const pageMap = { perType, totalItems, totalPages };
 
-  return { kind, members, people, percent, rate, base, items, assignments, hasSubField, pageMap, splitMainPercent: mainPct };
+  return { kind, members, people, rate, items, assignments, hasSubField, pageMap, splitMainPercent: mainPct };
 }
 
 // All four mutators call render() (not just renderBattlefields) so the sidebar's
@@ -7326,15 +7267,6 @@ function setAuctionField(kind, field, value) {
     try { newInput.setSelectionRange(pos, pos); } catch (e) {}
   }
   window.scrollTo(scrollX, scrollY);
-}
-
-function setAuctionPercent(kind, value) {
-  const n = parseInt(value, 10) || 0;
-  if (kind !== "gl") return;
-  if (state.auctionGL.bonusPercent === n) return;
-  state.auctionGL.bonusPercent = n;
-  save();
-  renderBattlefields();
 }
 
 /** Admin-editable per-person allocation rate (จำนวนของที่ได้รับต่อคน).
@@ -7439,8 +7371,8 @@ function buildAuctionView(kind) {
   const title = isGL ? "Auction GL" : "Auction Overrun";
   const rateLabel = `1 / ${data.rate.white} / ${data.rate.black}`;
 
-  // Base inputs
-  const baseInputs = ["cards","illusion","white","black"].map(field => {
+  // Item-count inputs (admin types the FINAL quantities — no multiplier)
+  const itemCountInputs = ["cards","illusion","white","black"].map(field => {
     const it = data.items.find(i => i.key === field);
     const labelMap = {
       cards:    ["🎴","การ์ด",         "ใบ/คน"  ],
@@ -7453,7 +7385,7 @@ function buildAuctionView(kind) {
     const RATE_KEY = { cards: "card", illusion: "illusion", white: "white", black: "black" };
     return buildAuctionInputCard({
       icon, label: lbl,
-      value: it.base,
+      value: it.total,
       rate: it.rate,
       perPersonLabel: ppLbl,
       kind, field,
@@ -7500,43 +7432,6 @@ function buildAuctionView(kind) {
       ⚠️ <b>ของไม่พอ</b> — ${shortPairs.map(s => data.hasSubField
           ? `${s.label.replace(/^[^\s]+\s/, "")}(สนาม${fieldThai(s.field)}) ขาด ${s.short}`
           : `${s.label.replace(/^[^\s]+\s/, "")} ขาด ${s.short}`).join(", ")}
-    </div>` : "";
-
-  // Bonus section (GL only) — % picker only; system derives bonus from base × multiplier.
-  // Cards + Illusion always ×2 when bonus active; feathers ×(1+%/100).
-  const bonusActive = data.percent > 0;
-  const featherMult = (1 + data.percent / 100).toFixed(2);
-  const bonusRows = isGL ? data.items.map(it => {
-    const isFixedDouble = (it.key === "cards" || it.key === "illusion");
-    const multLabel     = isFixedDouble ? (bonusActive ? "×2" : "×1") : `×${featherMult}`;
-    return `
-      <tr>
-        <td class="item">${it.label}</td>
-        <td class="num">${it.base}</td>
-        <td class="num">${multLabel}</td>
-        <td class="num"><b>${it.total}</b> ${bonusActive ? `<span style="color:var(--muted);font-weight:400">(+${it.bonus})</span>` : ""}</td>
-      </tr>`;
-  }).join("") : "";
-  const bonusSection = isGL ? `
-    <div class="auction-section bonus">
-      <h3>⭐ Bonus rate</h3>
-      <div class="auction-percent-row">
-        <span class="label">เลือก % เบิ้ลของวันนี้ (การ์ด ×2 เมื่อ %>0, ขน ×(1+%)):</span>
-        ${AUCTION_PERCENTS.map(p => `
-          <button class="auction-percent-btn ${data.percent === p ? "active" : ""}"
-                  onclick="setAuctionPercent('gl', ${p})">${p}%</button>`).join("")}
-      </div>
-      <table class="auction-summary-table">
-        <thead>
-          <tr>
-            <th style="text-align:left">รายการ</th>
-            <th>Base (รับมา)</th>
-            <th>คูณ</th>
-            <th>หลัง Bonus</th>
-          </tr>
-        </thead>
-        <tbody>${bonusRows}</tbody>
-      </table>
     </div>` : "";
 
   // GL main/sub split %: admin types main %, sub = 100 − main (live). Remainder
@@ -7766,16 +7661,13 @@ function buildAuctionView(kind) {
         <div class="auction-meta">
           <span class="rate-pill">คน: <b>${data.people}</b></span>
           <span class="rate-pill">อัตรา: <b>${rateLabel}</b></span>
-          ${isGL ? `<span class="rate-pill">Bonus: <b>${data.percent}%</b></span>` : ""}
         </div>
       </div>
 
       <div class="auction-section">
-        <h3>📦 ของหลัก (Base)</h3>
-        <div class="auction-inputs">${baseInputs}</div>
+        <h3>📦 จำนวนของ (กรอกยอดจริงที่จะแจก)</h3>
+        <div class="auction-inputs">${itemCountInputs}</div>
       </div>
-
-      ${bonusSection}
 
       ${splitSection}
 
@@ -8128,7 +8020,7 @@ function arResetAuctionPages() {
   // Preserve each mode's editable per-person rates across the reset — they're
   // config, not per-event tallies, so a daily wipe shouldn't clobber them.
   const fresh = (kind) => ({
-    cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0,
+    cards: 0, illusion: 0, white: 0, black: 0,
     rates: getAuctionRates(kind),
     assignments: {
       main: { cards: [], illusion: [], white: [], black: [] },
@@ -9707,12 +9599,13 @@ if (!state.wheelHistory || typeof state.wheelHistory !== "object" || Array.isArr
 function normalizeAuctionState(obj, kind) {
   const defRates = AUCTION_DEFAULT_RATES[kind] || AUCTION_DEFAULT_RATES.gl;
   if (!obj || typeof obj !== "object") {
-    return { cards: 0, illusion: 0, white: 0, black: 0, bonusPercent: 0, splitMainPercent: 70,
+    return { cards: 0, illusion: 0, white: 0, black: 0, splitMainPercent: 70,
       rates: { ...defRates },
       assignments: { main: { cards: [], illusion: [], white: [], black: [] }, sub: { cards: [], illusion: [], white: [], black: [] } } };
   }
+  // bonus system retired 2026-06: counts are entered as final totals now.
   delete obj.bonusCards; delete obj.bonusWhite; delete obj.bonusBlack;
-  if (typeof obj.bonusPercent !== "number") obj.bonusPercent = 0;
+  delete obj.bonusPercent;
   if (typeof obj.illusion !== "number") obj.illusion = 0;
   // Backfill GL main/sub split % (added 2026-05). Valid range 0..100, default 70.
   if (typeof obj.splitMainPercent !== "number" || !isFinite(obj.splitMainPercent)

@@ -10,6 +10,15 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.11.2]
+### Changed
+- **Auction GL: ถอดระบบคูณโบนัส (×) ออกทั้งหมด — กรอกจำนวนของสุทธิเองตรง ๆ.**
+  Section "⭐ Bonus rate" (ปุ่ม 0/50/70/100% + ตาราง Base→คูณ→หลัง Bonus), pill "Bonus: %",
+  สูตร การ์ด/Illusion ×2 + ขน ×(1+%/100) ใน `computeAuction`, `setAuctionPercent()` และ
+  field `bonusPercent` ถูกลบหมด (normalize ตัดทิ้งจาก save เก่าอัตโนมัติ). ช่องกรอกเปลี่ยน
+  หัวข้อเป็น "📦 จำนวนของ (กรอกยอดจริงที่จะแจก)" — พิมพ์เท่าไหร่ระบบใช้เท่านั้น.
+  ส่วนอื่นเดิมทั้งหมด: แบ่งสนามหลัก/รอง %, rate ต่อคน, ลากชื่อ, page map, Overrun.
+
 ## [2026.06.11.1]
 ### Added
 - **🎡 หน้า "สุ่มรางวัล" (admin-only): วงล้อสุ่มผู้โชคดีจากรายชื่อใน Roster.**

@@ -10,8 +10,8 @@ post-WoE auctions. Used by a single Ragnarok Online guild.
 - **Overrun** — 4 big parties × 4 sub-parties on a single map
 - **Roster** — member table (name, job, CP, Discord) with per-row edits
 - **Summary** — job counts vs. targets
-- **Auction GL** — post-WoE loot split 70/30 (main/sub field) with a
-  bonus-rate input
+- **Auction GL** — post-WoE loot split 70/30 (main/sub field); item counts
+  are entered as final totals
 - **Auction Overrun** — per-column drag-drop with auction page numbering
 - **Leave** — scheduled-leave registration, auto-resets every Monday
   00:00 Asia/Bangkok

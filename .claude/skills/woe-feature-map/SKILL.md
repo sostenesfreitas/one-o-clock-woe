@@ -37,7 +37,7 @@ window). If a surface exists, the rule must hold there too.
    deliberately not): `kind === "gl"`, `hasSubField`, `splitMain`, `state.auctionGL` vs
    `state.auctionOverrun`, `partiesLeague` vs `partiesOverrun`. Overrun has **no sub field**.
 3. **State + sync.** Where the value lives and how it propagates:
-   `state.auction{GL,Overrun}` (with `rates`, `bonusPercent`, `splitMainPercent`),
+   `state.auction{GL,Overrun}` (with `rates`, `splitMainPercent` — `bonusPercent` was retired 2026-06 and is stripped by normalize),
    `normalizeAuctionState(obj, kind)` (add a backfill for any new field),
    the `_fbDB.ref("auction_gl"|"auction_overrun").set(...)` writers + `.on("value")` listeners,
    and `save()` (localStorage). A new persistent field needs: state init + normalize backfill

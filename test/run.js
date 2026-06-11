@@ -171,7 +171,7 @@ t("computeAuction uses the live (edited) rate, not the default", () => {
 t("GL splits 70/30; status 'พอดี' when mainPool == need", () => {
   reset(app, mkMembers(["p1"]));
   app.state.auctionGL.rates.white = 7;
-  app.state.auctionGL.white = 10;          // base 10, bonus 0 -> total 10
+  app.state.auctionGL.white = 10;          // entered count IS the total
   app.state.auctionGL.assignments.main.white = ["p1"];
   const d = app.call("computeAuction", "gl");
   const w = d.items.find(i => i.key === "white");
@@ -278,7 +278,7 @@ function typeRange(pm, key) { const t = pm.perType.find(x => x.key === key); ret
 
 t("GL worked example: cards5 illu2 white10 black10 → per-type pages + total", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10 });
   const pm = pageMapOf("gl");
   // Items pack CONTINUOUSLY (no fresh page per type): cards 5 → p1-2; illu 2
   // continues p2; white 10 continues p2-5; black 10 continues p5-7. No gaps.
@@ -291,7 +291,7 @@ t("GL worked example: cards5 illu2 white10 black10 → per-type pages + total", 
 });
 t("GL invariant: totalPages === max endPage across all buckets", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10 });
   const d = app.call("computeAuction", "gl");
   let maxEnd = 0;
   d.items.forEach(it => {
@@ -304,7 +304,7 @@ t("GL items pack continuously — next type shares the same page (no fresh-page 
   reset(app, []);
   // cards 2 → page 1 slots 1-2; illu 2 must continue on page 1 slots 3-4 (same page),
   // NOT jump to a fresh page 2. (split 100 so each type is main-only for a clean check.)
-  Object.assign(app.state.auctionGL, { cards: 2, illusion: 2, white: 0, black: 0, bonusPercent: 0, splitMainPercent: 100 });
+  Object.assign(app.state.auctionGL, { cards: 2, illusion: 2, white: 0, black: 0, splitMainPercent: 100 });
   const d = app.call("computeAuction", "gl");
   const cards = d.items.find(i => i.key === "cards"), illu = d.items.find(i => i.key === "illusion");
   eq([cards.main.page.startPage, cards.main.page.endPage], [1, 1], "cards 2 → page 1");
@@ -312,7 +312,7 @@ t("GL items pack continuously — next type shares the same page (no fresh-page 
 });
 t("GL 70/30 boundary: sub continues main's partial page (white=10)", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   const w = app.call("computeAuction", "gl").items.find(i => i.key === "white");
   eq([w.main.page.startPage, w.main.page.endPage], [1, 2], "main 7 items → pages 1-2");
   eq([w.sub.page.startPage, w.sub.page.endPage], [2, 3], "sub 3 items → pages 2-3");
@@ -321,7 +321,7 @@ t("GL 70/30 boundary: sub continues main's partial page (white=10)", () => {
 });
 t("GL split @70 ceil-to-main: white=6 → main 5 (p1-2) / sub 1 (p2)", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 6, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 6, black: 0 });
   const w = app.call("computeAuction", "gl").items.find(i => i.key === "white");
   eq([w.main.pool, w.sub.pool], [5, 1], "6 @70 → main 5 / sub 1 (remainder to main)");
   eq([w.main.page.startPage, w.main.page.endPage], [1, 2], "main 5 → pages 1-2");
@@ -337,7 +337,7 @@ t("Overrun: items pack continuously across types (no fresh page per type)", () =
 });
 t("page-map is RATE-INDEPENDENT (editing rate doesn't move pages)", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   const before = JSON.stringify(pageMapOf("gl").perType.find(t => t.key === "white"));
   app.state.auctionGL.rates.white = 7;
   const after = JSON.stringify(pageMapOf("gl").perType.find(t => t.key === "white"));
@@ -345,7 +345,7 @@ t("page-map is RATE-INDEPENDENT (editing rate doesn't move pages)", () => {
 });
 t("page-map: zero-item type skipped (no page consumed); all-zero → 0 pages", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 8, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 8, black: 0 });
   const pm = pageMapOf("gl");
   eq(typeRange(pm, "cards"), [null, null], "no cards → null range");
   eq(typeRange(pm, "white"), [1, 2], "white at page 1 (empty earlier types consume no page)");
@@ -354,7 +354,7 @@ t("page-map: zero-item type skipped (no page consumed); all-zero → 0 pages", (
 });
 t("badge re-anchor: white person shows real page with cards column empty of people", () => {
   reset(app, mkMembers(["w1"]));
-  Object.assign(app.state.auctionGL, { cards: 5, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 5, illusion: 0, white: 10, black: 0 });
   app.state.auctionGL.assignments.main.white = ["w1"]; // cards has 5 ITEMS but no people
   const html = app.call("buildAuctionView", "gl");
   // cards 5 (main 4 + sub 1) consume cursor 1-5 → white main starts page 2 slot 2,
@@ -366,7 +366,7 @@ console.log("\n[auction column coverage — fill progress vs pool pages]");
 function coveragesOf(html) { return [...html.matchAll(/ac-coverage [^"]*">([^<]+)</g)].map(m => m[1].trim()); }
 t("under-filled column shows pages covered + items/pages remaining", () => {
   reset(app, mkMembers(["w1"]));
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   app.state.auctionGL.assignments.main.white = ["w1"]; // rate 3 → need 3 of pool 7
   const cov = coveragesOf(app.call("buildAuctionView", "gl"));
   eq(cov[0], "👥 ลากถึงหน้า 1 · ขาดอีก 4 ชิ้น (1 หน้า)", "white main under-filled");
@@ -374,14 +374,14 @@ t("under-filled column shows pages covered + items/pages remaining", () => {
 });
 t("exactly-filled column shows ครบ", () => {
   reset(app, mkMembers(["w1"]));
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   app.state.auctionGL.rates.white = 7;                 // need 7 == pool 7
   app.state.auctionGL.assignments.main.white = ["w1"];
   eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ ลากครบทุกหน้าแล้ว", "exact");
 });
 t("over-filled column shows เกิน", () => {
   reset(app, mkMembers(["w1", "w2"]));
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   app.state.auctionGL.rates.white = 7;                 // 2 ppl × 7 = 14 > pool 7
   app.state.auctionGL.assignments.main.white = ["w1", "w2"];
   eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ ครบแล้ว · เกินมา 7 ชิ้น", "over by 7");
@@ -398,19 +398,19 @@ t("default split is 70 (getter + computeAuction)", () => {
   reset(app, []);
   eq(app.call("getAuctionSplitPercent", "gl"), 70, "getter default");
   eq(app.call("getAuctionSplitPercent", "overrun"), 100, "overrun = no split");
-  Object.assign(app.state.auctionGL, { white: 10, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { white: 10 });
   eq(glPools("white"), { total: 10, main: 7, sub: 3, split: 70 }, "white10 @70");
 });
 t("uneven split: remainder goes to สนามหลัก (ceil)", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { white: 5, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { white: 5 });
   eq(glPools("white"), { total: 5, main: 4, sub: 1, split: 70 }, "5 @70 → main 4 / sub 1");
   Object.assign(app.state.auctionGL, { white: 6 });
   eq(glPools("white"), { total: 6, main: 5, sub: 1, split: 70 }, "6 @70 → main 5 / sub 1");
 });
 t("changing the split % moves main/sub pools", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { white: 5, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { white: 5 });
   setSplit(60); eq(glPools("white"), { total: 5, main: 3, sub: 2, split: 60 }, "5 @60 → 3/2");
   setSplit(100); Object.assign(app.state.auctionGL, { white: 10 });
   eq(glPools("white"), { total: 10, main: 10, sub: 0, split: 100 }, "100% → all main");
@@ -433,7 +433,7 @@ t("normalize backfills split (missing/invalid → 70)", () => {
 });
 t("split is independent of per-person rate", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { white: 5, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { white: 5 });
   const before = JSON.stringify(glPools("white"));
   app.state.auctionGL.rates.white = 7;
   eq(JSON.stringify(glPools("white")), before, "rate edit doesn't move the split");
@@ -447,7 +447,7 @@ t("Overrun ignores the split (no sub field)", () => {
 });
 t("page ranges stay split-invariant at 70% (worked example)", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10, bonusPercent: 0 });
+  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10 });
   const pm = pageMapOf("gl");
   eq(pm.perType.map(x => [x.key, x.startPage, x.endPage]),
      [["cards",1,2],["illusion",2,2],["white",2,5],["black",5,7]], "per-type pages (continuous packing)");
@@ -633,7 +633,7 @@ console.log("\n[search box scroll-jump guard]");
 console.log("\n[per-column page chip — slot range]");
 t("partial page shows slot range, not the whole page", function () {
   reset(app, mkMembers(["m1", "m2"]));
-  Object.assign(app.state.auctionOverrun, { cards: 20, illusion: 2, white: 0, black: 0, bonusPercent: 0 });
+  Object.assign(app.state.auctionOverrun, { cards: 20, illusion: 2, white: 0, black: 0 });
   (function () { var A = app.state.auctionOverrun.assignments; if (A && A.main && A.main.illusion) A.main.illusion = ["m1", "m2"]; else if (A && A.illusion) A.illusion = ["m1", "m2"]; })();
   const html = app.call("buildAuctionView", "overrun");
   const chips = [...html.matchAll(/ac-pagemap[^>]*>([^<]+)</g)].map(function (m) { return m[1]; });
@@ -642,7 +642,7 @@ t("partial page shows slot range, not the whole page", function () {
 });
 t("single-item column shows a single slot", function () {
   reset(app, mkMembers(["w1"]));
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 1, black: 0, bonusPercent: 0, splitMainPercent: 100 });
+  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 1, black: 0, splitMainPercent: 100 });
   (function () { var A = app.state.auctionGL.assignments; if (A && A.main && A.main.white) A.main.white = ["w1"]; })();
   const html = app.call("buildAuctionView", "gl");
   const chips = [...html.matchAll(/ac-pagemap[^>]*>([^<]+)</g)].map(function (m) { return m[1]; });
@@ -1061,6 +1061,40 @@ console.log("\n[landing — front door wiring]");
     ok(/_fbPartiesOverrunLoaded\s*=\s*true/.test(appHtml), "Overrun flag set when /parties loads");
     ok(/if \(_fbPartiesLeagueLoaded && state\.partiesLeague\) sanitizeSlots/.test(appHtml),
        "members-listener League sanitize gated on loaded flag");
+  });
+})();
+
+// ------------------------------------------------------ auction no-bonus
+// GL ×-bonus system retired 2026-06: admins enter FINAL counts directly.
+console.log("\n[auction no-bonus]");
+(() => {
+  const s = reset(app, mkMembers(["A", "B"]));
+
+  t("no-bonus: GL totals are exactly the entered counts (no multiplier)", () => {
+    Object.assign(app.state.auctionGL, { cards: 7, illusion: 3, white: 10, black: 9 });
+    const d = app.call("computeAuction", "gl");
+    eq(d.items.map(it => it.total), [7, 3, 10, 9], "entered counts pass through 1:1");
+  });
+
+  t("no-bonus: legacy bonusPercent in a saved state is stripped and ignored", () => {
+    const legacy = app.call("normalizeAuctionState",
+      { cards: 5, white: 4, bonusPercent: 70, bonusCards: 5 }, "gl");
+    ok(!("bonusPercent" in legacy), "bonusPercent stripped by normalize");
+    ok(!("bonusCards" in legacy), "legacy bonusCards stripped");
+    app.state.auctionGL = legacy;
+    const d = app.call("computeAuction", "gl");
+    eq(d.items.find(i => i.key === "cards").total, 5, "no ×2 even from a legacy save");
+    eq(d.items.find(i => i.key === "white").total, 4, "no ×(1+%) on feathers");
+  });
+
+  t("no-bonus: bonus system fully removed from the app source", () => {
+    const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+    ok(!appHtml.includes("AUCTION_PERCENTS"), "percent-picker constant gone");
+    ok(!appHtml.includes("setAuctionPercent"), "percent setter gone");
+    ok(!appHtml.includes("Bonus rate"), "bonus UI section gone");
+    ok(!appHtml.includes("auction-percent-btn"), "percent button CSS/markup gone");
+    ok(!appHtml.replace(/delete obj\.bonusPercent;/g, "").includes("bonusPercent"),
+       "no live bonusPercent reads/writes (only the normalize legacy-strip remains)");
   });
 })();
 
