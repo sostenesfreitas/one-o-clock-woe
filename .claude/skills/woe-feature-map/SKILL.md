@@ -32,7 +32,7 @@ window). If a surface exists, the rule must hold there too.
    - `isAdmin()` gates admin-only UI; non-admins get `viewer-mode` on `<body>` (CSS hides
      edit affordances). Check the feature renders correctly for **all three**.
    - Builders: `buildAuctionView(kind)`, `buildAuctionRequestHtml()`, `arBuildAdminQueue(date, eventMode)`,
-     `arRenderRow(r, asAdmin)`, `buildRosterHtml()`, the header mode buttons.
+     `arRenderRow(r, asAdmin, queueNo)` (queueNo > 0 = pending-queue badge), `buildRosterHtml()`, the header mode buttons.
 2. **Mode branches.** Anything keyed on `kind`/mode must handle **both** GL and Overrun (or
    deliberately not): `kind === "gl"`, `hasSubField`, `splitMain`, `state.auctionGL` vs
    `state.auctionOverrun`, `partiesLeague` vs `partiesOverrun`. Overrun has **no sub field**.

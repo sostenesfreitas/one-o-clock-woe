@@ -266,6 +266,17 @@ load() ──▶ initFirebase() ──▶ onAuthStateChanged
   request `mode` matches that day's event (GL ↔ อังคาร/พฤหัส, Overrun ↔
   อาทิตย์), and the member isn't on leave. `arGetDateRange()` returns only
   `[today]` (no advance window).
+- **Request queue order (2026-06-12):** every row shows 🕐 `requestedAt`
+  (`arFormatTime`, BKK, HH:MM:SS; legacy = "—"). The PENDING group renders
+  in pure first-come order with a visible `#N` queue badge
+  (`renderGroup(..., asQueue=true)` → `arRenderRow(r, asAdmin, queueNo)`);
+  approved/rejected history keeps the old main-before-sub grouping, and
+  `arBulkApprove` still allocates main-first (unchanged on purpose).
+  `requestedAt` is written as `firebase.database.ServerValue.TIMESTAMP`
+  (server clock — a guest's skewed/forged device time can't jump the queue;
+  raw-REST forgery is still possible — same accepted low-stakes griefing
+  class as guest deletes on this node). `arGetRequests` is the single sort
+  authority; the queue render deliberately does NOT re-sort.
 
 ## Testing (`test/`, dependency-free)
 

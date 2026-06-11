@@ -1064,6 +1064,64 @@ console.log("\n[landing — front door wiring]");
   });
 })();
 
+// --------------------------------------------------- auction-request queue
+// 2026-06-12: pending list = pure first-come queue with #N + 🕐 requestedAt.
+console.log("\n[auction-request queue]");
+(() => {
+  const date = "2026-06-02"; // Tuesday = GL event day
+  function seedQueue() {
+    app.setAdmin(true);
+    app.setToday(date);
+    reset(app, mkMembers(["EarlySub", "MidMain", "LateMain", "WonGuy", "OldSub"]));
+    app.state.auctionRequests = { [date]: { gl: {
+      q2: { id: "q2", memberId: "MidMain",  memberName: "MidMain",  items: ["cards"], status: "pending",  computedField: "main", requestedAt: 200 },
+      q1: { id: "q1", memberId: "EarlySub", memberName: "EarlySub", items: ["white"], status: "pending",  computedField: "sub",  requestedAt: 100 },
+      q3: { id: "q3", memberId: "LateMain", memberName: "LateMain", items: ["black"], status: "pending",  computedField: "main", requestedAt: 300 },
+      a1: { id: "a1", memberId: "WonGuy",   memberName: "WonGuy",   items: ["cards"], status: "approved", computedField: "main", requestedAt: 250 },
+      a2: { id: "a2", memberId: "OldSub",   memberName: "OldSub",   items: ["white"], status: "approved", computedField: "sub",  requestedAt: 50  },
+    } } };
+  }
+
+  t("queue: pending renders in pure arrival order with #N (sub ที่มาก่อนขึ้นก่อน)", () => {
+    seedQueue();
+    const h = app.call("arBuildAdminQueue", date, "gl");
+    const pendingPart = h.split("อนุมัติแล้ว")[0];
+    ok(pendingPart.includes("ar-queue-no"), "queue badges rendered");
+    const iE = pendingPart.indexOf("EarlySub"), iM = pendingPart.indexOf("MidMain"), iL = pendingPart.indexOf("LateMain");
+    ok(iE !== -1 && iM !== -1 && iL !== -1, "all three pending rows rendered");
+    ok(iE < iM && iM < iL, "order is requestedAt 100 < 200 < 300 — NOT main-before-sub");
+    ok(pendingPart.indexOf(">#1<") < pendingPart.indexOf(">#2<"), "#1 before #2");
+    eq((pendingPart.match(/ar-queue-no/g) || []).length, 3, "exactly three queue badges");
+    ok(pendingPart.includes(">#3<"), "third queue number present (badge token, not the #3f hex)");
+  });
+
+  t("queue: every row shows 🕐 requestedAt; legacy entry shows —", () => {
+    seedQueue();
+    app.state.auctionRequests[date].gl.q1.requestedAt = undefined;
+    const h = app.call("arBuildAdminQueue", date, "gl");
+    ok(h.includes("ar-time"), "time spans rendered");
+    ok(h.includes("🕐 —"), "legacy request without requestedAt shows a dash");
+    ok((h.match(/ar-time/g) || []).length >= 5, "time shown on pending AND history rows");
+  });
+
+  t("queue: approved history keeps main-before-sub grouping (unchanged)", () => {
+    seedQueue();
+    const h = app.call("arBuildAdminQueue", date, "gl");
+    const approvedPart = h.split("อนุมัติแล้ว")[1] || "";
+    const iMain = approvedPart.indexOf("WonGuy"), iSub = approvedPart.indexOf("OldSub");
+    ok(iMain !== -1 && iSub !== -1, "both approved rows rendered");
+    ok(iMain < iSub, "main (t=250) still before sub (t=50) in history — old grouping intact");
+    ok(!approvedPart.includes("ar-queue-no"), "no queue numbers on history rows");
+  });
+
+  t("queue: arFormatTime formats BKK time and dashes invalid input", () => {
+    ok(/^\d{1,2}:\d{2}:\d{2}$/.test(app.call("arFormatTime", 1718160000000).trim()), "ms → HH:MM:SS");
+    eq(app.call("arFormatTime", 0), "—", "0 → dash");
+    eq(app.call("arFormatTime", undefined), "—", "undefined → dash");
+    eq(app.call("arFormatTime", NaN), "—", "NaN → dash");
+  });
+})();
+
 // ------------------------------------------------------ auction no-bonus
 // GL ×-bonus system retired 2026-06: admins enter FINAL counts directly.
 console.log("\n[auction no-bonus]");

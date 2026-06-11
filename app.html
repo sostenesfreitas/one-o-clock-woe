@@ -597,6 +597,14 @@
   .ar-req-row.rejected { border-left: 3px solid var(--danger); opacity: 0.7; }
   .ar-req-row .ar-name { font-weight: 700; min-width: 120px; }
   .ar-req-row .ar-job { color: var(--muted); font-size: 11px; }
+  .ar-req-row .ar-queue-no {
+    font-weight: 800; color: #fbbf24; font-size: 12px; min-width: 26px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ar-req-row .ar-time {
+    color: var(--muted); font-size: 11px; white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
   .ar-req-row .ar-items { display: flex; gap: 4px; flex-wrap: wrap; }
   .ar-req-row .ar-item-chip {
     background: var(--panel); border: 1px solid var(--border);
@@ -4992,7 +5000,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.11.2";
+const APP_VERSION = "2026.06.12.1";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -7798,6 +7806,14 @@ function arGetRequests(date, mode) {
   return Object.values(list).sort((a, b) => (a.requestedAt || 0) - (b.requestedAt || 0));
 }
 
+// "13:05:22" in Asia/Bangkok for a request timestamp; "—" for legacy
+// entries without one. Seconds matter — people race at event open.
+function arFormatTime(ms) {
+  if (typeof ms !== "number" || !isFinite(ms) || ms <= 0) return "—";
+  return new Date(ms).toLocaleTimeString("th-TH",
+    { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
 function arGetMyRequests(memberId) {
   if (!memberId || !state.auctionRequests) return [];
   const out = [];
@@ -7859,7 +7875,11 @@ function arCreateRequest({ date, mode, items, note }) {
     note: (note || "").slice(0, 200),
     status: "pending",
     computedField,
-    requestedAt: Date.now(),
+    // SERVER clock, not the guest's device clock — the queue page sorts and
+    // numbers by this, so a skewed/forged client time must not jump the line.
+    // (The compat SDK substitutes its server-offset estimate in the local
+    // echo, so the row shows a sane time immediately.)
+    requestedAt: firebase.database.ServerValue.TIMESTAMP,
     decidedAt: null,
     decidedBy: null,
     rejectReason: null
@@ -8230,7 +8250,7 @@ function formatDayShortBkk(iso) {
   return `${wd} ${d}/${m}`;
 }
 
-function arRenderRow(r, asAdmin) {
+function arRenderRow(r, asAdmin, queueNo) {
   const m = findMember(r.memberId);
   const name = m ? m.name : (r.memberName || "?");
   const job  = m ? (m.job || "") : "";
@@ -8268,8 +8288,10 @@ function arRenderRow(r, asAdmin) {
   }
 
   return `<div class="ar-req-row ${r.status}">
+    ${queueNo ? `<span class="ar-queue-no" title="ลำดับคิวตามเวลาที่ขอ">#${queueNo}</span>` : ""}
     <span class="ar-name">${escapeHtml(name)}</span>
     <span class="ar-job">${escapeHtml(job)}</span>
+    <span class="ar-time" title="เวลาที่ส่งคำขอ">🕐 ${arFormatTime(r.requestedAt)}</span>
     ${fieldTag}
     ${leaveTag}
     <span class="ar-items">${items}</span>
@@ -8297,18 +8319,24 @@ function arBuildAdminQueue(date, eventMode) {
   const rejectedOver   = arGetRequests(date, "overrun").filter(r => r.status === "rejected");
   const totalPending = pendingGl.length + pendingOverrun.length;
 
-  const renderGroup = (title, mode, reqs) => {
+  const renderGroup = (title, mode, reqs, asQueue) => {
     if (!reqs.length) return "";
-    // Sort: main before sub, then by requestedAt
-    const sorted = reqs.slice().sort((a, b) => {
-      const fa = a.computedField === "sub" ? 1 : 0;
-      const fb = b.computedField === "sub" ? 1 : 0;
-      if (fa !== fb) return fa - fb;
-      return (a.requestedAt || 0) - (b.requestedAt || 0);
-    });
+    // Pending = the QUEUE: pure first-come-first-served with visible #N so
+    // the admin can approve in arrival order (the หลัก/รอง tag stays on each
+    // row). arGetRequests is the single sort authority (requestedAt asc) and
+    // filter() preserves it — don't re-sort here, or queue-order changes made
+    // there would silently not apply. History keeps main-before-sub grouping.
+    const sorted = asQueue
+      ? reqs
+      : reqs.slice().sort((a, b) => {
+          const fa = a.computedField === "sub" ? 1 : 0;
+          const fb = b.computedField === "sub" ? 1 : 0;
+          if (fa !== fb) return fa - fb;
+          return (a.requestedAt || 0) - (b.requestedAt || 0);
+        });
     return `<div class="ar-queue-group">
       <h4>${title} (${reqs.length})</h4>
-      ${sorted.map(r => arRenderRow({ ...r, date, mode }, true)).join("")}
+      ${sorted.map((r, i) => arRenderRow({ ...r, date, mode }, true, asQueue ? i + 1 : 0)).join("")}
     </div>`;
   };
 
@@ -8327,8 +8355,8 @@ function arBuildAdminQueue(date, eventMode) {
       <h3>📥 รออนุมัติ (${totalPending})</h3>
       ${bulkBar}
       ${totalPending === 0 ? `<div class="ar-queue-empty">ไม่มีคำขอรออนุมัติ</div>` : ""}
-      ${renderGroup("⚔️ GL", "gl", pendingGl)}
-      ${renderGroup("🏆 Overrun", "overrun", pendingOverrun)}
+      ${renderGroup("⚔️ GL", "gl", pendingGl, true)}
+      ${renderGroup("🏆 Overrun", "overrun", pendingOverrun, true)}
     </div>`;
 
   const approvedSection = (approvedGl.length || approvedOver.length) ? `
