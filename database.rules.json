@@ -110,6 +110,20 @@
     "users": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+    },
+
+    "wheel_history": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
+      "$wid": {
+        ".validate": "!newData.exists() || newData.hasChildren(['at', 'by', 'winnerId', 'winnerName', 'prize'])",
+        "at":         { ".validate": "newData.isNumber()" },
+        "by":         { ".validate": "newData.isString() && newData.val().length <= 64" },
+        "winnerId":   { ".validate": "newData.isString() && newData.val().length <= 64" },
+        "winnerName": { ".validate": "newData.isString() && newData.val().length <= 64" },
+        "prize":      { ".validate": "newData.isString() && newData.val().length <= 120" },
+        "$other":     { ".validate": false }
+      }
     }
   }
 }

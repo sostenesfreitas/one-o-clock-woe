@@ -152,6 +152,9 @@
   .mode-toggle.users-active .seg-indicator {
     background: linear-gradient(90deg, #2563eb, #60a5fa);
   }
+  .mode-toggle.wheel-active .seg-indicator {
+    background: linear-gradient(90deg, #8b5cf6, #d946ef);
+  }
   /* Admin-only chrome (Users tab, mobile dropdown option). Hidden by
      default and only revealed when applyViewerMode() flags body
      data-admin="true". */
@@ -415,6 +418,105 @@
   }
   .users-empty {
     text-align: center; color: var(--muted); padding: 20px; font-size: 13px;
+  }
+
+  /* ===== Wheel page (admin-only prize wheel) ===== */
+  body[data-mode="wheel"] .sidebar          { display: none; }
+  body[data-mode="wheel"] .layout           { grid-template-columns: 1fr !important; }
+  body[data-mode="wheel"] .hamburger-btn    { display: none; }
+  body[data-mode="wheel"] .sidebar-backdrop { display: none !important; }
+
+  .wheel-view { display: flex; flex-direction: column; gap: 14px; max-width: 1100px; margin: 0 auto; }
+  .wheel-hero {
+    background: linear-gradient(135deg, #4a1d96 0%, #1e1b4b 100%);
+    border: 1px solid #8b5cf6;
+    border-left: 4px solid #a78bfa;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .wheel-hero h2 { margin: 0; color: #c4b5fd; font-size: 18px; }
+  .wheel-hero .wheel-meta { color: var(--muted); font-size: 13px; }
+  .wheel-layout { display: grid; grid-template-columns: minmax(320px, 480px) 1fr; gap: 14px; align-items: start; }
+  .wheel-stage {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .wheel-canvas-wrap { position: relative; width: 100%; max-width: 440px; }
+  .wheel-canvas-wrap canvas { display: block; width: 100%; height: auto; }
+  #wheelConfetti { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .wheel-spin-btn {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 84px; height: 84px; border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    border: 3px solid #c4b5fd; color: #fff;
+    font-size: 15px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.5);
+  }
+  .wheel-spin-btn:hover:not(:disabled) { box-shadow: 0 4px 22px rgba(124,58,237,0.8); }
+  .wheel-spin-btn:disabled { opacity: 0.55; cursor: default; }
+  .wheel-count { color: var(--muted); font-size: 12px; }
+  .wheel-panel { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .wheel-section { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .wheel-section h3 { margin: 0 0 10px 0; font-size: 14px; color: var(--text); }
+  .wheel-prize-input {
+    background: var(--bg-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px; font-size: 14px; width: 100%;
+  }
+  .wheel-prize-input:focus { border-color: #a78bfa; outline: none; }
+  .wheel-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .wheel-tools button {
+    background: var(--bg-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 12px;
+  }
+  .wheel-tools button:hover { border-color: #a78bfa; }
+  .wheel-members { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px 10px; max-height: 320px; overflow: auto; }
+  .wheel-member { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); padding: 3px 2px; cursor: pointer; border-radius: 4px; }
+  .wheel-member:hover { background: var(--bg-2); }
+  .wheel-member input { margin: 0; accent-color: #8b5cf6; }
+  .wheel-member .wm-job { color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wheel-member.off { opacity: 0.45; }
+  .wheel-history-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow: auto; }
+  .wheel-history-row {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px;
+  }
+  .wheel-history-row .wh-when { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .wheel-history-row .wh-name { font-weight: 700; color: #fbbf24; }
+  .wheel-history-row .wh-prize { color: var(--text); }
+  .wheel-history-row .wh-by { color: var(--muted); font-size: 10px; margin-left: auto; }
+  .wheel-history-row .wh-del {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 7px; cursor: pointer; font-size: 11px;
+  }
+  .wheel-history-row .wh-del:hover { color: #fca5a5; border-color: #b91c1c; }
+  .wheel-empty { text-align: center; color: var(--muted); padding: 16px; font-size: 13px; }
+  .wheel-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(0,0,0,0.65);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .wheel-result-card {
+    background: var(--panel); border: 1px solid #8b5cf6; border-radius: 14px;
+    padding: 28px 34px; text-align: center; max-width: 420px; width: 100%;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+  }
+  .wheel-result-card .wr-label { color: var(--muted); font-size: 13px; }
+  .wheel-result-card .wr-name { font-size: 30px; font-weight: 800; color: #fbbf24; margin: 8px 0 2px; word-break: break-word; }
+  .wheel-result-card .wr-job { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .wheel-result-card .wr-prize { font-size: 15px; color: var(--text); margin-bottom: 18px; word-break: break-word; }
+  .wheel-result-card .wr-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .wheel-result-card .wr-save {
+    background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; border: none;
+    border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .wheel-result-card .wr-skip {
+    background: var(--bg-2); color: var(--muted); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 20px; font-size: 14px; cursor: pointer;
+  }
+  @media (max-width: 900px) {
+    .wheel-layout { grid-template-columns: 1fr; }
+    .wheel-members { max-height: 240px; }
   }
 
   /* ===== Auction Request page ===== */
@@ -2658,6 +2760,7 @@
     <button class="seg" data-mode="auction-overrun" onclick="switchMode('auction-overrun')">🎴 Auction Overrun</button>
     <button class="seg" data-mode="auction-request" onclick="switchMode('auction-request')">🙋 ขอประมูล</button>
     <button class="seg" data-mode="leave" onclick="switchMode('leave')">🌴 ลา</button>
+    <button class="seg seg-admin" data-mode="wheel" onclick="switchMode('wheel')">🎡 สุ่มรางวัล</button>
     <button class="seg seg-admin" data-mode="users" onclick="switchMode('users')">👥 Users</button>
     <span class="seg-indicator"></span>
   </div>
@@ -2669,6 +2772,7 @@
     <option value="auction-overrun">🎴 Auction Overrun</option>
     <option value="auction-request">🙋 ขอประมูล</option>
     <option value="leave">🌴 ลา</option>
+    <option value="wheel" class="user-option-admin">🎡 สุ่มรางวัล</option>
     <option value="users" class="user-option-admin">👥 Users</option>
   </select>
   <span class="status" id="statusInfo">Loading…</span>
@@ -2961,6 +3065,7 @@ function updateModeToggleUI() {
   t.classList.toggle("auction-request-active", state.mode === "auction-request");
   t.classList.toggle("leave-active", state.mode === "leave");
   t.classList.toggle("users-active", state.mode === "users");
+  t.classList.toggle("wheel-active", state.mode === "wheel");
   // Admin-only chrome (e.g., Users tab) is gated by CSS using
   // body[data-admin="true"] — applyViewerMode() flips that attribute
   // whenever auth changes, so this UI updates without us having to
@@ -4923,7 +5028,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.10.1";
+const APP_VERSION = "2026.06.11.1";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -5854,7 +5959,7 @@ function fbSubscribeAll() {
     // own admin status flipped OR we're on a page that actually displays
     // the admin list. Other pages don't depend on /admins content.
     const nowAdmin = isAdmin();
-    const onAdminAwarePage = state.mode === "users" || state.mode === "auction-request";
+    const onAdminAwarePage = state.mode === "users" || state.mode === "auction-request" || state.mode === "wheel";
     if (wasAdmin !== nowAdmin || onAdminAwarePage) {
       if (typeof render === "function") render();
     }
@@ -5868,6 +5973,18 @@ function fbSubscribeAll() {
     state.users = v;
     _fbApplyingRemote = false;
     if (typeof render === "function" && state.mode === "users") render();
+  });
+
+  // wheel_history: prize-wheel winner log (admin page). Read-only mirror in
+  // state; writes happen in wheelSaveResult()/wheelDeleteHistory() (admin-
+  // gated + DB-rules-enforced). Mid-spin canvas protection lives at the
+  // single choke point in renderBattlefields — not per-listener.
+  _fbDB.ref("wheel_history").on("value", snap => {
+    const v = snap.val() || {};
+    _fbApplyingRemote = true;
+    state.wheelHistory = v;
+    _fbApplyingRemote = false;
+    if (typeof render === "function" && state.mode === "wheel") render();
   });
 
   // auction_requests: per-date guest requests + admin queue. Lives entirely
@@ -8962,6 +9079,446 @@ function buildGlSummaryHtml() {
     </div>`;
 }
 
+/* =====================================================================
+ * Wheel page (admin-only) — 🎡 สุ่มรางวัลจากรายชื่อ Roster
+ * ===================================================================== *
+ * Everyone in the roster stays in the wheel EVERY round (no winner
+ * removal — by design; ทุกคนมีสิทธิ์ทุกรอบ). Admin can manually exclude
+ * people for the session (checkbox / "ตัดคนลาวันนี้") — exclusions are
+ * local-only, never synced. Saved winners go to /wheel_history
+ * (admin-write, shape-locked by DB rules; trimmed to the newest
+ * WHEEL_HISTORY_MAX). The winner is picked with rejection-sampled
+ * crypto randomness BEFORE the animation starts — the spin is
+ * presentation only.
+ * NOTE for tests: don't invoke wheelSpin()/wheelConfetti() in the vm
+ * harness — its requestAnimationFrame stub re-enters synchronously.
+ */
+let wheelUI = {
+  excluded: {},        // memberId -> true (session-only, not synced)
+  spinning: false,
+  spinList: null,      // frozen eligible list while spinning — a /members
+                       // snapshot mid-spin must NOT re-slice the wheel, or the
+                       // pointer would land on a different name than the
+                       // pre-picked winner shown in the modal
+  rot: -Math.PI / 2,   // current wheel rotation (rad)
+  prize: "",           // mirrors the prize input across re-renders
+  pendingResult: null, // { id, name, job } awaiting save/discard
+};
+const WHEEL_HISTORY_MAX = 200;
+const WHEEL_COLORS = ["#7c3aed", "#0e7490", "#b45309", "#be185d", "#15803d", "#1d4ed8", "#b91c1c"];
+
+// Firebase keys we interpolate into inline onclick handlers must stay inside
+// this charset — escapeHtml can't help there (the browser entity-decodes
+// attribute values back before parsing the JS), so anything else is skipped
+// at render time. Push keys and uid()-style member ids always match.
+const WHEEL_SAFE_KEY_RE = /^[A-Za-z0-9_-]+$/;
+
+function wheelEligibleMembers() {
+  return (state.members || []).filter(m => m && !wheelUI.excluded[m.id]);
+}
+
+// Uniform int in [0, n). Rejection sampling kills modulo bias. `rng` is an
+// injectable () => [0,1) for deterministic tests; default is crypto.
+function wheelRandIndex(n, rng) {
+  if (!(n > 0)) return -1;
+  if (typeof rng === "function") return Math.min(n - 1, Math.floor(rng() * n));
+  const limit = Math.floor(4294967296 / n) * n;
+  const buf = new Uint32Array(1);
+  let x;
+  do { crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
+  return x % n;
+}
+
+function wheelMakeHistoryEntry(member, prize, by, at) {
+  return {
+    at: at,
+    by: String(by || "admin").slice(0, 64),
+    winnerId: String(member.id).slice(0, 64),
+    winnerName: String(member.name || "?").slice(0, 64),
+    prize: String(prize || "").trim().slice(0, 120),
+  };
+}
+
+// History keys sorted oldest→newest in, keys to DELETE out (keep newest max).
+function wheelTrimDeletions(sortedKeys, max) {
+  if (!Array.isArray(sortedKeys) || sortedKeys.length <= max) return [];
+  return sortedKeys.slice(0, sortedKeys.length - max);
+}
+
+function wheelHistorySorted() {
+  const h = state.wheelHistory || {};
+  return Object.keys(h)
+    .map(k => ({ key: k, e: h[k] || {} }))
+    .sort((a, b) => (b.e.at || 0) - (a.e.at || 0));
+}
+
+function buildWheelHtml() {
+  if (!isAdmin()) {
+    return `<div class="wheel-view">
+      <div class="wheel-hero">
+        <h2>🎡 สุ่มรางวัล</h2>
+        <div class="wheel-meta">หน้านี้สำหรับ admin เท่านั้น</div>
+      </div>
+      <div class="wheel-section">
+        <div class="wheel-empty">🔒 ต้อง login เป็น admin ก่อน</div>
+      </div>
+    </div>`;
+  }
+  const rows = wheelHistorySorted();
+  const histHtml = rows.length
+    ? rows.map(r => {
+        const when = new Date(r.e.at || 0).toLocaleString("th-TH",
+          { timeZone: "Asia/Bangkok", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+        const del = WHEEL_SAFE_KEY_RE.test(r.key)
+          ? `<button class="wh-del" onclick="wheelDeleteHistory('${r.key}')" title="ลบรายการนี้">✕</button>`
+          : "";
+        return `<div class="wheel-history-row">
+          <span class="wh-when">${escapeHtml(when)}</span>
+          <span class="wh-name">🏆 ${escapeHtml(r.e.winnerName || "?")}</span>
+          <span class="wh-prize">${escapeHtml(r.e.prize || "—")}</span>
+          <span class="wh-by">โดย ${escapeHtml(String(r.e.by || "").split("@")[0])}</span>
+          ${del}
+        </div>`;
+      }).join("")
+    : '<div class="wheel-empty">ยังไม่มีประวัติ — หมุนแล้วกด "บันทึกผล" รายการจะโผล่ที่นี่</div>';
+
+  const membersHtml = (state.members || []).filter(Boolean).map(m => {
+    const on = !wheelUI.excluded[m.id];
+    const id = String(m.id);
+    const box = WHEEL_SAFE_KEY_RE.test(id)
+      ? `<input type="checkbox" ${on ? "checked" : ""} onchange="wheelToggleMember('${id}', this.checked, this)">`
+      : "";
+    return `<label class="wheel-member${on ? "" : " off"}">
+      ${box}
+      <span>${escapeHtml(m.name)}</span>
+      <span class="wm-job">${escapeHtml(m.job || "")}</span>
+    </label>`;
+  }).join("");
+
+  const r = wheelUI.pendingResult;
+  const overlay = !r ? "" : `
+  <div class="wheel-overlay">
+    <div class="wheel-result-card">
+      <div class="wr-label">🎉 ผู้โชคดีรอบนี้</div>
+      <div class="wr-name">${escapeHtml(r.name)}</div>
+      <div class="wr-job">${escapeHtml(r.job || "")}</div>
+      <div class="wr-prize">🎁 ${escapeHtml((wheelUI.prize || "").trim() || "ไม่ได้ระบุรางวัล")}</div>
+      <div class="wr-actions">
+        <button class="wr-save" onclick="wheelSaveResult()">💾 บันทึกผล</button>
+        <button class="wr-skip" onclick="wheelDiscardResult()">✕ ไม่นับรอบนี้</button>
+      </div>
+    </div>
+  </div>`;
+
+  return `<div class="wheel-view">
+    <div class="wheel-hero">
+      <h2>🎡 สุ่มรางวัล</h2>
+      <div class="wheel-meta">สุ่มผู้โชคดีจากรายชื่อใน Roster — ทุกคนมีสิทธิ์ทุกรอบ ชื่อไม่ถูกเอาออกหลังได้รางวัล</div>
+    </div>
+    <div class="wheel-layout">
+      <div class="wheel-stage">
+        <div class="wheel-canvas-wrap">
+          <canvas id="wheelCanvas"></canvas>
+          <canvas id="wheelConfetti"></canvas>
+          <button class="wheel-spin-btn" id="wheelSpinBtn" onclick="wheelSpin()">หมุน!</button>
+        </div>
+        <div class="wheel-count" id="wheelCount"></div>
+      </div>
+      <div class="wheel-panel">
+        <div class="wheel-section">
+          <h3>🎁 รางวัลรอบนี้</h3>
+          <input class="wheel-prize-input" id="wheelPrize" maxlength="120" placeholder="เช่น การ์ดบอส 1 ใบ"
+                 value="${escapeHtml(wheelUI.prize)}" oninput="wheelUI.prize = this.value">
+          <div class="wheel-tools">
+            <button onclick="wheelExcludeOnLeaveToday()" title="ติ๊กออกอัตโนมัติ: คนที่ลงลาวันนี้ไว้ในหน้า 🌴 ลา">🌴 ตัดคนลาวันนี้ออก</button>
+            <button onclick="wheelIncludeAll()">↺ เลือกทุกคน</button>
+          </div>
+        </div>
+        <div class="wheel-section">
+          <h3>👥 รายชื่อในวงล้อ</h3>
+          <div class="wheel-members">${membersHtml || '<div class="wheel-empty">Roster ว่าง — เพิ่มสมาชิกในหน้า Roster ก่อน</div>'}</div>
+        </div>
+        <div class="wheel-section">
+          <h3>📜 ประวัติผู้ชนะ</h3>
+          <div class="wheel-history-list">${histHtml}</div>
+        </div>
+      </div>
+    </div>
+    ${overlay}
+  </div>`;
+}
+
+// Label layout (truncated names, font size, palette) is invariant while only
+// the rotation changes — cache it so the rAF spin loop doesn't redo
+// measureText for every slice on every frame (78 names × ~276 frames).
+let _wheelLayout = null; // { key, labels: string[], fontPx, pal }
+
+function wheelComputeLayout(ctx, list, R) {
+  const n = list.length;
+  const key = R + "|" + list.map(m => m.name || "?").join("");
+  if (_wheelLayout && _wheelLayout.key === key) return _wheelLayout;
+
+  // Cycle the palette; the seam (last slice next to slice 0) clashes exactly
+  // when n % pal.length === 1, so shrink until it doesn't.
+  let pal = WHEEL_COLORS;
+  while (pal.length > 3 && n > 1 && n % pal.length === 1) pal = pal.slice(0, pal.length - 1);
+
+  const fontPx = n <= 16 ? 14 : n <= 32 ? 12 : n <= 56 ? 10.5 : 9.5;
+  ctx.font = "600 " + fontPx + "px 'Segoe UI', Sarabun, sans-serif";
+  const maxW = R - 58;
+  const labels = list.map(m => {
+    let label = String(m.name || "?");
+    if (ctx.measureText(label).width > maxW) {
+      while (label.length > 1 && ctx.measureText(label + "…").width > maxW) label = label.slice(0, -1);
+      label += "…";
+    }
+    return label;
+  });
+  _wheelLayout = { key, labels, fontPx, pal };
+  return _wheelLayout;
+}
+
+function drawWheel() {
+  const cv = document.getElementById("wheelCanvas");
+  if (!cv || typeof cv.getContext !== "function") return;
+  const ctx = cv.getContext("2d");
+  if (!ctx || typeof ctx.beginPath !== "function") return; // vm-test ctx stub
+  const wrap = cv.parentElement;
+  const wrapW = wrap && typeof wrap.clientWidth === "number" ? wrap.clientWidth : 440;
+  const cssW = Math.max(240, Math.min(440, wrapW || 440));
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.round(cssW * dpr);
+  // Only touch canvas dimensions when they actually change — assigning
+  // .width resets the backing store (3MB+ realloc at dpr=2) and would run
+  // on every animation frame otherwise.
+  if (cv.width !== W || cv.height !== W) {
+    cv.width = W; cv.height = W;
+    cv.style.width = cssW + "px";
+    cv.style.height = cssW + "px";
+    const cf = document.getElementById("wheelConfetti");
+    if (cf) {
+      cf.width = W; cf.height = W;
+      cf.style.width = cv.style.width; cf.style.height = cv.style.height;
+    }
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssW);
+
+  const C = cssW / 2, R = C - 6;
+  // While spinning, draw the FROZEN list the winner was picked from — a
+  // members snapshot mid-spin must not re-slice the wheel under the pointer.
+  const list = (wheelUI.spinning && wheelUI.spinList) ? wheelUI.spinList : wheelEligibleMembers();
+  const n = list.length;
+
+  if (n === 0) {
+    ctx.beginPath(); ctx.arc(C, C, R, 0, Math.PI * 2);
+    ctx.fillStyle = "#232a33"; ctx.fill();
+    ctx.fillStyle = "#8b949e";
+    ctx.font = "13px 'Segoe UI', Sarabun, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("ไม่มีรายชื่อในวงล้อ", C, C - 64);
+  } else {
+    const L = wheelComputeLayout(ctx, list, R);
+    const sa = (Math.PI * 2) / n;
+    ctx.font = "600 " + L.fontPx + "px 'Segoe UI', Sarabun, sans-serif";
+    for (let i = 0; i < n; i++) {
+      const a0 = wheelUI.rot + i * sa;
+      ctx.beginPath(); ctx.moveTo(C, C); ctx.arc(C, C, R, a0, a0 + sa); ctx.closePath();
+      ctx.fillStyle = L.pal[i % L.pal.length]; ctx.fill();
+      ctx.strokeStyle = "#0d1117"; ctx.lineWidth = 1; ctx.stroke();
+      ctx.save();
+      ctx.translate(C, C);
+      ctx.rotate(a0 + sa / 2);
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "#fff";
+      ctx.fillText(L.labels[i], R - 8, 0);
+      ctx.restore();
+    }
+  }
+
+  // Hub (sits under the absolutely-positioned spin button) + pointer on top.
+  ctx.beginPath(); ctx.arc(C, C, 46, 0, Math.PI * 2);
+  ctx.fillStyle = "#161b22"; ctx.fill();
+  ctx.strokeStyle = "#444c56"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(C - 12, 2); ctx.lineTo(C + 12, 2); ctx.lineTo(C, 30); ctx.closePath();
+  ctx.fillStyle = "#f0d896"; ctx.strokeStyle = "#0d1117"; ctx.lineWidth = 1.5;
+  ctx.fill(); ctx.stroke();
+
+  const cnt = document.getElementById("wheelCount");
+  if (cnt) cnt.textContent = "ในวงล้อ " + n + "/" + (state.members || []).length + " คน";
+  const btn = document.getElementById("wheelSpinBtn");
+  if (btn) btn.disabled = wheelUI.spinning || n === 0;
+}
+
+function wheelToggleMember(id, on, inputEl) {
+  if (wheelUI.spinning) { if (inputEl) inputEl.checked = !on; return; }
+  if (on) delete wheelUI.excluded[id];
+  else wheelUI.excluded[id] = true;
+  if (inputEl && typeof inputEl.closest === "function") {
+    const row = inputEl.closest(".wheel-member");
+    if (row && row.classList) row.classList.toggle("off", !on);
+  }
+  drawWheel();
+}
+
+function wheelExcludeOnLeaveToday() {
+  if (wheelUI.spinning) return;
+  // /leaves is the only synced source of "ลาวันนี้" — the manual onLeave*
+  // flags never survive the members listener mirror, so don't pretend to
+  // honor them here.
+  let n = 0;
+  (state.members || []).forEach(m => {
+    if (!m) return;
+    if (hasScheduledLeaveToday(m.id)) {
+      if (!wheelUI.excluded[m.id]) n++;
+      wheelUI.excluded[m.id] = true;
+    }
+  });
+  toast(n ? "ตัดคนลาออกจากวงล้อ " + n + " คน" : "ไม่มีคนลงลาวันนี้", n ? "success" : "");
+  render();
+}
+
+function wheelIncludeAll() {
+  if (wheelUI.spinning) return;
+  wheelUI.excluded = {};
+  render();
+}
+
+function wheelSpin() {
+  if (!isAdmin()) { toast("ต้องเป็น admin ถึงจะหมุนได้", "error"); return; }
+  if (wheelUI.spinning || wheelUI.pendingResult) return;
+  const list = wheelEligibleMembers();
+  if (!list.length) { toast("ไม่มีรายชื่อในวงล้อ", "error"); return; }
+
+  // Winner decided HERE, before any animation (fair + glitch-proof). The
+  // list is frozen for the whole spin so drawWheel keeps slicing the wheel
+  // exactly as it was when the winner was picked.
+  const idx = wheelRandIndex(list.length);
+  const winner = list[idx];
+  wheelUI.spinList = list;
+
+  const sa = (Math.PI * 2) / list.length;
+  const targetWithin = -Math.PI / 2 - (idx + 0.5) * sa; // slice center → pointer (top)
+  const delta = ((targetWithin - wheelUI.rot) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  const start = wheelUI.rot;
+  const total = Math.PI * 2 * 7 + delta;
+  const dur = 4600;
+  const t0 = Date.now();
+  wheelUI.spinning = true;
+  drawWheel(); // repaint immediately so the spin button disables this frame
+
+  (function step() {
+    if (state.mode !== "wheel") { // tab switched mid-spin — abort silently
+      wheelUI.spinning = false;
+      wheelUI.spinList = null;
+      return;
+    }
+    const p = Math.min(1, (Date.now() - t0) / dur);
+    const ease = 1 - Math.pow(1 - p, 3);
+    wheelUI.rot = start + total * ease;
+    drawWheel();
+    if (p < 1) { requestAnimationFrame(step); return; }
+    wheelUI.spinning = false;
+    wheelUI.spinList = null;
+    wheelUI.rot = (start + total) % (Math.PI * 2);
+    wheelUI.pendingResult = { id: winner.id, name: winner.name || "?", job: winner.job || "" };
+    render();
+    wheelConfetti(); // render() is synchronous — the confetti canvas exists now
+  })();
+}
+
+function wheelSaveResult() {
+  const r = wheelUI.pendingResult;
+  if (!r) return;
+  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin + ออนไลน์ถึงจะบันทึกได้", "error"); return; }
+  const entry = wheelMakeHistoryEntry(r, wheelUI.prize, (_fbUser && _fbUser.email) || "admin", Date.now());
+  // Close the modal before the write so the local listener echo renders the
+  // already-dismissed state (one rebuild, not overlay-then-dismiss).
+  wheelUI.pendingResult = null;
+  const ref = _fbDB.ref("wheel_history").push();
+  ref.set(entry)
+    .then(() => {
+      toast("บันทึกแล้ว: " + entry.winnerName, "success");
+      // Trim to the newest WHEEL_HISTORY_MAX by entry time (same ordering the
+      // history panel displays — key order isn't trustworthy if an entry was
+      // ever written under a custom key).
+      const all = Object.assign({}, state.wheelHistory);
+      all[ref.key] = entry;
+      const oldestFirst = Object.keys(all).sort((a, b) => ((all[a] && all[a].at) || 0) - ((all[b] && all[b].at) || 0));
+      const dels = wheelTrimDeletions(oldestFirst, WHEEL_HISTORY_MAX);
+      if (dels.length) {
+        const upd = {};
+        dels.forEach(k => { upd[k] = null; });
+        // Trim failure must NOT read as "save failed" — the entry IS saved.
+        return _fbDB.ref("wheel_history").update(upd)
+          .catch(e => console.warn("[wheel] history trim failed (entry saved fine)", e));
+      }
+    })
+    .catch(e => {
+      console.warn("[wheel] save failed", e);
+      toast("บันทึกไม่สำเร็จ: " + (e && e.message || e), "error");
+      // Bring the result back so the admin can retry — losing the draw to a
+      // network blip would force an unfair re-spin.
+      wheelUI.pendingResult = r;
+      if (state.mode === "wheel") render();
+    });
+  render();
+}
+
+function wheelDiscardResult() {
+  wheelUI.pendingResult = null;
+  render();
+}
+
+function wheelDeleteHistory(key) {
+  if (!isAdmin() || !_fbDB) return;
+  if (typeof key !== "string" || !/^[A-Za-z0-9_-]+$/.test(key)) return;
+  if (!confirm("ลบรายการประวัตินี้?")) return;
+  _fbDB.ref("wheel_history/" + key).remove()
+    .then(() => toast("ลบแล้ว", "success"))
+    .catch(e => toast("ลบไม่สำเร็จ: " + (e && e.message || e), "error"));
+}
+
+function wheelConfetti() {
+  const cf = document.getElementById("wheelConfetti");
+  if (!cf || typeof cf.getContext !== "function") return;
+  const ctx = cf.getContext("2d");
+  if (!ctx || typeof ctx.fillRect !== "function") return; // vm-test ctx stub
+  const dpr = window.devicePixelRatio || 1;
+  const W = cf.width / dpr, H = cf.height / dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const ps = [];
+  for (let i = 0; i < 90; i++) {
+    ps.push({
+      x: W / 2, y: H / 2,
+      vx: (Math.random() - 0.5) * 11,
+      vy: -Math.random() * 9 - 3,
+      s: Math.random() * 5 + 3,
+      c: WHEEL_COLORS[i % WHEEL_COLORS.length],
+      r: Math.random() * Math.PI,
+    });
+  }
+  const t0 = Date.now();
+  (function f() {
+    const el = Date.now() - t0;
+    ctx.clearRect(0, 0, W, H);
+    if (el > 1700 || state.mode !== "wheel") return;
+    ps.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.28; p.r += 0.1;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6);
+      ctx.restore();
+    });
+    requestAnimationFrame(f);
+  })();
+}
+
+// Keep the wheel crisp on window resizes (no-op off the wheel page / mid-spin).
+window.addEventListener("resize", () => {
+  if (state.mode === "wheel" && !wheelUI.spinning) drawWheel();
+});
+
 function renderBattlefields() {
   const center = document.getElementById("center");
   if (state.mode === "overrun") {
@@ -8989,6 +9546,26 @@ function renderBattlefields() {
     center.innerHTML = buildAuctionRequestHtml();
   } else if (state.mode === "users") {
     center.innerHTML = buildUsersHtml();
+  } else if (state.mode === "wheel") {
+    // Mid-spin renders are skipped so a Firebase snapshot can't tear down
+    // the canvas while it's animating; the post-spin render() repaints.
+    // This is the ONLY spin guard — every render path funnels through here.
+    if (!wheelUI.spinning) {
+      // Preserve prize-input focus/caret across snapshot re-renders (same
+      // teardown problem the roster claim-select works around above).
+      const ae = document.activeElement;
+      const prizeFocused = !!(ae && ae.id === "wheelPrize");
+      const caret = prizeFocused ? ae.selectionStart : 0;
+      center.innerHTML = buildWheelHtml();
+      drawWheel();
+      if (prizeFocused) {
+        const inp = document.getElementById("wheelPrize");
+        if (inp) {
+          inp.focus();
+          try { inp.setSelectionRange(caret, caret); } catch (e) {}
+        }
+      }
+    }
   } else {
     center.innerHTML =
       buildBfHtml(0) +
@@ -9117,12 +9694,13 @@ delete state.partiesDimension;
 delete state.dimensionNames;
 // Legacy modes redirect to league
 if (state.mode === "dimension" || state.mode === "glsummary") state.mode = "league";
-if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun" || state.mode === "roster" || state.mode === "auction-request" || state.mode === "users") {
+if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun" || state.mode === "roster" || state.mode === "auction-request" || state.mode === "users" || state.mode === "wheel") {
   state.parties = state.partiesLeague;
 } else {
   state.parties = state.mode === "overrun" ? state.partiesOverrun : state.partiesLeague;
 }
 if (!state.jobTargets || typeof state.jobTargets !== "object") state.jobTargets = {};
+if (!state.wheelHistory || typeof state.wheelHistory !== "object" || Array.isArray(state.wheelHistory)) state.wheelHistory = {};
 // Normalize one auction object: ensure shape + migrate legacy flat assignments
 // (cards/white/black at top level → main bucket, fresh sub bucket). Also
 // backfills "illusion" key on saves that pre-date the Illusion Fragment item.

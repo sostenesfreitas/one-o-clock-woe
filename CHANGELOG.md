@@ -10,6 +10,18 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.11.1]
+### Added
+- **🎡 หน้า "สุ่มรางวัล" (admin-only): วงล้อสุ่มผู้โชคดีจากรายชื่อใน Roster.**
+  แท็บใหม่เห็นเฉพาะ admin (pattern เดียวกับ Users — `seg-admin` + จอล็อกใน `buildWheelHtml()`).
+  ทุกคนใน roster อยู่ในวงล้อ**ทุกรอบ** (ตั้งใจ — ไม่มี auto-remove ผู้ชนะ); admin ติ๊กคนออกได้ชั่วคราว
+  (ราย session, ไม่ sync) + ปุ่ม "🌴 ตัดคนลาวันนี้ออก" (อ่านจาก `/leaves` + ธงลาใน Roster).
+  ผลถูกสุ่มด้วย `crypto.getRandomValues` (rejection sampling, ไม่มี bias) **ก่อน**เริ่มแอนิเมชัน —
+  วงล้อหมุน ~4.6 วิเป็นแค่การแสดงผล. หลังหมุน: modal ผู้ชนะ + confetti → **บันทึกผล** (เขียน
+  `/wheel_history`: เวลา/ผู้ชนะ/รางวัล/คนสุ่ม, เก็บล่าสุด 200 รายการ, ลบรายการได้) หรือ **ไม่นับรอบนี้**.
+  Database Rules เพิ่ม node `wheel_history` (read=authed, write=admin, shape-locked `$other:false`).
+  ป้องกัน snapshot กลางคัน: render ข้ามหน้า wheel ระหว่าง `wheelUI.spinning`.
+
 ## [2026.06.10.1]
 ### Added
 - **Roster self-service: สมาชิก (Guest) แก้ข้อมูลแถวตัวเองได้ครบทุกช่อง — ชื่อ / Job / Discord / Discord ID / CP.**

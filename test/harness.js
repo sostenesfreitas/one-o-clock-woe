@@ -98,6 +98,7 @@ function loadApp() {
   globalThis.__T_setRosterCache = function(v){ rosterCache = v; };
   globalThis.__T_setMembersRef  = function(r){ _fbMembersRef = r; };
   globalThis.__T_ROSTER_LIMITS  = { fields: ROSTER_FIELD_MAX, cp: ROSTER_CP_MAX };
+  globalThis.__T_wheelUI = function(){ return (typeof wheelUI !== "undefined") ? wheelUI : null; };
 })();
 `;
   const marker = "\nload();";
@@ -125,6 +126,15 @@ function loadApp() {
     alert: () => {}, confirm: () => true, prompt: () => null,
     firebase: makeFirebaseStub(),
     navigator: { userAgent: "node-test", language: "th", clipboard: { writeText: () => Promise.resolve() } },
+    // Real randomness for the prize wheel (assumes Uint32Array callers,
+    // which is all the app uses). Cross-realm safe: fills via plain writes.
+    crypto: {
+      getRandomValues(arr) {
+        const bytes = require("crypto").randomBytes(arr.length * 4);
+        for (let i = 0; i < arr.length; i++) arr[i] = bytes.readUInt32LE(i * 4);
+        return arr;
+      },
+    },
   };
   // document
   sandbox.document = {
@@ -177,6 +187,7 @@ function loadApp() {
     setRosterCache: context.__T_setRosterCache,
     setMembersRef: context.__T_setMembersRef,
     rosterLimits: context.__T_ROSTER_LIMITS,
+    wheelUI: () => context.__T_wheelUI(),
     // app functions (resolved live so isAdmin/today overrides take effect)
     call: (name, ...args) => need(name)(...args),
     fn: (name) => need(name),

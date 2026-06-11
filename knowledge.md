@@ -65,7 +65,7 @@ Use this lookup before grep:
   sheetUrl: string,                  // legacy DEFAULT_SHEET, kept for back-compat
   members: [{ id, name, job, cp, discord }],
   mode: "league"|"overrun"|"summary"|"auction-gl"|"auction-overrun"
-        |"roster"|"leave",
+        |"roster"|"leave"|"auction-request"|"users"|"wheel",
   parties: Party[],                  // mirrors partiesLeague or partiesOverrun
   partiesLeague: Party[16],          // each = { id, name, slots: [memberId|null × 5] }
   partiesOverrun: Party[16],         // 4 main × 4 sub layout reuses 16-slot shape
@@ -161,6 +161,34 @@ load() ──▶ initFirebase() ──▶ onAuthStateChanged
   `41728ac`, `de853be`, `7c24602`.
 - `dragMemberStart` / `dragSlotStart` / `dragPartyNumStart` all use the
   `dataTransfer` API. Don't mix `setData` formats across them.
+
+## Wheel page (🎡 สุ่มรางวัล, admin-only)
+
+- Mode `"wheel"`; tab is `seg-admin`-gated like Users; `buildWheelHtml()`
+  shows a 🔒 lock for non-admins. DB rules are the real boundary.
+- **ทุกคนใน roster อยู่ในวงล้อทุกรอบ** (no auto-remove of winners — by
+  design). Per-session exclusions live in `wheelUI.excluded` (local, never
+  synced); "ตัดคนลาวันนี้" reads `/leaves` via `hasScheduledLeaveToday()`
+  only (the manual `onLeave*` flags don't survive the members mirror).
+- Winner is picked by `wheelRandIndex()` (crypto + rejection sampling)
+  BEFORE the animation. `wheelUI.spinList` freezes the slice list for the
+  whole spin so a `/members` snapshot can't desync pointer vs winner.
+- The ONLY mid-spin render guard is in `renderBattlefields`'s wheel branch
+  (`if (!wheelUI.spinning)`) — every render path funnels through it; do NOT
+  add per-listener spinning checks.
+- History: `/wheel_history` push keys `{at, by, winnerId, winnerName,
+  prize}` (admin-write, shape-locked, `$other:false`); mirrored to
+  `state.wheelHistory`; client-trimmed to `WHEEL_HISTORY_MAX` (200) ordered
+  by `at` (not key order). Failed saves restore `wheelUI.pendingResult` so
+  the admin can retry instead of re-spinning.
+- Label layout (truncation/font/palette) is cached in `_wheelLayout` —
+  `measureText` runs once per roster/width change, not per rAF frame.
+- Strings interpolated into inline `onclick` JS (member ids, history keys)
+  must pass `WHEEL_SAFE_KEY_RE` — `escapeHtml` alone can't protect JS-in-
+  attribute context (entities decode back before JS parses).
+- Tests: `[wheel]` section in `test/run.js`. **Never call `wheelSpin()` /
+  `wheelConfetti()` in the vm harness** — its rAF stub re-enters
+  synchronously.
 
 ## Leave page semantics
 

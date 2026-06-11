@@ -1064,5 +1064,134 @@ console.log("\n[landing — front door wiring]");
   });
 })();
 
+// ---------------------------------------------------------------- wheel
+// Prize-wheel page (admin-only). NOTE: never invoke wheelSpin()/
+// wheelConfetti() here — the harness rAF stub re-enters synchronously.
+console.log("\n[wheel]");
+(() => {
+  const s = reset(app, mkMembers(["A", "B", "C", "D"]));
+  s.wheelHistory = {};
+  app.setAdmin(true);
+
+  t("wheel: admin page renders canvas + every roster name", () => {
+    const html = app.call("buildWheelHtml");
+    ok(html.includes("wheelCanvas"), "has wheel canvas");
+    ok(html.includes("wheelSpinBtn"), "has spin button");
+    for (const n of ["A", "B", "C", "D"]) ok(html.includes(">" + n + "</span>"), "lists member " + n);
+  });
+
+  t("wheel: non-admin gets the lock screen, no wheel UI", () => {
+    app.setAdmin(false);
+    const html = app.call("buildWheelHtml");
+    ok(html.includes("admin เท่านั้น"), "lock text shown");
+    ok(!html.includes("wheelCanvas"), "no canvas for guests");
+    ok(!html.includes("wheelSpinBtn"), "no spin button for guests");
+    app.setAdmin(true);
+  });
+
+  t("wheel: excluded member is never picked; everyone else reachable", () => {
+    // exercises the REAL spin pick path: wheelEligibleMembers + wheelRandIndex
+    app.call("wheelToggleMember", "B", false, null);
+    const seen = {};
+    for (let i = 0; i < 300; i++) {
+      const list = app.call("wheelEligibleMembers");
+      const w = list[app.call("wheelRandIndex", list.length)];
+      ok(w && w.id !== "B", "excluded B must never win");
+      seen[w.id] = true;
+    }
+    eq(Object.keys(seen).sort(), ["A", "C", "D"], "all eligible members reachable in 300 picks");
+    app.call("wheelToggleMember", "B", true, null);
+    eq(app.call("wheelEligibleMembers").length, 4, "toggle back restores B");
+  });
+
+  t("wheel: wheelRandIndex honors injected rng (deterministic) + edge cases", () => {
+    eq(app.call("wheelRandIndex", 4, () => 0), 0, "rng→0 picks first index");
+    eq(app.call("wheelRandIndex", 4, () => 0.999), 3, "rng→~1 picks last index");
+    eq(app.call("wheelRandIndex", 0), -1, "n=0 → -1 (no pick)");
+    const i = app.call("wheelRandIndex", 5);
+    ok(i >= 0 && i < 5, "crypto path stays in range");
+  });
+
+  t("wheel: history entry is shape-locked + length-clamped", () => {
+    const e = app.call("wheelMakeHistoryEntry",
+      { id: "m1", name: "X".repeat(100) }, " " + "P".repeat(200), "admin@example.com", 42);
+    eq(Object.keys(e).sort(), ["at", "by", "prize", "winnerId", "winnerName"], "exact field set");
+    eq(e.at, 42, "timestamp passthrough");
+    eq(e.winnerId, "m1", "winner id");
+    eq(e.winnerName.length, 64, "name clamped to 64");
+    eq(e.prize.length, 120, "prize trimmed+clamped to 120");
+  });
+
+  t("wheel: wheelTrimDeletions keeps only the newest max", () => {
+    eq(app.call("wheelTrimDeletions", ["a", "b", "c", "d", "e"], 3), ["a", "b"], "oldest two deleted");
+    eq(app.call("wheelTrimDeletions", ["a", "b"], 3), [], "under cap → nothing");
+    eq(app.call("wheelTrimDeletions", [], 3), [], "empty → nothing");
+  });
+
+  t("wheel: saving a result must NOT shrink the wheel (ทุกคนมีสิทธิ์ทุกรอบ)", () => {
+    const W = app.wheelUI();
+    ok(W, "wheelUI bridged out of the vm");
+    const before = app.call("wheelEligibleMembers").length;
+    W.pendingResult = { id: "A", name: "A", job: "Knight" };
+    W.prize = "การ์ดบอส 1 ใบ";
+    app.call("wheelSaveResult");
+    eq(W.pendingResult, null, "pending result cleared after save");
+    eq(app.call("wheelEligibleMembers").length, before, "pool unchanged — no winner removal");
+  });
+
+  t("wheel: discard clears pending result without touching the pool", () => {
+    const W = app.wheelUI();
+    W.pendingResult = { id: "C", name: "C", job: "Knight" };
+    app.call("wheelDiscardResult");
+    eq(W.pendingResult, null, "pending cleared");
+    eq(app.call("wheelEligibleMembers").length, 4, "pool intact");
+  });
+
+  t("wheel: history renders newest-first with prize + actor", () => {
+    s.wheelHistory = {
+      k1: { at: 1000, by: "boss@x.com", winnerId: "A", winnerName: "A", prize: "ของเก่า" },
+      k2: { at: 2000, by: "boss@x.com", winnerId: "B", winnerName: "B", prize: "ของใหม่" },
+    };
+    const html = app.call("buildWheelHtml");
+    ok(html.indexOf("ของใหม่") < html.indexOf("ของเก่า"), "newest entry first");
+    ok(html.includes("โดย boss"), "actor shown (email prefix)");
+    s.wheelHistory = {};
+  });
+
+  t("wheel: mode plumbing complete (tab, dropdown, css, boot guard, dispatch)", () => {
+    const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+    ok(appHtml.includes('data-mode="wheel"'), "header tab present");
+    ok((appHtml.match(/seg-admin/g) || []).length >= 3, "wheel tab is admin-gated (seg-admin)");
+    ok(appHtml.includes('<option value="wheel" class="user-option-admin">'), "mobile dropdown option (admin-gated)");
+    ok(appHtml.includes('body[data-mode="wheel"]'), "css hides sidebar on wheel page");
+    ok(appHtml.includes('t.classList.toggle("wheel-active", state.mode === "wheel")'), "indicator class wired");
+    ok(/state\.mode === "users" \|\| state\.mode === "wheel"\) \{\s*\n\s*state\.parties = state\.partiesLeague/.test(appHtml),
+       "boot guard maps wheel → partiesLeague");
+    ok(/state\.mode === "wheel"\) \{[\s\S]{0,400}?if \(!wheelUI\.spinning\)/.test(appHtml),
+       "renderBattlefields wheel branch is spin-guarded (the single choke point)");
+  });
+
+  t("wheel: review fixes locked in (frozen spin list, at-ordered trim, save-fail restore)", () => {
+    const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+    ok(appHtml.includes("wheelUI.spinList = list"), "spin freezes the eligible list it picked from");
+    ok(appHtml.includes("(wheelUI.spinning && wheelUI.spinList) ? wheelUI.spinList : wheelEligibleMembers()"),
+       "drawWheel slices from the frozen list mid-spin (pointer can't desync from winner)");
+    ok(/sort\(\(a, b\) => \(\(all\[a\] && all\[a\]\.at\) \|\| 0\) - \(\(all\[b\] && all\[b\]\.at\) \|\| 0\)\)/.test(appHtml),
+       "history trim orders by entry time, matching the display order");
+    ok(appHtml.includes("wheelUI.pendingResult = r;"), "failed save restores the result for retry");
+  });
+
+  t("wheel: rules file has shape-locked admin-write wheel_history node", () => {
+    const rules = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "..", "database.rules.json"), "utf8"));
+    const node = rules.rules.wheel_history;
+    ok(node, "wheel_history node exists");
+    eq(node[".read"], "auth != null", "authed read");
+    ok(String(node[".write"]).includes("root.child('admins')"), "admin-only write");
+    const wid = node["$wid"];
+    ok(wid && wid["$other"] && wid["$other"][".validate"] === false, "$other locked");
+    for (const f of ["at", "by", "winnerId", "winnerName", "prize"]) ok(wid[f], "field rule: " + f);
+  });
+})();
+
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
 if (fail) { console.log("FAILURES:\n  - " + failures.join("\n  - ") + "\n"); process.exit(1); }
