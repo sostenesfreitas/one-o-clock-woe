@@ -1601,8 +1601,10 @@ t("i18n: Wheel keys resolve in both locales", () => {
   eq(app.call("t", "wheel.spin"), "Girar!");
   eq(app.call("t", "wheel.by", { by: "joe" }), "por joe");
   eq(app.call("t", "toast.wheel_saved", { name: "Ana" }), "Salvo: Ana");
+  eq(app.call("t", "wheel.count", { n: 8, total: 12 }), "na roleta 8/12");
   app.call("setLocale", "en");
   eq(app.call("t", "wheel.spin"), "Spin!");
+  eq(app.call("t", "wheel.count", { n: 8, total: 12 }), "in the wheel 8/12");
   app.call("setLocale", "pt-BR");
 });
 

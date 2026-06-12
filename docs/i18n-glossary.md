@@ -198,6 +198,7 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | 🌴 ตัดคนลาวันนี้ออก | 🌴 Exclude people on leave today | 🌴 Tirar quem está de folga hoje | `wheel.exclude_leave_btn` |
 | ↺ เลือกทุกคน | ↺ Include all | ↺ Incluir todos | `wheel.include_all` |
 | 👥 รายชื่อในวงล้อ | 👥 Wheel members | 👥 Nomes na roleta | `wheel.members_title` |
+| ในวงล้อ {n}/{total} | in the wheel {n}/{total} | na roleta {n}/{total} | `wheel.count` |
 | Roster ว่าง — เพิ่มสมาชิกในหน้า Roster ก่อน | Roster empty — add members in the Roster page first | Roster vazio — adicione membros na página Roster primeiro | `wheel.roster_empty` |
 | 📜 ประวัติผู้ชนะ | 📜 Winner history | 📜 Histórico de vencedores | `wheel.history_title` |
 | ตัดคนลาออกจากวงล้อ N คน (toast) | N on leave excluded from the wheel | N de folga tirados da roleta | `toast.wheel_excluded` |

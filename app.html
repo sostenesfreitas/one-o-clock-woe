@@ -3092,6 +3092,7 @@ const LOCALES = {
     "wheel.include_all": "↺ Incluir todos",
     "wheel.members_title": "👥 Nomes na roleta",
     "wheel.roster_empty": "Roster vazio — adicione membros na página Roster primeiro",
+    "wheel.count": "na roleta {n}/{total}",
     "wheel.history_title": "📜 Histórico de vencedores",
     "toast.wheel_excluded": "{ppl} de folga tirados da roleta",
     "toast.wheel_none_leave": "Ninguém de folga hoje",
@@ -3304,6 +3305,7 @@ const LOCALES = {
     "wheel.include_all": "↺ Include all",
     "wheel.members_title": "👥 Wheel members",
     "wheel.roster_empty": "Roster empty — add members in the Roster page first",
+    "wheel.count": "in the wheel {n}/{total}",
     "wheel.history_title": "📜 Winner history",
     "toast.wheel_excluded": "{ppl} on leave excluded from the wheel",
     "toast.wheel_none_leave": "No one on leave today",
@@ -9940,7 +9942,7 @@ function drawWheel() {
     ctx.fillStyle = "#8b949e";
     ctx.font = "13px 'Segoe UI', Sarabun, sans-serif";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("ไม่มีรายชื่อในวงล้อ", C, C - 64);
+    ctx.fillText(t('toast.wheel_empty'), C, C - 64);
   } else {
     const L = wheelComputeLayout(ctx, list, R);
     const sa = (Math.PI * 2) / n;
@@ -9970,7 +9972,7 @@ function drawWheel() {
   ctx.fill(); ctx.stroke();
 
   const cnt = document.getElementById("wheelCount");
-  if (cnt) cnt.textContent = "ในวงล้อ " + n + "/" + (state.members || []).length + " คน";
+  if (cnt) cnt.textContent = t('wheel.count', { n: n, total: (state.members || []).length });
   const btn = document.getElementById("wheelSpinBtn");
   if (btn) btn.disabled = wheelUI.spinning || n === 0;
 }
