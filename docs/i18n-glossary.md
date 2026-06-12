@@ -52,12 +52,12 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | รอ Admin เพิ่มสมาชิก | Waiting for Admin to add members | Aguardando o Admin adicionar membros | `roster.empty_member` |
 | ไม่พบ "{q}" | No results for "{q}" | Nada encontrado para "{q}" | `roster.not_found` |
 | ชื่อ | Name | Nome | `roster.col_name` |
-| อาชีพ (Roster) | Job | Classe | `roster.col_job` |
+| อาชีพ (Roster) | Job | Job | `roster.col_job` |
 | มี | Have | Tem | `roster.col_have` |
 | เป้า | Target | Meta | `roster.col_target` |
 | สถานะ | Status | Status | `roster.col_status` |
 | — เลือก Job — | — Select Job — | — Selecionar Job — | `roster.select_job` |
-| แก้ล่าสุดโดย {by} | Last edited by {by} | Editado por último por {by} | `roster.updated_by` |
+| แก้ล่าสุดโดย {by} | Last edited by {by} | Última edição por {by} | `roster.updated_by` |
 | 💾 เซฟ | 💾 Save | 💾 Salvar | `roster.save_btn` |
 | เซฟข้อมูลของฉัน | Save my data | Salvar meus dados | `roster.save_mine_tip` |
 | N อาชีพ | N jobs | N classes | `roster.job_count` |
