@@ -2906,6 +2906,30 @@ const LOCALES = {
     "sidebar.search_ph": "🔎 Buscar nome...",
     "sidebar.hide_assigned": "Ocultar quem já está em grupo",
     "sidebar.hide_leave": "Ocultar quem está de folga",
+    "party.label": "Grupo {n}",
+    "unit.people": "{n} pessoas",
+    "league.party_range": "(Grupos {range})",
+    "party.sort_by_job": "Ordenar por classe (Knight → Paladin → Wizard → …)",
+    "party.sort_all_by_job": "Ordenar todos os grupos por classe (Knight → Paladin → Wizard → …)",
+    "party.clear_this": "Limpar este grupo",
+    "party.remove_from": "Remover do grupo",
+    "slot.leave_back": "Esta pessoa está de folga — clique para marcá-la como disponível",
+    "slot.leave_mark": "Marcar como de folga (permanece no grupo, não é movida)",
+    "slot.leave_on": "Folga ✓",
+    "slot.leave_off": "Folga",
+    "bf.no_members": "Ainda não há membros neste campo",
+    "map.plan_bottom": "Spawn baixo",
+    "map.plan_top": "Spawn cima",
+    "map.show_all_parties": "Mostrar todos os grupos",
+    "map.all_parties": "🔍 Todos",
+    "map.tick_multi_parties": "Pode marcar vários grupos ao mesmo tempo",
+    "map.range_circles_tip": "Círculos de alcance (centro/esq/dir)",
+    "map.range_circles_btn": "◯ Alcance",
+    "map.reset_range_tip": "Restaurar alcance para o padrão",
+    "map.reset_range_btn": "↺ Resetar alcance",
+    "map.clear_arrows_tip": "Limpar setas de movimento",
+    "map.readonly_tip": "Marcadores/setas são só do Admin — convidado só filtra/visualiza",
+    "map.readonly_badge": "🔒 Somente leitura",
   },
   "en": {
     "common.save": "Save",
@@ -2919,6 +2943,30 @@ const LOCALES = {
     "sidebar.search_ph": "🔎 Search name...",
     "sidebar.hide_assigned": "Hide already-assigned",
     "sidebar.hide_leave": "Hide on leave",
+    "party.label": "Party {n}",
+    "unit.people": "{n} people",
+    "league.party_range": "(Parties {range})",
+    "party.sort_by_job": "Sort by job (Knight → Paladin → Wizard → …)",
+    "party.sort_all_by_job": "Sort all parties by job (Knight → Paladin → Wizard → …)",
+    "party.clear_this": "Clear this party",
+    "party.remove_from": "Remove from party",
+    "slot.leave_back": "On leave — click to mark available",
+    "slot.leave_mark": "Mark as on leave (stays in the party, not moved)",
+    "slot.leave_on": "Leave ✓",
+    "slot.leave_off": "Leave",
+    "bf.no_members": "No members in this battlefield yet",
+    "map.plan_bottom": "Bottom spawn",
+    "map.plan_top": "Top spawn",
+    "map.show_all_parties": "Show all parties",
+    "map.all_parties": "🔍 All",
+    "map.tick_multi_parties": "Select multiple parties at once",
+    "map.range_circles_tip": "Range circles (center/left/right)",
+    "map.range_circles_btn": "◯ Range",
+    "map.reset_range_tip": "Reset range circles to default",
+    "map.reset_range_btn": "↺ Reset range",
+    "map.clear_arrows_tip": "Clear movement arrows",
+    "map.readonly_tip": "Pins/arrows are admin-only — guests can only filter the view",
+    "map.readonly_badge": "🔒 View only",
   },
 };
 let currentLocale = (function () {
@@ -2980,6 +3028,14 @@ function makeEmptyParties() {
     name: "ตี้ " + (i+1),
     slots: Array(PARTY_SLOTS).fill(null)
   }));
+}
+
+/* Display label for a party: keep a custom name, but localize the default
+ * (blank, or the legacy Thai "ตี้ N" default) so it follows the locale. */
+function partyLabel(p, id) {
+  const nm = (p && p.name) ? String(p.name).trim() : "";
+  if (nm && !/^ตี้\s*\d+$/.test(nm)) return nm;   // real custom name → keep as-is
+  return t("party.label", { n: id });
 }
 
 let state = {
@@ -4814,13 +4870,13 @@ function buildPartyRowHtml(p) {
                  ondragend="dragSlotEnd(event)"
                  ondragover="dragOverEl(event)" ondragleave="dragLeaveEl(event)"
                  ondrop="dropSlot(event, ${p.id}, ${i})">
-          ${leaveEnabled() ? `<button class="slot-leave-btn" onclick="event.stopPropagation(); toggleLeave('${m.id}')" title="${onLeave ? 'คนนี้ลาอยู่ — กดเพื่อให้กลับมาพร้อม' : 'มาร์คว่าคนนี้ลา (อยู่ในตี้เหมือนเดิม ไม่ย้าย)'}">${onLeave ? 'ลา ✓' : 'ลา'}</button>` : ''}
+          ${leaveEnabled() ? `<button class="slot-leave-btn" onclick="event.stopPropagation(); toggleLeave('${m.id}')" title="${onLeave ? t('slot.leave_back') : t('slot.leave_mark')}">${onLeave ? t('slot.leave_on') : t('slot.leave_off')}</button>` : ''}
           <span class="slot-job">${escapeHtml(m.job)}</span>
           <div class="slot-info">
             <span class="slot-name">${escapeHtml(m.name)}</span>
             ${cpHtml}
           </div>
-          <span class="slot-del" onclick="event.stopPropagation(); removeFromSlot(${p.id}, ${i}); commitPartiesNow(); render();" title="ลบจากตี้">×</span>
+          <span class="slot-del" onclick="event.stopPropagation(); removeFromSlot(${p.id}, ${i}); commitPartiesNow(); render();" title="${t('party.remove_from')}">×</span>
         </div>`;
   }).join("");
   const tc = teamColor(p.id);
@@ -4836,8 +4892,8 @@ function buildPartyRowHtml(p) {
            ondblclick="renameParty(${p.id})">${p.id}</div>
       ${slotsHtml}
       <div class="party-row-actions">
-        <button class="party-sort admin-only" onclick="sortPartyByJob(${p.id})" title="จัดเรียงตามอาชีพ (Knight → Paladin → Wizard → …)">🔀</button>
-        <div class="party-actions" onclick="clearParty(${p.id})" title="เคลียร์ตี้นี้">✕</div>
+        <button class="party-sort admin-only" onclick="sortPartyByJob(${p.id})" title="${t('party.sort_by_job')}">🔀</button>
+        <div class="party-actions" onclick="clearParty(${p.id})" title="${t('party.clear_this')}">✕</div>
       </div>
     </div>`;
 }
@@ -4856,7 +4912,7 @@ function buildBfJobSummary(range) {
   }
   const jobs = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
   if (!jobs.length) {
-    return `<div class="bf-summary empty">ยังไม่มีสมาชิกใน battlefield นี้</div>`;
+    return `<div class="bf-summary empty">${t("bf.no_members")}</div>`;
   }
   const pills = jobs.map(j =>
     `<span class="bf-job-pill"><b>${escapeHtml(j)}</b> ×${counts[j]}</span>`
@@ -4877,13 +4933,13 @@ function buildBfHtml(bfIdx) {
   // it sorts ALL 16 parties (League uses one state.parties array shared
   // between Main and Sub cards, so we only need the button in one place).
   const sortAllBtn = (bfIdx === 0 && typeof isAdmin === "function" && isAdmin())
-    ? `<button class="header-sort-btn" onclick="sortAllPartiesByJob()" title="จัดเรียงทุกตี้ตามอาชีพ (Knight → Paladin → Wizard → …)">🔀 จัดเรียงทุกตี้</button>`
+    ? `<button class="header-sort-btn" onclick="sortAllPartiesByJob()" title="${t('party.sort_all_by_job')}">🔀 ${t('party.sort_all_by_job')}</button>`
     : "";
   return `
     <div class="bf ${bfIdx===1?'sub':''}">
       <div class="bf-head">
         <span>${bfIdx===0?'🏰':'🏯'} ${title}</span>
-        <span class="count">${totalInBf} คน</span>
+        <span class="count">${t("unit.people", { n: totalInBf })}</span>
         ${sortAllBtn ? '<div style="flex:1"></div>' + sortAllBtn : ''}
       </div>
       ${partiesHtml}
@@ -4955,7 +5011,7 @@ function buildOverrunMapHtml() {
 
 function buildMapHtml(mapNum) {
   const isMain = leagueMapIsMain(mapNum);
-  const planLabel = leagueMapPlan(mapNum) === "bottom" ? "เกิดล่าง" : "เกิดบน";
+  const planLabel = leagueMapPlan(mapNum) === "bottom" ? t("map.plan_bottom") : t("map.plan_top");
   const cls = isMain ? 'main' : 'sub';
   const subWrapCls = isMain ? '' : 'sub-map';
   const icon = '🗺️';
@@ -4971,10 +5027,10 @@ function buildMapHtml(mapNum) {
   // per party. Active chips get their team color so they match their map markers.
   const allActive = currentFilter.size === 0 ? " active" : "";
   const filterChips =
-    `<button class="map-filter-chip${allActive}" onclick="${clearFnName}()" title="แสดงทุกตี้">🔍 ทุกตี้</button>` +
+    `<button class="map-filter-chip${allActive}" onclick="${clearFnName}()" title="${t('map.show_all_parties')}">${t('map.all_parties')}</button>` +
     range.map(partyId => {
       const p = (state.partiesLeague || [])[partyId - 1];
-      const nm = (p && p.name) ? p.name : ("ตี้ " + partyId);
+      const nm = partyLabel(p, partyId);
       const on = currentFilter.has(partyId);
       const style = on ? ` style="background:${teamColor(partyId)};border-color:${teamColor(partyId)};color:#fff"` : "";
       return `<button class="map-filter-chip${on ? " active" : ""}" onclick="${toggleFnName}(${partyId})"${style} title="${escapeHtml(nm)}">${partyId}</button>`;
@@ -4982,21 +5038,21 @@ function buildMapHtml(mapNum) {
   // Range-circle controls — GL Main map (mapNum 1) only. Toggle for everyone; the
   // reset button appears only when circles are on AND the viewer is an admin.
   const rangeCircleBtns = isMain
-    ? `<button onclick="toggleRangeCircles()" class="${_rangeCirclesOn ? "rc-toggle-on" : ""}" title="วงระยะ 3 จุด (กลาง/ซ้าย/ขวา)">◯ ระยะ</button>` +
+    ? `<button onclick="toggleRangeCircles()" class="${_rangeCirclesOn ? "rc-toggle-on" : ""}" title="${t('map.range_circles_tip')}">${t('map.range_circles_btn')}</button>` +
       ((_rangeCirclesOn && typeof isAdmin === "function" && isAdmin())
-        ? `<button onclick="resetRangeCircles()" title="คืนวงระยะกลับค่าเริ่มต้น">↺ รีเซ็ตวงระยะ</button>` : "")
+        ? `<button onclick="resetRangeCircles()" title="${t('map.reset_range_tip')}">${t('map.reset_range_btn')}</button>` : "")
     : "";
   return `
     <div class="map-card">
       <div class="map-title ${cls}">
-        <span>${icon} ${title} · <b>${planLabel}</b> (ตี้ ${isMain?'1–8':'9–16'})</span>
+        <span>${icon} ${title} · <b>${planLabel}</b> ${t("league.party_range", { range: isMain ? "1–8" : "9–16" })}</span>
         <span class="actions">
-          <span class="map-filter-chips" title="ติ๊กได้หลายตี้พร้อมกัน">${filterChips}</span>
+          <span class="map-filter-chips" title="${t('map.tick_multi_parties')}">${filterChips}</span>
           ${rangeCircleBtns}
           <button onclick="toggleMapFullscreen(${mapNum})" class="btn-expand-${mapNum}" title="ขยายเต็มจอ">⛶ Expand</button>
           ${(typeof isAdmin === "function" && isAdmin())
-            ? `<button onclick="clearArrows(${mapNum})" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>`
-            : `<span class="map-readonly-hint" title="หมุด/ลูกศรจัดการได้เฉพาะ Admin — guest ใช้ filter ดูได้อย่างเดียว">🔒 ดูอย่างเดียว</span>`}
+            ? `<button onclick="clearArrows(${mapNum})" title="${t('map.clear_arrows_tip')}">🗑 Clear arrows</button>`
+            : `<span class="map-readonly-hint" title="${t('map.readonly_tip')}">${t('map.readonly_badge')}</span>`}
           ${buildMapUploadBtns(mapNum)}
         </span>
       </div>

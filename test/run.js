@@ -1009,7 +1009,7 @@ console.log("\n[map admin gate — guests view-only, filters allowed]");
     app.setAdmin(false);
     const html = app.call("buildMapHtml", 1);
     ok(!html.includes("clearArrows("), "no clear button for guest");
-    ok(html.includes("ดูอย่างเดียว"), "read-only hint shown");
+    ok(html.includes("map-readonly-hint"), "read-only hint shown");
     ok(html.includes("map-filter-chip"), "party filters kept");
     ok(html.includes("toggleRangeCircles"), "ระยะ toggle kept");
     ok(html.includes("toggleMapFullscreen(1)"), "Expand kept");
@@ -1018,7 +1018,7 @@ console.log("\n[map admin gate — guests view-only, filters allowed]");
     app.setAdmin(true);
     const html = app.call("buildMapHtml", 1);
     ok(html.includes("clearArrows(1)"), "clear button for admin");
-    ok(!html.includes("ดูอย่างเดียว"), "no hint for admin");
+    ok(!html.includes("map-readonly-hint"), "no hint for admin");
   });
   t("buildOverrunHtml: same gate on the Overrun map card", () => {
     app.setAdmin(false);
@@ -1510,6 +1510,17 @@ t("i18n: nav+sidebar keys present in both locales", () => {
   eq(app.call("t", "nav.leave"), "🌴 Leave");
   eq(app.call("t", "sidebar.hide_assigned"), "Hide already-assigned");
   app.call("setLocale", "pt-BR"); // reset for later groups
+});
+t("i18n: League keys + partyLabel resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "party.clear_this"), "Limpar este grupo");
+  eq(app.call("partyLabel", { name: "" }, 3), "Grupo 3");
+  eq(app.call("partyLabel", { name: "ตี้ 7" }, 7), "Grupo 7");   // legacy default localized
+  eq(app.call("partyLabel", { name: "Squad A" }, 1), "Squad A"); // custom kept
+  app.call("setLocale", "en");
+  eq(app.call("t", "map.readonly_badge"), "🔒 View only");
+  eq(app.call("partyLabel", { name: "" }, 3), "Party 3");
+  app.call("setLocale", "pt-BR");
 });
 
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
