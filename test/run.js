@@ -1475,6 +1475,27 @@ t("i18n: invalid locale is a no-op (stays pt-BR)", () => {
   app.call("setLocale", "xx-XX");
   eq(app.call("t", "common.save"), "Salvar");
 });
+t("i18n: applyStaticI18n fills data-i18n textContent + parses data-i18n-attr pairs", () => {
+  app.call("setLocale", "pt-BR");
+  // fake elements
+  const textEl = { _attr: { "data-i18n": "common.save" }, textContent: "",
+                   getAttribute(k){ return this._attr[k]; } };
+  const attrEl = { _attr: { "data-i18n-attr": " placeholder:common.save , title:queue.badge , bogus_no_colon " },
+                   _set: {}, getAttribute(k){ return this._attr[k]; },
+                   setAttribute(k,v){ this._set[k] = v; } };
+  const root = {
+    querySelectorAll(sel) {
+      if (sel === "[data-i18n]") return [textEl];
+      if (sel === "[data-i18n-attr]") return [attrEl];
+      return [];
+    }
+  };
+  app.call("applyStaticI18n", root);
+  eq(textEl.textContent, "Salvar");                 // data-i18n → textContent
+  eq(attrEl._set.placeholder, "Salvar");            // attr pair, trimmed
+  eq(attrEl._set.title, "Fila #{n}");               // second pair (raw template, no params)
+  ok(!("bogus_no_colon" in attrEl._set), "pair without ':' is skipped");
+});
 
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
 if (fail) { console.log("FAILURES:\n  - " + failures.join("\n  - ") + "\n"); process.exit(1); }
