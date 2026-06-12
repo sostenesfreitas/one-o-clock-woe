@@ -3194,6 +3194,13 @@ const LOCALES = {
     "toast.ar_withdraw_approved": "Admin já aprovou — não dá para retirar sozinho",
     "toast.ar_bulk_confirm": "Aprovar todos os pedidos de {date} ({mode})?",
     "toast.ar_clear_confirm": "Limpar todos os pedidos de {date}?",
+    "toast.ar_bulk_done": "✅ {ppl} aprovados · se passar da quantidade de itens, ajuste na página Auction {mode}",
+    "toast.ar_clear_fail": "Falha ao limpar: {msg}",
+    "toast.ar_reset_gl_fail": "Falha ao limpar Auction GL: {msg}",
+    "toast.ar_reset_or_fail": "Falha ao limpar Auction Overrun: {msg}",
+    "ar.block_today_only": "Só é possível pedir no dia atual — pedido antecipado não é permitido",
+    "ar.block_wrong_mode": "Hoje é dia de {ev} — só dá para pedir de {ev}",
+    "ar.block_on_leave": "Você marcou folga em {date} — sem direito a pedir leilão",
   },
   "en": {
     "common.save": "Save",
@@ -3495,6 +3502,13 @@ const LOCALES = {
     "toast.ar_withdraw_approved": "Admin already approved — can't withdraw yourself",
     "toast.ar_bulk_confirm": "Approve all requests for {date} ({mode})?",
     "toast.ar_clear_confirm": "Clear all requests for {date}?",
+    "toast.ar_bulk_done": "✅ {ppl} approved · if it exceeds the item count, trim on the Auction {mode} page",
+    "toast.ar_clear_fail": "Clear failed: {msg}",
+    "toast.ar_reset_gl_fail": "Failed to clear Auction GL: {msg}",
+    "toast.ar_reset_or_fail": "Failed to clear Auction Overrun: {msg}",
+    "ar.block_today_only": "You can only request on the current day — advance requests are not allowed",
+    "ar.block_wrong_mode": "Today is a {ev} day — you can only request {ev}",
+    "ar.block_on_leave": "You set leave on {date} — can't request auction",
   },
 };
 let currentLocale = (function () {
@@ -8889,14 +8903,14 @@ async function arBulkApprove(date, mode) {
   for (const r of pending) {
     await arApproveRequest(date, mode, r.id);
   }
-  toast(`✅ อนุมัติ ${pending.length} คน · ถ้าเกินจำนวนของ ไป trim ในหน้า Auction ${mode === "gl" ? "GL" : "Overrun"}`, "success");
+  toast(t('toast.ar_bulk_done', { ppl: plural(pending.length, 'unit.people'), mode: mode === "gl" ? "GL" : "Overrun" }), "success");
 }
 
 function arClearDay(date) {
   if (!isAdmin()) { toast(t("toast.users_need_admin"), "error"); return; }
   if (!confirm(t("toast.ar_clear_confirm", { date }))) return;
   _fbDB.ref(`auction_requests/${date}`).remove()
-    .catch(e => { toast(`ล้างไม่สำเร็จ: ${e.message}`, "error"); console.error(e); });
+    .catch(e => { toast(t('toast.ar_clear_fail', { msg: e.message }), "error"); console.error(e); });
 }
 
 /** Auto-clear past dates (anything before today). Called from the daily
@@ -8936,9 +8950,9 @@ function arResetAuctionPages() {
   state.auctionGL      = fresh("gl");
   state.auctionOverrun = fresh("overrun");
   _fbDB.ref("auction_gl").set(state.auctionGL)
-    .catch(e => { toast(`ล้าง Auction GL ไม่สำเร็จ: ${e.message}`, "error"); console.error(e); });
+    .catch(e => { toast(t('toast.ar_reset_gl_fail', { msg: e.message }), "error"); console.error(e); });
   _fbDB.ref("auction_overrun").set(state.auctionOverrun)
-    .catch(e => { toast(`ล้าง Auction Overrun ไม่สำเร็จ: ${e.message}`, "error"); console.error(e); });
+    .catch(e => { toast(t('toast.ar_reset_or_fail', { msg: e.message }), "error"); console.error(e); });
 }
 
 /* ---------- Modal helpers ---------- */
@@ -8947,12 +8961,12 @@ function arResetAuctionPages() {
  *  current day only, must be an event day, and the request mode must match
  *  that day's event (GL on อังคาร/พฤหัส, Overrun on อาทิตย์), plus leave. */
 function arRequestBlockReason(memberId, date, mode) {
-  if (date !== todayBkkISO()) return "ขอประมูลได้เฉพาะวันปัจจุบันเท่านั้น — ขอล่วงหน้าไม่ได้";
+  if (date !== todayBkkISO()) return t('ar.block_today_only');
   const ev = isEventDay(date);  // "GL" | "Overrun" | null
-  if (!ev) return "วันนี้ไม่ใช่วันกิจกรรม — ขอประมูลได้เฉพาะวันกิจ (อังคาร/พฤหัส = GL, อาทิตย์ = Overrun)";
+  if (!ev) return t('ar.locked_noevent');
   const allowedMode = ev === "GL" ? "gl" : "overrun";
-  if (mode !== allowedMode) return `วันนี้เป็นกิจ ${ev} — ขอได้เฉพาะของกิจ ${ev} เท่านั้น`;
-  if (arHasLeaveOnDate(memberId, date)) return `คุณลงลาวันที่ ${date} ไว้ — ไม่มีสิทธิ์ขอประมูล`;
+  if (mode !== allowedMode) return t('ar.block_wrong_mode', { ev });
+  if (arHasLeaveOnDate(memberId, date)) return t('ar.block_on_leave', { date });
   return null;
 }
 

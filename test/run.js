@@ -1639,6 +1639,21 @@ t("i18n: AR modal + toast keys", () => {
   app.call("setLocale", "pt-BR");
 });
 
+t("i18n: AR remaining toasts + block reasons", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "toast.ar_clear_fail", { msg: "x" }), "Falha ao limpar: x");
+  eq(app.call("t", "toast.ar_bulk_done", { ppl: "3 pessoas", mode: "GL" }), "✅ 3 pessoas aprovados · se passar da quantidade de itens, ajuste na página Auction GL");
+  eq(app.call("t", "toast.ar_reset_gl_fail", { msg: "e" }), "Falha ao limpar Auction GL: e");
+  eq(app.call("t", "toast.ar_reset_or_fail", { msg: "e" }), "Falha ao limpar Auction Overrun: e");
+  eq(app.call("t", "ar.block_today_only"), "Só é possível pedir no dia atual — pedido antecipado não é permitido");
+  eq(app.call("t", "ar.block_wrong_mode", { ev: "GL" }), "Hoje é dia de GL — só dá para pedir de GL");
+  eq(app.call("t", "ar.block_on_leave", { date: "2026-06-12" }), "Você marcou folga em 2026-06-12 — sem direito a pedir leilão");
+  app.call("setLocale", "en");
+  eq(app.call("t", "toast.ar_clear_fail", { msg: "x" }), "Clear failed: x");
+  eq(app.call("t", "toast.ar_bulk_done", { ppl: "3 people", mode: "GL" }), "✅ 3 people approved · if it exceeds the item count, trim on the Auction GL page");
+  app.call("setLocale", "pt-BR");
+});
+
 console.log("\n[plural]");
 t("i18n: plural picks singular at n=1", () => {
   app.call("setLocale", "pt-BR");

@@ -304,3 +304,10 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | 🎴 การ์ด → literal English (AR item) | 🎴 Card | 🎴 Card | AR_ITEM_META.cards.label |
 | 🪶 ขนขาว → literal English (AR item) | 🪶 White | 🪶 White | AR_ITEM_META.white.label |
 | 🪶 ขนดำ → literal English (AR item) | 🪶 Black | 🪶 Black | AR_ITEM_META.black.label |
+| ✅ อนุมัติ {n} คน · ถ้าเกินจำนวนของ ไป trim ในหน้า Auction {mode} | ✅ {ppl} approved · if it exceeds the item count, trim on the Auction {mode} page | ✅ {ppl} aprovados · se passar da quantidade de itens, ajuste na página Auction {mode} | `toast.ar_bulk_done` |
+| ล้างไม่สำเร็จ: {msg} | Clear failed: {msg} | Falha ao limpar: {msg} | `toast.ar_clear_fail` |
+| ล้าง Auction GL ไม่สำเร็จ: {msg} | Failed to clear Auction GL: {msg} | Falha ao limpar Auction GL: {msg} | `toast.ar_reset_gl_fail` |
+| ล้าง Auction Overrun ไม่สำเร็จ: {msg} | Failed to clear Auction Overrun: {msg} | Falha ao limpar Auction Overrun: {msg} | `toast.ar_reset_or_fail` |
+| ขอประมูลได้เฉพาะวันปัจจุบันเท่านั้น — ขอล่วงหน้าไม่ได้ | You can only request on the current day — advance requests are not allowed | Só é possível pedir no dia atual — pedido antecipado não é permitido | `ar.block_today_only` |
+| วันนี้เป็นกิจ {ev} — ขอได้เฉพาะของกิจ {ev} เท่านั้น | Today is a {ev} day — you can only request {ev} | Hoje é dia de {ev} — só dá para pedir de {ev} | `ar.block_wrong_mode` |
+| คุณลงลาวันที่ {date} ไว้ — ไม่มีสิทธิ์ขอประมูล | You set leave on {date} — can't request auction | Você marcou folga em {date} — sem direito a pedir leilão | `ar.block_on_leave` |
