@@ -1190,39 +1190,39 @@ console.log("\n[summary exact targets]");
 })();
 
 // ------------------------------------------------------- overrun groups
-// 2026-06-12: 5th purple "พิเศษ" group (ตี้ 15,16 carved out of Blue).
+// 2026-06-12: 5th "Purple" group (ตี้ 15,16 carved out of Blue).
 console.log("\n[overrun groups]");
 (() => {
   const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
 
-  t("overrun: OVERRUN_GROUPS partitions ตี้ 1-16 exactly once (Blue 13-14, พิเศษ 15-16)", () => {
+  t("overrun: OVERRUN_GROUPS partitions ตี้ 1-16 exactly once (Blue 13-14, Purple 15-16)", () => {
     const block = (appHtml.match(/const OVERRUN_GROUPS = \[([\s\S]*?)\];/) || [])[1];
     ok(block, "OVERRUN_GROUPS literal found");
     const groups = [...block.matchAll(/ids:\s*\[([0-9,\s]+)\]/g)].map(m => m[1].split(",").map(Number));
     eq(groups.length, 5, "five groups");
     eq(groups[3], [13, 14], "Blue keeps 13,14");
-    eq(groups[4], [15, 16], "พิเศษ owns 15,16");
+    eq(groups[4], [15, 16], "Purple owns 15,16");
     const all = groups.flat().sort((a, b) => a - b);
     eq(all, Array.from({ length: 16 }, (_, i) => i + 1), "ids 1-16 each exactly once");
     ok(block.includes("#a855f7"), "purple color present");
   });
 
-  t("overrun: page renders 5 group cards incl. พิเศษ Party in purple", () => {
+  t("overrun: page renders 5 group cards incl. Purple Party", () => {
     reset(app, []);
     const html = app.call("buildOverrunHtml");
     eq((html.match(/bg-card/g) || []).length, 5, "five group cards");
-    ok(html.includes("พิเศษ Party"), "purple group card title");
+    ok(html.includes("Purple Party"), "purple group card title");
     ok(html.includes("--gc:#a855f7"), "card carries the purple group color");
-    const purpleCard = html.split("พิเศษ Party")[1] || "";
+    const purpleCard = html.split("Purple Party")[1] || "";
     ok(purpleCard.includes('data-tip-party="15"') && purpleCard.includes('data-tip-party="16"'),
-       "พิเศษ card holds party rows 15+16");
+       "Purple card holds party rows 15+16");
   });
 
   t("overrun: map gets 5 filter chips + dynamic group count title", () => {
     reset(app, []);
     const html = app.call("buildOverrunHtml");
     ok(html.includes("toggleMapFilterOverrun(5)"), "5th group filter chip wired");
-    ok(html.includes("● พิเศษ"), "พิเศษ chip label");
+    ok(html.includes("● Purple"), "Purple chip label");
     ok(html.includes("Overrun Map · 5 กลุ่ม"), "map title reflects group count");
   });
 

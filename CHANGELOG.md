@@ -10,6 +10,13 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.12.5]
+### Changed
+- **Overrun: เปลี่ยนชื่อกลุ่ม "พิเศษ" → "Purple"** ให้เข้าชุด Red/Yellow/Green/Blue (ตี้ 15,16 เหมือนเดิม).
+- **จัด layout การ์ดกลุ่ม Overrun ใหม่ (masonry).** เดิมเป็น grid ที่ยืดการ์ดให้สูงเท่ากันทั้งแถว —
+  การ์ด 2 ตี้เลยมีพื้นที่ว่างโบ๋ข้างใน และกลุ่มเล็กตกไปอยู่แถวล่างเดียวดาย; ตอนนี้การ์ดสูงตามเนื้อหา
+  และสองคอลัมน์ balance อัตโนมัติ (Red+Yellow / Green+Blue+Purple) ทั้งหน้าแน่นเรียบร้อย.
+
 ## [2026.06.12.4]
 ### Fixed
 - **หน้าแมพ: hard-gate หมุด/ลูกศร/วงระยะ เป็น admin-only — guest เหลือ filter/ระยะ/Expand (ดูอย่างเดียว).**

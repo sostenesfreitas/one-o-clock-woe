@@ -1682,14 +1682,25 @@
   .ai-comment b.balanced { color: var(--success); }
 
   /* ===== Overrun layout ===== */
+  /* Masonry via CSS columns (2026-06-12): cards size to their CONTENT and
+     the two columns auto-balance — a 2-party card no longer stretches to
+     match a 4-party neighbor (the hollow-card look), and the small groups
+     pack together instead of leaving a half-empty last row. */
   .overrun {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    columns: 2;
+    column-gap: 10px;
     flex-shrink: 0;
+    /* cancel the last card's margin-bottom so the cards→map gap keeps the
+       page-wide 10px rhythm (multicol is its own formatting context — the
+       trailing margin would otherwise stack with .center's gap) */
+    margin-bottom: -10px;
+  }
+  .overrun .bg-card {
+    break-inside: avoid;
+    margin-bottom: 10px;
   }
   @media (max-width: 1100px) {
-    .overrun { grid-template-columns: 1fr; }
+    .overrun { columns: 1; }
   }
   .bg-card {
     background: var(--bg-2);
@@ -2560,7 +2571,7 @@
     .party-row > .slot.filled:not(.slot-onleave) .slot-leave-btn { opacity: 0.7; }
 
     .bg-card { font-size: 11px; }
-    .overrun { grid-template-columns: 1fr; }
+    .overrun { columns: 1; }
     /* Job summary pills below each party tighter on mobile */
     .bf-summary, .bg-card .bf-summary { padding: 6px 10px; font-size: 10px; }
     .bf-job-pill { font-size: 10px; padding: 1px 6px; }
@@ -2839,16 +2850,16 @@ const TEAM_COLORS = [
 ];
 
 // 5 color groups partitioning the 16 shared overrun parties (2026-06-12:
-// Blue gave ตี้ 15,16 to the new purple "พิเศษ" group — no structural
+// Blue gave ตี้ 15,16 to the new "Purple" group — no structural
 // change, party ids/slots untouched, only the group mapping).
 // `marker` = the group's default map pin (used only until a position is
-// saved) — 2×2 corners for the four classic groups, center for พิเศษ.
+// saved) — 2×2 corners for the four classic groups, center for Purple.
 const OVERRUN_GROUPS = [
   { name: "Red",    color: "#ef4444", ids: [1,2,3,4],    marker: { x: 25, y: 35 } },
   { name: "Yellow", color: "#eab308", ids: [5,6,7,8],    marker: { x: 75, y: 35 } },
   { name: "Green",  color: "#22c55e", ids: [9,10,11,12], marker: { x: 25, y: 70 } },
   { name: "Blue",   color: "#3b82f6", ids: [13,14],      marker: { x: 75, y: 70 } },
-  { name: "พิเศษ",  color: "#a855f7", ids: [15,16],      marker: { x: 50, y: 52 } }
+  { name: "Purple", color: "#a855f7", ids: [15,16],      marker: { x: 50, y: 52 } }
 ];
 const TEAM_COLORS_OVERRUN = (() => {
   const out = new Array(16);
@@ -5148,7 +5159,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.12.4";
+const APP_VERSION = "2026.06.12.5";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;

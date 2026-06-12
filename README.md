@@ -7,7 +7,7 @@ post-WoE auctions. Used by a single Ragnarok Online guild.
 
 - **League** — 16 parties × 5 slots over main + sub maps, drag-drop,
   map markers, save/restore
-- **Overrun** — 5 color groups (Red/Yellow/Green/Blue + พิเศษ) over 16 shared parties on a single map
+- **Overrun** — 5 color groups (Red/Yellow/Green/Blue/Purple) over 16 shared parties on a single map
 - **Roster** — member table (name, job, CP, Discord) with per-row edits
 - **Summary** — job counts vs. targets
 - **Auction GL** — post-WoE loot split 70/30 (main/sub field); item counts
