@@ -10,7 +10,12 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
-## [2026.06.12.5]
+## [2026.06.12.6]
+### Added
+- **i18n: เพิ่มสวิตช์ภาษา PT | EN ที่ header.** ระบบแปลกลาง (`LOCALES` + `t()`),
+  ค่าเริ่มต้น **pt-BR**, สลับเป็นอังกฤษได้สด ๆ ไม่ต้องรีโหลด. จำค่าภาษาแบบ **ราย-อุปกรณ์**
+  (`localStorage`, อยู่นอก `state` — ไม่ sync ขึ้น Firebase, แต่ละคนเลือกของตัวเอง).
+- _Fase 0 = เฉพาะ engine + สวิตช์; ยังไม่ได้แปลข้อความในหน้าจอ (ตามแผน faseado)._
 ### Changed
 - **Overrun: เปลี่ยนชื่อกลุ่ม "พิเศษ" → "Purple"** ให้เข้าชุด Red/Yellow/Green/Blue (ตี้ 15,16 เหมือนเดิม).
 - **จัด layout การ์ดกลุ่ม Overrun ใหม่ (masonry).** เดิมเป็น grid ที่ยืดการ์ดให้สูงเท่ากันทั้งแถว —
