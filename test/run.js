@@ -168,7 +168,7 @@ t("computeAuction uses the live (edited) rate, not the default", () => {
   eq(w.rate, 7, "item rate");
   eq(w.main.need, 21, "3 ppl x 7");
 });
-t("GL splits 70/30; status 'พอดี' when mainPool == need", () => {
+t("GL splits 70/30; status 'Exato' (ok) when mainPool == need", () => {
   reset(app, mkMembers(["p1"]));
   app.state.auctionGL.rates.white = 7;
   app.state.auctionGL.white = 10;          // entered count IS the total
@@ -178,7 +178,7 @@ t("GL splits 70/30; status 'พอดี' when mainPool == need", () => {
   eq(w.main.pool, 7, "floor(10*0.7)");
   eq(w.main.need, 7, "1 ppl x 7");
   eq(w.main.diff, 0, "exact");
-  eq(w.main.statusCls, "ok", "พอดี");
+  eq(w.main.statusCls, "ok", "Exato");
 });
 t("Overrun has no sub field (single combined pool)", () => {
   reset(app, mkMembers(["p1"]));
@@ -1560,6 +1560,15 @@ t("i18n: Auction keys resolve + interpolate in both locales", () => {
   app.call("setLocale", "en");
   eq(app.call("t", "auction.field_main"), "Main field");
   eq(app.call("t", "auction.no_items"), "📄 No items");
+  app.call("setLocale", "pt-BR");
+});
+
+t("i18n: auction status labels resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "auction.status_exact"), "Exato");
+  eq(app.call("t", "auction.status_left", { n: 3 }), "Sobra 3");
+  app.call("setLocale", "en");
+  eq(app.call("t", "auction.status_left", { n: 3 }), "3 left");
   app.call("setLocale", "pt-BR");
 });
 

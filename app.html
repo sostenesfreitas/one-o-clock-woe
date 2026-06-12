@@ -2978,6 +2978,8 @@ const LOCALES = {
     "auction.field_main": "Campo principal",
     "auction.field_sub": "Campo secundário",
     "auction.not_dragged": "Ainda não arrastado",
+    "auction.status_exact": "Exato",
+    "auction.status_left": "Sobra {n}",
     "auction.not_enough": "Itens insuficientes",
     "auction.total_short": "Total",
     "auction.split_title": "⚖️ Divisão de campo (Principal/Secundário)",
@@ -3108,6 +3110,8 @@ const LOCALES = {
     "auction.field_main": "Main field",
     "auction.field_sub": "Sub field",
     "auction.not_dragged": "Not assigned yet",
+    "auction.status_exact": "Exact",
+    "auction.status_left": "{n} left",
     "auction.not_enough": "Not enough items",
     "auction.total_short": "Total",
     "auction.split_title": "⚖️ Field split (Main/Sub)",
@@ -7637,18 +7641,18 @@ function computeAuction(kind) {
     const need = count * perPersonRate;
     const diff = pool - need;
     let status, statusCls;
-    if (count === 0)        { status = "ยังไม่ลาก",  statusCls = "none" }
-    else if (diff < 0)      { status = `ขาด ${-diff}`, statusCls = "short" }
-    else if (diff === 0)    { status = "พอดี",        statusCls = "ok" }
-    else                    { status = `เหลือ ${diff}`, statusCls = "over" }
+    if (count === 0)        { status = t('auction.not_dragged'),              statusCls = "none" }
+    else if (diff < 0)      { status = t('status.short', { n: -diff }),       statusCls = "short" }
+    else if (diff === 0)    { status = t('auction.status_exact'),             statusCls = "ok" }
+    else                    { status = t('auction.status_left', { n: diff }), statusCls = "over" }
     return { pool, count, need, diff, status, statusCls };
   };
 
   const ITEM_META = {
-    cards:    { label: "🎴 Card",           rateKey: "card",     unit: "ใบ"   },
-    illusion: { label: "🔮 Illusion Frag.", rateKey: "illusion", unit: "ชิ้น" },
-    white:    { label: "🪶 White",          rateKey: "white",    unit: "ขน"   },
-    black:    { label: "🪶 Black",          rateKey: "black",    unit: "ขน"   }
+    cards:    { label: "🎴 Card",           rateKey: "card",     unit: "pcs" },
+    illusion: { label: "🔮 Illusion Frag.", rateKey: "illusion", unit: "pcs" },
+    white:    { label: "🪶 White",          rateKey: "white",    unit: "pcs" },
+    black:    { label: "🪶 Black",          rateKey: "black",    unit: "pcs" }
   };
   const items = ["cards","illusion","white","black"].map(key => {
     const total    = totals[key];

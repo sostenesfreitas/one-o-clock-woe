@@ -85,6 +85,8 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | สนามหลัก | Main field | Campo principal | `auction.field_main` |
 | สนามรอง | Sub field | Campo secundário | `auction.field_sub` |
 | ยังไม่ลาก | Not assigned yet | Ainda não arrastado | `auction.not_dragged` |
+| พอดี | Exact | Exato | `auction.status_exact` |
+| เหลือ {n} | {n} left | Sobra {n} | `auction.status_left` |
 | ของไม่พอ | Not enough items | Itens insuficientes | `auction.not_enough` |
 | รวม | Total | Total | `auction.total_short` |
 | ⚖️ การแบ่งสนาม (หลัก/รอง) | ⚖️ Field split (Main/Sub) | ⚖️ Divisão de campo (Principal/Secundário) | `auction.split_title` |
