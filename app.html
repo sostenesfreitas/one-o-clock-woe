@@ -2911,6 +2911,33 @@ function t(key, params) {
   return s;
 }
 
+/* Fill static markup: <el data-i18n="key"> sets textContent;
+ * <el data-i18n-attr="placeholder:key,title:key2"> sets attributes. */
+function applyStaticI18n(root) {
+  root = root || document;
+  root.querySelectorAll("[data-i18n]").forEach(function (el) {
+    el.textContent = t(el.getAttribute("data-i18n"));
+  });
+  root.querySelectorAll("[data-i18n-attr]").forEach(function (el) {
+    el.getAttribute("data-i18n-attr").split(",").forEach(function (pair) {
+      const i = pair.indexOf(":");
+      if (i < 0) return;
+      const attr = pair.slice(0, i).trim();
+      const key = pair.slice(i + 1).trim();
+      if (attr && key) el.setAttribute(attr, t(key));
+    });
+  });
+}
+
+function setLocale(loc) {
+  if (!LOCALES[loc]) return;            // invalid → no-op
+  currentLocale = loc;
+  try { localStorage.setItem("woe_locale", loc); } catch (e) {}
+  applyStaticI18n(document);
+  if (typeof render === "function") render();
+  if (typeof updateLocaleSwitcherUI === "function") updateLocaleSwitcherUI();
+}
+
 function makeEmptyParties() {
   return Array.from({length: PARTIES}, (_, i) => ({
     id: i + 1,
