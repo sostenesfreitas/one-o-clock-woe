@@ -1350,7 +1350,7 @@ console.log("\n[wheel]");
   t("wheel: non-admin gets the lock screen, no wheel UI", () => {
     app.setAdmin(false);
     const html = app.call("buildWheelHtml");
-    ok(html.includes("admin เท่านั้น"), "lock text shown");
+    ok(html.includes("só para admin") || html.includes("Admin only page"), "lock text shown");
     ok(!html.includes("wheelCanvas"), "no canvas for guests");
     ok(!html.includes("wheelSpinBtn"), "no spin button for guests");
     app.setAdmin(true);
@@ -1421,7 +1421,7 @@ console.log("\n[wheel]");
     };
     const html = app.call("buildWheelHtml");
     ok(html.indexOf("ของใหม่") < html.indexOf("ของเก่า"), "newest entry first");
-    ok(html.includes("โดย boss"), "actor shown (email prefix)");
+    ok(html.includes("por boss") || html.includes("by boss"), "actor shown (email prefix)");
     s.wheelHistory = {};
   });
 
@@ -1593,6 +1593,16 @@ t("i18n: Leave keys + day/date helpers", () => {
   eq(app.call("plural", 3, "leave.days"), "3 dias");
   app.call("setLocale", "en");
   eq(app.call("t", "leave.no_event"), "No event");
+  app.call("setLocale", "pt-BR");
+});
+
+t("i18n: Wheel keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "wheel.spin"), "Girar!");
+  eq(app.call("t", "wheel.by", { by: "joe" }), "por joe");
+  eq(app.call("t", "toast.wheel_saved", { name: "Ana" }), "Salvo: Ana");
+  app.call("setLocale", "en");
+  eq(app.call("t", "wheel.spin"), "Spin!");
   app.call("setLocale", "pt-BR");
 });
 

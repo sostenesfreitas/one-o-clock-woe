@@ -3074,6 +3074,37 @@ const LOCALES = {
     "toast.fb_not_ready": "Firebase não está pronto",
     "toast.leave_add_fail": "Falha ao adicionar folga",
     "toast.leave_added": "Folga adicionada",
+    "wheel.admin_only": "Esta página é só para admin",
+    "wheel.login_first": "🔒 Faça login como admin primeiro",
+    "wheel.del_entry": "Excluir este registro",
+    "wheel.by": "por {by}",
+    "wheel.no_history": "Sem histórico ainda — gire e clique em \"Salvar\" para aparecer aqui",
+    "wheel.winner_label": "🎉 Sortudo desta rodada",
+    "wheel.no_prize": "Prêmio não especificado",
+    "wheel.save_result": "💾 Salvar resultado",
+    "wheel.discard": "✕ Não contar esta rodada",
+    "wheel.subtitle": "Sorteia um sortudo da lista do Roster — todos concorrem toda rodada; o nome não sai após ganhar",
+    "wheel.spin": "Girar!",
+    "wheel.prize_this_round": "🎁 Prêmio desta rodada",
+    "wheel.prize_ph": "ex.: 1 Boss Card",
+    "wheel.exclude_leave_tip": "Desmarca automaticamente quem está de folga hoje na página 🌴 Folga",
+    "wheel.exclude_leave_btn": "🌴 Tirar quem está de folga hoje",
+    "wheel.include_all": "↺ Incluir todos",
+    "wheel.members_title": "👥 Nomes na roleta",
+    "wheel.roster_empty": "Roster vazio — adicione membros na página Roster primeiro",
+    "wheel.history_title": "📜 Histórico de vencedores",
+    "toast.wheel_excluded": "{ppl} de folga tirados da roleta",
+    "toast.wheel_none_leave": "Ninguém de folga hoje",
+    "toast.wheel_admin_spin": "Precisa ser admin para girar",
+    "toast.wheel_empty": "Sem nomes na roleta",
+    "toast.wheel_admin_online": "Precisa ser admin + online para salvar",
+    "toast.wheel_saved": "Salvo: {name}",
+    "toast.wheel_save_fail": "Falha ao salvar: {msg}",
+    "toast.wheel_del_confirm": "Excluir este registro do histórico?",
+    "toast.deleted": "Excluído",
+    "toast.del_fail": "Falha ao excluir: {msg}",
+    "toast.copied": "📋 Copiado",
+    "toast.copy_fail": "Falha ao copiar — copie manualmente",
   },
   "en": {
     "common.save": "Save",
@@ -3255,6 +3286,37 @@ const LOCALES = {
     "toast.fb_not_ready": "Firebase not ready",
     "toast.leave_add_fail": "Failed to add leave",
     "toast.leave_added": "Leave added",
+    "wheel.admin_only": "Admin only page",
+    "wheel.login_first": "🔒 Log in as admin first",
+    "wheel.del_entry": "Delete this entry",
+    "wheel.by": "by {by}",
+    "wheel.no_history": "No history yet — spin then click \"Save\" to show here",
+    "wheel.winner_label": "🎉 Lucky winner this round",
+    "wheel.no_prize": "No prize specified",
+    "wheel.save_result": "💾 Save result",
+    "wheel.discard": "✕ Don't count this round",
+    "wheel.subtitle": "Raffle a winner from the Roster — everyone's eligible every round; names aren't removed after winning",
+    "wheel.spin": "Spin!",
+    "wheel.prize_this_round": "🎁 Prize this round",
+    "wheel.prize_ph": "e.g. 1 Boss Card",
+    "wheel.exclude_leave_tip": "Auto-unchecks people on leave today in the 🌴 Leave page",
+    "wheel.exclude_leave_btn": "🌴 Exclude people on leave today",
+    "wheel.include_all": "↺ Include all",
+    "wheel.members_title": "👥 Wheel members",
+    "wheel.roster_empty": "Roster empty — add members in the Roster page first",
+    "wheel.history_title": "📜 Winner history",
+    "toast.wheel_excluded": "{ppl} on leave excluded from the wheel",
+    "toast.wheel_none_leave": "No one on leave today",
+    "toast.wheel_admin_spin": "Must be admin to spin",
+    "toast.wheel_empty": "No names in the wheel",
+    "toast.wheel_admin_online": "Must be admin + online to save",
+    "toast.wheel_saved": "Saved: {name}",
+    "toast.wheel_save_fail": "Save failed: {msg}",
+    "toast.wheel_del_confirm": "Delete this history entry?",
+    "toast.deleted": "Deleted",
+    "toast.del_fail": "Delete failed: {msg}",
+    "toast.copied": "📋 Copied",
+    "toast.copy_fail": "Copy failed — copy manually",
   },
 };
 let currentLocale = (function () {
@@ -9090,9 +9152,9 @@ function genUserPwIntoInput() {
 async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
-    toast("📋 คัดลอกแล้ว", "success");
+    toast(t('toast.copied'), "success");
   } catch (e) {
-    toast("คัดลอกไม่สำเร็จ — copy เอง", "error");
+    toast(t('toast.copy_fail'), "error");
   }
 }
 
@@ -9718,31 +9780,31 @@ function buildWheelHtml() {
   if (!isAdmin()) {
     return `<div class="wheel-view">
       <div class="wheel-hero">
-        <h2>🎡 สุ่มรางวัล</h2>
-        <div class="wheel-meta">หน้านี้สำหรับ admin เท่านั้น</div>
+        <h2>${t('nav.wheel')}</h2>
+        <div class="wheel-meta">${t('wheel.admin_only')}</div>
       </div>
       <div class="wheel-section">
-        <div class="wheel-empty">🔒 ต้อง login เป็น admin ก่อน</div>
+        <div class="wheel-empty">${t('wheel.login_first')}</div>
       </div>
     </div>`;
   }
   const rows = wheelHistorySorted();
   const histHtml = rows.length
     ? rows.map(r => {
-        const when = new Date(r.e.at || 0).toLocaleString("th-TH",
+        const when = new Date(r.e.at || 0).toLocaleString(currentLocale === "en" ? "en-GB" : "pt-BR",
           { timeZone: "Asia/Bangkok", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
         const del = WHEEL_SAFE_KEY_RE.test(r.key)
-          ? `<button class="wh-del" onclick="wheelDeleteHistory('${r.key}')" title="ลบรายการนี้">✕</button>`
+          ? `<button class="wh-del" onclick="wheelDeleteHistory('${r.key}')" title="${t('wheel.del_entry')}">✕</button>`
           : "";
         return `<div class="wheel-history-row">
           <span class="wh-when">${escapeHtml(when)}</span>
           <span class="wh-name">🏆 ${escapeHtml(r.e.winnerName || "?")}</span>
           <span class="wh-prize">${escapeHtml(r.e.prize || "—")}</span>
-          <span class="wh-by">โดย ${escapeHtml(String(r.e.by || "").split("@")[0])}</span>
+          <span class="wh-by">${t('wheel.by', { by: escapeHtml(String(r.e.by || "").split("@")[0]) })}</span>
           ${del}
         </div>`;
       }).join("")
-    : '<div class="wheel-empty">ยังไม่มีประวัติ — หมุนแล้วกด "บันทึกผล" รายการจะโผล่ที่นี่</div>';
+    : `<div class="wheel-empty">${t('wheel.no_history')}</div>`;
 
   const membersHtml = (state.members || []).filter(Boolean).map(m => {
     const on = !wheelUI.excluded[m.id];
@@ -9761,47 +9823,47 @@ function buildWheelHtml() {
   const overlay = !r ? "" : `
   <div class="wheel-overlay">
     <div class="wheel-result-card">
-      <div class="wr-label">🎉 ผู้โชคดีรอบนี้</div>
+      <div class="wr-label">${t('wheel.winner_label')}</div>
       <div class="wr-name">${escapeHtml(r.name)}</div>
       <div class="wr-job">${escapeHtml(r.job || "")}</div>
-      <div class="wr-prize">🎁 ${escapeHtml((wheelUI.prize || "").trim() || "ไม่ได้ระบุรางวัล")}</div>
+      <div class="wr-prize">🎁 ${escapeHtml((wheelUI.prize || "").trim() || t('wheel.no_prize'))}</div>
       <div class="wr-actions">
-        <button class="wr-save" onclick="wheelSaveResult()">💾 บันทึกผล</button>
-        <button class="wr-skip" onclick="wheelDiscardResult()">✕ ไม่นับรอบนี้</button>
+        <button class="wr-save" onclick="wheelSaveResult()">${t('wheel.save_result')}</button>
+        <button class="wr-skip" onclick="wheelDiscardResult()">${t('wheel.discard')}</button>
       </div>
     </div>
   </div>`;
 
   return `<div class="wheel-view">
     <div class="wheel-hero">
-      <h2>🎡 สุ่มรางวัล</h2>
-      <div class="wheel-meta">สุ่มผู้โชคดีจากรายชื่อใน Roster — ทุกคนมีสิทธิ์ทุกรอบ ชื่อไม่ถูกเอาออกหลังได้รางวัล</div>
+      <h2>${t('nav.wheel')}</h2>
+      <div class="wheel-meta">${t('wheel.subtitle')}</div>
     </div>
     <div class="wheel-layout">
       <div class="wheel-stage">
         <div class="wheel-canvas-wrap">
           <canvas id="wheelCanvas"></canvas>
           <canvas id="wheelConfetti"></canvas>
-          <button class="wheel-spin-btn" id="wheelSpinBtn" onclick="wheelSpin()">หมุน!</button>
+          <button class="wheel-spin-btn" id="wheelSpinBtn" onclick="wheelSpin()">${t('wheel.spin')}</button>
         </div>
         <div class="wheel-count" id="wheelCount"></div>
       </div>
       <div class="wheel-panel">
         <div class="wheel-section">
-          <h3>🎁 รางวัลรอบนี้</h3>
-          <input class="wheel-prize-input" id="wheelPrize" maxlength="120" placeholder="เช่น การ์ดบอส 1 ใบ"
+          <h3>${t('wheel.prize_this_round')}</h3>
+          <input class="wheel-prize-input" id="wheelPrize" maxlength="120" placeholder="${t('wheel.prize_ph')}"
                  value="${escapeHtml(wheelUI.prize)}" oninput="wheelUI.prize = this.value">
           <div class="wheel-tools">
-            <button onclick="wheelExcludeOnLeaveToday()" title="ติ๊กออกอัตโนมัติ: คนที่ลงลาวันนี้ไว้ในหน้า 🌴 ลา">🌴 ตัดคนลาวันนี้ออก</button>
-            <button onclick="wheelIncludeAll()">↺ เลือกทุกคน</button>
+            <button onclick="wheelExcludeOnLeaveToday()" title="${t('wheel.exclude_leave_tip')}">${t('wheel.exclude_leave_btn')}</button>
+            <button onclick="wheelIncludeAll()">${t('wheel.include_all')}</button>
           </div>
         </div>
         <div class="wheel-section">
-          <h3>👥 รายชื่อในวงล้อ</h3>
-          <div class="wheel-members">${membersHtml || '<div class="wheel-empty">Roster ว่าง — เพิ่มสมาชิกในหน้า Roster ก่อน</div>'}</div>
+          <h3>${t('wheel.members_title')}</h3>
+          <div class="wheel-members">${membersHtml || `<div class="wheel-empty">${t('wheel.roster_empty')}</div>`}</div>
         </div>
         <div class="wheel-section">
-          <h3>📜 ประวัติผู้ชนะ</h3>
+          <h3>${t('wheel.history_title')}</h3>
           <div class="wheel-history-list">${histHtml}</div>
         </div>
       </div>
@@ -9937,7 +9999,7 @@ function wheelExcludeOnLeaveToday() {
       wheelUI.excluded[m.id] = true;
     }
   });
-  toast(n ? "ตัดคนลาออกจากวงล้อ " + n + " คน" : "ไม่มีคนลงลาวันนี้", n ? "success" : "");
+  toast(n ? t('toast.wheel_excluded', { ppl: plural(n, 'unit.people') }) : t('toast.wheel_none_leave'), n ? "success" : "");
   render();
 }
 
@@ -9948,10 +10010,10 @@ function wheelIncludeAll() {
 }
 
 function wheelSpin() {
-  if (!isAdmin()) { toast("ต้องเป็น admin ถึงจะหมุนได้", "error"); return; }
+  if (!isAdmin()) { toast(t('toast.wheel_admin_spin'), "error"); return; }
   if (wheelUI.spinning || wheelUI.pendingResult) return;
   const list = wheelEligibleMembers();
-  if (!list.length) { toast("ไม่มีรายชื่อในวงล้อ", "error"); return; }
+  if (!list.length) { toast(t('toast.wheel_empty'), "error"); return; }
 
   // Winner decided HERE, before any animation (fair + glitch-proof). The
   // list is frozen for the whole spin so drawWheel keeps slicing the wheel
@@ -9993,7 +10055,7 @@ function wheelSpin() {
 function wheelSaveResult() {
   const r = wheelUI.pendingResult;
   if (!r) return;
-  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin + ออนไลน์ถึงจะบันทึกได้", "error"); return; }
+  if (!isAdmin() || !_fbDB) { toast(t('toast.wheel_admin_online'), "error"); return; }
   const entry = wheelMakeHistoryEntry(r, wheelUI.prize, (_fbUser && _fbUser.email) || "admin", Date.now());
   // Close the modal before the write so the local listener echo renders the
   // already-dismissed state (one rebuild, not overlay-then-dismiss).
@@ -10001,7 +10063,7 @@ function wheelSaveResult() {
   const ref = _fbDB.ref("wheel_history").push();
   ref.set(entry)
     .then(() => {
-      toast("บันทึกแล้ว: " + entry.winnerName, "success");
+      toast(t('toast.wheel_saved', { name: entry.winnerName }), "success");
       // Trim to the newest WHEEL_HISTORY_MAX by entry time (same ordering the
       // history panel displays — key order isn't trustworthy if an entry was
       // ever written under a custom key).
@@ -10019,7 +10081,7 @@ function wheelSaveResult() {
     })
     .catch(e => {
       console.warn("[wheel] save failed", e);
-      toast("บันทึกไม่สำเร็จ: " + (e && e.message || e), "error");
+      toast(t('toast.wheel_save_fail', { msg: e && e.message || e }), "error");
       // Bring the result back so the admin can retry — losing the draw to a
       // network blip would force an unfair re-spin.
       wheelUI.pendingResult = r;
@@ -10036,10 +10098,10 @@ function wheelDiscardResult() {
 function wheelDeleteHistory(key) {
   if (!isAdmin() || !_fbDB) return;
   if (typeof key !== "string" || !/^[A-Za-z0-9_-]+$/.test(key)) return;
-  if (!confirm("ลบรายการประวัตินี้?")) return;
+  if (!confirm(t('toast.wheel_del_confirm'))) return;
   _fbDB.ref("wheel_history/" + key).remove()
-    .then(() => toast("ลบแล้ว", "success"))
-    .catch(e => toast("ลบไม่สำเร็จ: " + (e && e.message || e), "error"));
+    .then(() => toast(t('toast.deleted'), "success"))
+    .catch(e => toast(t('toast.del_fail', { msg: e && e.message || e }), "error"));
 }
 
 function wheelConfetti() {

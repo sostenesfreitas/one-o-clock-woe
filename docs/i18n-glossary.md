@@ -181,3 +181,34 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | Firebase ยังไม่พร้อม (toast) | Firebase not ready | Firebase não está pronto | `toast.fb_not_ready` |
 | เพิ่มลาไม่สำเร็จ (toast) | Failed to add leave | Falha ao adicionar folga | `toast.leave_add_fail` |
 | เพิ่มลาแล้ว (toast) | Leave added | Folga adicionada | `toast.leave_added` |
+| หน้านี้สำหรับ admin เท่านั้น | Admin only page | Esta página é só para admin | `wheel.admin_only` |
+| 🔒 ต้อง login เป็น admin ก่อน | 🔒 Log in as admin first | 🔒 Faça login como admin primeiro | `wheel.login_first` |
+| ลบรายการนี้ | Delete this entry | Excluir este registro | `wheel.del_entry` |
+| โดย {by} | by {by} | por {by} | `wheel.by` |
+| ยังไม่มีประวัติ — หมุนแล้วกด "บันทึกผล" | No history yet — spin then click "Save" | Sem histórico ainda — gire e clique em "Salvar" | `wheel.no_history` |
+| 🎉 ผู้โชคดีรอบนี้ | 🎉 Lucky winner this round | 🎉 Sortudo desta rodada | `wheel.winner_label` |
+| ไม่ได้ระบุรางวัล | No prize specified | Prêmio não especificado | `wheel.no_prize` |
+| 💾 บันทึกผล | 💾 Save result | 💾 Salvar resultado | `wheel.save_result` |
+| ✕ ไม่นับรอบนี้ | ✕ Don't count this round | ✕ Não contar esta rodada | `wheel.discard` |
+| สุ่มผู้โชคดีจากรายชื่อใน Roster — ทุกคนมีสิทธิ์ทุกรอบ ชื่อไม่ถูกเอาออกหลังได้รางวัล | Raffle a winner from the Roster — everyone's eligible every round; names aren't removed after winning | Sorteia um sortudo da lista do Roster — todos concorrem toda rodada; o nome não sai após ganhar | `wheel.subtitle` |
+| หมุน! | Spin! | Girar! | `wheel.spin` |
+| 🎁 รางวัลรอบนี้ | 🎁 Prize this round | 🎁 Prêmio desta rodada | `wheel.prize_this_round` |
+| เช่น การ์ดบอส 1 ใบ | e.g. 1 Boss Card | ex.: 1 Boss Card | `wheel.prize_ph` |
+| ติ๊กออกอัตโนมัติ: คนที่ลงลาวันนี้ไว้ในหน้า 🌴 ลา | Auto-unchecks people on leave today in the 🌴 Leave page | Desmarca automaticamente quem está de folga hoje na página 🌴 Folga | `wheel.exclude_leave_tip` |
+| 🌴 ตัดคนลาวันนี้ออก | 🌴 Exclude people on leave today | 🌴 Tirar quem está de folga hoje | `wheel.exclude_leave_btn` |
+| ↺ เลือกทุกคน | ↺ Include all | ↺ Incluir todos | `wheel.include_all` |
+| 👥 รายชื่อในวงล้อ | 👥 Wheel members | 👥 Nomes na roleta | `wheel.members_title` |
+| Roster ว่าง — เพิ่มสมาชิกในหน้า Roster ก่อน | Roster empty — add members in the Roster page first | Roster vazio — adicione membros na página Roster primeiro | `wheel.roster_empty` |
+| 📜 ประวัติผู้ชนะ | 📜 Winner history | 📜 Histórico de vencedores | `wheel.history_title` |
+| ตัดคนลาออกจากวงล้อ N คน (toast) | N on leave excluded from the wheel | N de folga tirados da roleta | `toast.wheel_excluded` |
+| ไม่มีคนลงลาวันนี้ (toast) | No one on leave today | Ninguém de folga hoje | `toast.wheel_none_leave` |
+| ต้องเป็น admin ถึงจะหมุนได้ (toast) | Must be admin to spin | Precisa ser admin para girar | `toast.wheel_admin_spin` |
+| ไม่มีรายชื่อในวงล้อ (toast) | No names in the wheel | Sem nomes na roleta | `toast.wheel_empty` |
+| ต้องเป็น admin + ออนไลน์ถึงจะบันทึกได้ (toast) | Must be admin + online to save | Precisa ser admin + online para salvar | `toast.wheel_admin_online` |
+| บันทึกแล้ว: {name} (toast) | Saved: {name} | Salvo: {name} | `toast.wheel_saved` |
+| บันทึกไม่สำเร็จ: {msg} (toast) | Save failed: {msg} | Falha ao salvar: {msg} | `toast.wheel_save_fail` |
+| ลบรายการประวัตินี้? (confirm) | Delete this history entry? | Excluir este registro do histórico? | `toast.wheel_del_confirm` |
+| ลบแล้ว (toast) | Deleted | Excluído | `toast.deleted` |
+| ลบไม่สำเร็จ: {msg} (toast) | Delete failed: {msg} | Falha ao excluir: {msg} | `toast.del_fail` |
+| 📋 คัดลอกแล้ว (toast) | 📋 Copied | 📋 Copiado | `toast.copied` |
+| คัดลอกไม่สำเร็จ — copy เอง (toast) | Copy failed — copy manually | Falha ao copiar — copie manualmente | `toast.copy_fail` |
