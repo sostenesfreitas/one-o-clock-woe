@@ -213,3 +213,32 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ลบไม่สำเร็จ: {msg} (toast) | Delete failed: {msg} | Falha ao excluir: {msg} | `toast.del_fail` |
 | 📋 คัดลอกแล้ว (toast) | 📋 Copied | 📋 Copiado | `toast.copied` |
 | คัดลอกไม่สำเร็จ — copy เอง (toast) | Copy failed — copy manually | Falha ao copiar — copie manualmente | `toast.copy_fail` |
+| ✅ สร้าง user สำเร็จ — ส่ง credentials นี้ให้ user | ✅ User created — send these credentials to the user | ✅ User criado — envie estas credenciais ao usuário | `users.created_ok` |
+| 📋 copy ทั้งคู่ | 📋 Copy both | 📋 Copiar ambos | `users.copy_both` |
+| ✕ ปิด | ✕ Close | ✕ Fechar | `users.close` |
+| ⚠️ จะแสดงครั้งเดียว — เก็บไว้ก่อนปิดหน้า / refresh | ⚠️ Shown once only — save before closing / refresh | ⚠️ Mostrado só uma vez — guarde antes de fechar / atualizar | `users.shown_once` |
+| สร้างเมื่อ {dt} โดย {by} | Created {dt} by {by} | Criado em {dt} por {by} | `users.created_meta` |
+| 🗑 ลบ (users page) | 🗑 Delete | 🗑 Excluir | `users.del_btn` |
+| — ยังไม่มี user — สร้างคนแรกได้เลย — | — No users yet — create the first one — | — Nenhum usuário ainda — crie o primeiro — | `users.empty` |
+| 👥 Users · จัดการบัญชี Login | 👥 Users · manage login accounts | 👥 Users · gerenciar contas de login | `users.hero` |
+| สร้าง ID + Password ให้สมาชิกล็อกอินเป็น admin — ไม่ต้องเปิด Firebase Console | Create ID + Password for members to log in as admin — no Firebase Console needed | Crie ID + Password para membros logarem como admin — sem abrir o Firebase Console | `users.subtitle` |
+| ➕ สร้าง User ใหม่ | ➕ Create new User | ➕ Criar novo User | `users.create_new` |
+| ID (a-z, 0-9, _ · 3-20 ตัว) | ID (a-z, 0-9, _ · 3-20 chars) | ID (a-z, 0-9, _ · 3-20 caracteres) | `users.id_label` |
+| เช่น johnny (placeholder) | e.g. johnny | ex.: johnny | `users.id_ph` |
+| Password (อย่างน้อย 6 ตัว) | Password (at least 6 chars) | Password (mín. 6 caracteres) | `users.pw_label` |
+| หรือกดสุ่ม → (placeholder) | or click random → | ou clique em aleatório → | `users.pw_ph` |
+| สุ่มรหัสผ่าน 10 ตัว (title) | Generate a 10-char password | Gerar senha de 10 caracteres | `users.gen_tip` |
+| 🎲 สุ่ม | 🎲 Random | 🎲 Aleatório | `users.gen_btn` |
+| ➕ สร้าง (create btn) | ➕ Create | ➕ Criar | `users.create_btn` |
+| รายชื่อ User | User list | Lista de Users | `users.list_title` |
+| ⓘ ปุ่ม "ลบ" จะเอาออกจาก /users + /admins … | ⓘ The "Delete" button removes from /users + /admins … | ⓘ O botão "Excluir" remove de /users + /admins … | `users.del_note` |
+| ต้องเป็น admin (users toast) | Must be admin | Precisa ser admin | `toast.users_need_admin` |
+| ID ใช้ a-z, 0-9, _ ความยาว 3-20 ตัว | ID: use a-z, 0-9, _ · 3-20 chars | ID: use a-z, 0-9, _ · 3-20 caracteres | `toast.users_id_invalid` |
+| รหัสผ่านต้องอย่างน้อย 6 ตัว | Password must be at least 6 chars | Password precisa ter pelo menos 6 caracteres | `toast.users_pw_short` |
+| ✅ สร้าง user "{username}" สำเร็จ (toast) | ✅ User "{username}" created | ✅ User "{username}" criado | `toast.users_created` |
+| ID "{username}" มีอยู่แล้ว | ID "{username}" already exists | ID "{username}" já existe | `toast.users_id_taken` |
+| รหัสผ่านอ่อนเกินไป | Password too weak | Password muito fraca | `toast.users_pw_weak` |
+| สร้าง user ไม่สำเร็จ: {msg} | Failed to create user: {msg} | Falha ao criar user: {msg} | `toast.users_create_fail` |
+| ลบ user "{username}" ? … (confirm) | Delete user "{username}"? … | Excluir user "{username}"? … | `toast.users_del_confirm` |
+| ✅ ลบ user "{username}" — โปรดลบใน Firebase Auth ด้วย | ✅ User "{username}" deleted — also remove from Firebase Auth | ✅ User "{username}" excluído — remova-o do Firebase Auth também | `toast.users_deleted` |
+| ลบไม่สำเร็จ: {msg} (users toast) | Delete failed: {msg} | Falha ao excluir: {msg} | `toast.users_del_fail` |

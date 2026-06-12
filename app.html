@@ -3106,6 +3106,35 @@ const LOCALES = {
     "toast.del_fail": "Falha ao excluir: {msg}",
     "toast.copied": "📋 Copiado",
     "toast.copy_fail": "Falha ao copiar — copie manualmente",
+    "users.created_ok": "✅ User criado — envie estas credenciais ao usuário",
+    "users.copy_both": "📋 Copiar ambos",
+    "users.close": "✕ Fechar",
+    "users.shown_once": "⚠️ Mostrado só uma vez — guarde antes de fechar / atualizar",
+    "users.created_meta": "Criado em {dt} por {by}",
+    "users.del_btn": "🗑 Excluir",
+    "users.empty": "— Nenhum usuário ainda — crie o primeiro —",
+    "users.hero": "👥 Users · gerenciar contas de login",
+    "users.subtitle": "Crie ID + Password para membros logarem como admin — sem abrir o Firebase Console",
+    "users.create_new": "➕ Criar novo User",
+    "users.id_label": "ID (a-z, 0-9, _ · 3-20 caracteres)",
+    "users.id_ph": "ex.: johnny",
+    "users.pw_label": "Password (mín. 6 caracteres)",
+    "users.pw_ph": "ou clique em aleatório →",
+    "users.gen_tip": "Gerar senha de 10 caracteres",
+    "users.gen_btn": "🎲 Aleatório",
+    "users.create_btn": "➕ Criar",
+    "users.list_title": "Lista de Users",
+    "users.del_note": "ⓘ O botão \"Excluir\" remove de /users + /admins (o login deixa de ter admin), mas a conta do Firebase Auth continua — para excluir de verdade entre no Firebase Console → Authentication → Users",
+    "toast.users_need_admin": "Precisa ser admin",
+    "toast.users_id_invalid": "ID: use a-z, 0-9, _ · 3-20 caracteres",
+    "toast.users_pw_short": "Password precisa ter pelo menos 6 caracteres",
+    "toast.users_created": "✅ User \"{username}\" criado",
+    "toast.users_id_taken": "ID \"{username}\" já existe",
+    "toast.users_pw_weak": "Password muito fraca",
+    "toast.users_create_fail": "Falha ao criar user: {msg}",
+    "toast.users_del_confirm": "Excluir user \"{username}\"?\n\n(A conta do Firebase Auth precisa ser removida no Firebase Console — esta ação revoga o admin e remove da lista)",
+    "toast.users_deleted": "✅ User \"{username}\" excluído — remova-o do Firebase Auth também",
+    "toast.users_del_fail": "Falha ao excluir: {msg}",
   },
   "en": {
     "common.save": "Save",
@@ -3319,6 +3348,35 @@ const LOCALES = {
     "toast.del_fail": "Delete failed: {msg}",
     "toast.copied": "📋 Copied",
     "toast.copy_fail": "Copy failed — copy manually",
+    "users.created_ok": "✅ User created — send these credentials to the user",
+    "users.copy_both": "📋 Copy both",
+    "users.close": "✕ Close",
+    "users.shown_once": "⚠️ Shown once only — save before closing / refresh",
+    "users.created_meta": "Created {dt} by {by}",
+    "users.del_btn": "🗑 Delete",
+    "users.empty": "— No users yet — create the first one —",
+    "users.hero": "👥 Users · manage login accounts",
+    "users.subtitle": "Create ID + Password for members to log in as admin — no Firebase Console needed",
+    "users.create_new": "➕ Create new User",
+    "users.id_label": "ID (a-z, 0-9, _ · 3-20 chars)",
+    "users.id_ph": "e.g. johnny",
+    "users.pw_label": "Password (at least 6 chars)",
+    "users.pw_ph": "or click random →",
+    "users.gen_tip": "Generate a 10-char password",
+    "users.gen_btn": "🎲 Random",
+    "users.create_btn": "➕ Create",
+    "users.list_title": "User list",
+    "users.del_note": "ⓘ The \"Delete\" button removes from /users + /admins (login loses admin), but the Firebase Auth account remains — to truly delete go to Firebase Console → Authentication → Users",
+    "toast.users_need_admin": "Must be admin",
+    "toast.users_id_invalid": "ID: use a-z, 0-9, _ · 3-20 chars",
+    "toast.users_pw_short": "Password must be at least 6 chars",
+    "toast.users_created": "✅ User \"{username}\" created",
+    "toast.users_id_taken": "ID \"{username}\" already exists",
+    "toast.users_pw_weak": "Password too weak",
+    "toast.users_create_fail": "Failed to create user: {msg}",
+    "toast.users_del_confirm": "Delete user \"{username}\"?\n\n(Firebase Auth account must be deleted in Firebase Console — this revokes admin and removes from the list)",
+    "toast.users_deleted": "✅ User \"{username}\" deleted — also remove from Firebase Auth",
+    "toast.users_del_fail": "Delete failed: {msg}",
   },
 };
 let currentLocale = (function () {
@@ -6958,13 +7016,13 @@ function genRandomPassword(len = 10) {
 }
 
 async function createAppUser(username, password) {
-  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return null; }
+  if (!isAdmin() || !_fbDB) { toast(t('toast.users_need_admin'), "error"); return null; }
   username = (username || "").trim().toLowerCase();
   if (!/^[a-z0-9_]{3,20}$/.test(username)) {
-    toast("ID ใช้ a-z, 0-9, _ ความยาว 3-20 ตัว", "error"); return null;
+    toast(t('toast.users_id_invalid'), "error"); return null;
   }
   if (!password || password.length < 6) {
-    toast("รหัสผ่านต้องอย่างน้อย 6 ตัว", "error"); return null;
+    toast(t('toast.users_pw_short'), "error"); return null;
   }
   const email = usernameToEmail(username);
   const secAuth = getSecondaryAuth();
@@ -6988,15 +7046,17 @@ async function createAppUser(username, password) {
       createdBy: myEmail
     });
     await _fbDB.ref(`admins/${adminKey}`).set(true);
-    toast(`✅ สร้าง user "${username}" สำเร็จ`, "success");
+    toast(t('toast.users_created', { username }), "success");
     return { username, password };
   } catch (e) {
-    let msg = e.message || e.code || "create failed";
+    let msg;
     if (e.code === "auth/email-already-in-use")
-      msg = `ID "${username}" มีอยู่แล้ว`;
+      msg = t('toast.users_id_taken', { username });
     else if (e.code === "auth/weak-password")
-      msg = "รหัสผ่านอ่อนเกินไป";
-    toast("สร้าง user ไม่สำเร็จ: " + msg, "error");
+      msg = t('toast.users_pw_weak');
+    else
+      msg = t('toast.users_create_fail', { msg: e.message || e.code || "create failed" });
+    toast(msg, "error");
     console.error("[users] create failed", e);
     // Rollback: if the Auth account was created but a subsequent DB write
     // failed, delete the orphan Auth account so the admin isn't stuck
@@ -7020,16 +7080,16 @@ async function createAppUser(username, password) {
 }
 
 async function deleteAppUser(username) {
-  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return; }
-  if (!confirm(`ลบ user "${username}" ?\n\n(Firebase Auth account ต้องลบเองที่ Firebase Console — หน้านี้แค่ revoke admin role + ลบจากตาราง)`)) return;
+  if (!isAdmin() || !_fbDB) { toast(t('toast.users_need_admin'), "error"); return; }
+  if (!confirm(t('toast.users_del_confirm', { username }))) return;
   const email = usernameToEmail(username);
   const adminKey = emailToAdminKey(email);
   try {
     await _fbDB.ref(`users/${username}`).remove();
     await _fbDB.ref(`admins/${adminKey}`).remove();
-    toast(`✅ ลบ user "${username}" — โปรดลบใน Firebase Auth ด้วย`, "success");
+    toast(t('toast.users_deleted', { username }), "success");
   } catch (e) {
-    toast("ลบไม่สำเร็จ: " + e.message, "error");
+    toast(t('toast.users_del_fail', { msg: e.message }), "error");
     console.error("[users] delete failed", e);
   }
 }
@@ -9170,10 +9230,10 @@ function buildUsersHtml() {
     return `<div class="users-view">
       <div class="users-hero">
         <h2>👥 Users</h2>
-        <div class="users-meta">หน้านี้สำหรับ admin เท่านั้น</div>
+        <div class="users-meta">${t('wheel.admin_only')}</div>
       </div>
       <div class="users-section">
-        <div class="users-empty">🔒 ต้อง login เป็น admin ก่อน</div>
+        <div class="users-empty">${t('wheel.login_first')}</div>
       </div>
     </div>`;
   }
@@ -9188,7 +9248,7 @@ function buildUsersHtml() {
   // handler reads via this.dataset to keep JS-context safety.
   const lastBox = _lastCreatedUser ? `
     <div class="users-credential-box">
-      <div style="font-weight:700;color:#6ee7b7;margin-bottom:6px">✅ สร้าง user สำเร็จ — ส่ง credentials นี้ให้ user</div>
+      <div style="font-weight:700;color:#6ee7b7;margin-bottom:6px">${t('users.created_ok')}</div>
       <div class="row">
         <span>ID:</span>
         <b>${escapeHtml(_lastCreatedUser.username)}</b>
@@ -9202,57 +9262,57 @@ function buildUsersHtml() {
       <div class="row">
         <button class="copy-btn"
           data-copy="${escapeHtml("ID: " + _lastCreatedUser.username + "\nPassword: " + _lastCreatedUser.password)}"
-          onclick="copyToClipboard(this.dataset.copy)">📋 copy ทั้งคู่</button>
+          onclick="copyToClipboard(this.dataset.copy)">${t('users.copy_both')}</button>
         <div style="flex:1"></div>
-        <button class="copy-btn" onclick="dismissLastCredential()">✕ ปิด</button>
+        <button class="copy-btn" onclick="dismissLastCredential()">${t('users.close')}</button>
       </div>
-      <div class="warn">⚠️ จะแสดงครั้งเดียว — เก็บไว้ก่อนปิดหน้า / refresh</div>
+      <div class="warn">${t('users.shown_once')}</div>
     </div>
   ` : "";
 
   const rows = list.length ? list.map(u => {
-    const dt = u.createdAt ? new Date(u.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" }) : "";
+    const dt = u.createdAt ? new Date(u.createdAt).toLocaleString(currentLocale === "en" ? "en-GB" : "pt-BR", { dateStyle: "short", timeStyle: "short" }) : "";
     return `<div class="users-row">
       <span class="u-name">${escapeHtml(u.username || "?")}</span>
       <span class="u-badge">admin</span>
-      <span class="u-meta">สร้างเมื่อ ${escapeHtml(dt)} โดย ${escapeHtml(u.createdBy || "?")}</span>
-      <button class="u-del" data-username="${escapeHtml(u.username)}" onclick="deleteAppUser(this.dataset.username)">🗑 ลบ</button>
+      <span class="u-meta">${t('users.created_meta', { dt: escapeHtml(dt), by: escapeHtml(u.createdBy || "?") })}</span>
+      <button class="u-del" data-username="${escapeHtml(u.username)}" onclick="deleteAppUser(this.dataset.username)">${t('users.del_btn')}</button>
     </div>`;
-  }).join("") : `<div class="users-empty">— ยังไม่มี user — สร้างคนแรกได้เลย —</div>`;
+  }).join("") : `<div class="users-empty">${t('users.empty')}</div>`;
 
   return `<div class="users-view">
     <div class="users-hero">
       <div>
-        <h2>👥 Users · จัดการบัญชี Login</h2>
-        <div class="users-meta">สร้าง ID + Password ให้สมาชิกล็อกอินเป็น admin — ไม่ต้องเปิด Firebase Console</div>
+        <h2>${t('users.hero')}</h2>
+        <div class="users-meta">${t('users.subtitle')}</div>
       </div>
     </div>
 
     <div class="users-section">
-      <h3>➕ สร้าง User ใหม่</h3>
+      <h3>${t('users.create_new')}</h3>
       <div class="users-form">
         <div>
-          <label>ID (a-z, 0-9, _ · 3-20 ตัว)</label>
-          <input id="newUserId" type="text" placeholder="เช่น johnny" maxlength="20"
+          <label>${t('users.id_label')}</label>
+          <input id="newUserId" type="text" placeholder="${t('users.id_ph')}" maxlength="20"
             autocapitalize="off" autocorrect="off" spellcheck="false" />
         </div>
         <div>
-          <label>Password (อย่างน้อย 6 ตัว)</label>
+          <label>${t('users.pw_label')}</label>
           <div class="pw-row">
-            <input id="newUserPw" type="password" placeholder="หรือกดสุ่ม →" />
-            <button class="gen-btn" onclick="genUserPwIntoInput()" title="สุ่มรหัสผ่าน 10 ตัว">🎲 สุ่ม</button>
+            <input id="newUserPw" type="password" placeholder="${t('users.pw_ph')}" />
+            <button class="gen-btn" onclick="genUserPwIntoInput()" title="${t('users.gen_tip')}">${t('users.gen_btn')}</button>
           </div>
         </div>
-        <button class="create-btn" onclick="handleCreateUser()">➕ สร้าง</button>
+        <button class="create-btn" onclick="handleCreateUser()">${t('users.create_btn')}</button>
       </div>
       ${lastBox}
     </div>
 
     <div class="users-section">
-      <h3>📋 รายชื่อ User (${list.length})</h3>
+      <h3>📋 ${t('users.list_title')} (${list.length})</h3>
       <div class="users-list">${rows}</div>
       <div style="margin-top:10px;color:var(--muted);font-size:11px;line-height:1.6">
-        ⓘ ปุ่ม "ลบ" จะเอาออกจาก /users + /admins (ทำให้ login มาก็ไม่มีสิทธิ์ admin แล้ว) แต่ Firebase Auth account ยังอยู่ — ถ้าต้องการลบจริงต้องเข้า Firebase Console → Authentication → Users
+        ${t('users.del_note')}
       </div>
     </div>
   </div>`;

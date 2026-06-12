@@ -1608,6 +1608,15 @@ t("i18n: Wheel keys resolve in both locales", () => {
   app.call("setLocale", "pt-BR");
 });
 
+t("i18n: Users keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "users.create_btn"), "➕ Criar");
+  eq(app.call("t", "users.created_meta", { dt: "X", by: "Y" }), "Criado em X por Y");
+  app.call("setLocale", "en");
+  eq(app.call("t", "users.del_btn"), "🗑 Delete");
+  app.call("setLocale", "pt-BR");
+});
+
 console.log("\n[plural]");
 t("i18n: plural picks singular at n=1", () => {
   app.call("setLocale", "pt-BR");
