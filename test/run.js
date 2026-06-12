@@ -1597,5 +1597,14 @@ t("date: fmtDate is Gregorian + locale month, no Buddhist year", () => {
   ok(/Jun/.test(e) && e.indexOf("2026") >= 0, "en month + year");
 });
 
+t("date: helpers guard bad input", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("dowName", 9), "");
+  eq(app.call("dowShort", -1), "");
+  eq(app.call("fmtDate", "bad"), "bad");
+  eq(app.call("fmtDate", "2026-13-12"), "2026-13-12");
+  app.call("setLocale", "pt-BR");
+});
+
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
 if (fail) { console.log("FAILURES:\n  - " + failures.join("\n  - ") + "\n"); process.exit(1); }

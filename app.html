@@ -3323,6 +3323,7 @@ function fmtDate(iso) {
   const y = parts[0], m = parts[1], d = parts[2];
   if (!y || !m || !d) return String(iso);
   const mon = (MONTH_LOCALES[currentLocale] || MONTH_LOCALES["pt-BR"])[m - 1];
+  if (mon == null) return String(iso);
   return d + " " + mon + " " + y;
 }
 /** Format an epoch ms timestamp into compact "D/M, H:MM" using BKK time.
