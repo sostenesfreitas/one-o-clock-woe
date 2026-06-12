@@ -159,3 +159,25 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ปรับเป้าหรือ rotate ออก | adjust the target or rotate out | ajuste a meta ou faça rotação | `ai.over_target_post` |
 | 📊 สรุปอาชีพในกิลด์ | 📊 Guild job summary | 📊 Resumo de classes da guild | `summary.title` |
 | ยังไม่มีสมาชิก — กด Refresh จาก Sheet | No members yet — click Refresh from Sheet | Ainda não há membros — clique em Refresh da Sheet | `summary.empty` |
+| 🌴 ลา (title) | 🌴 Leave | 🌴 Folga | `leave.title` |
+| 🌴 ลา · กิจ WoE (hero) | 🌴 Leave · WoE event | 🌴 Folga · evento WoE | `leave.hero` |
+| กิจ (event label) | event | evento | `leave.event_label` |
+| วันนี้ | today | hoje | `leave.today_word` |
+| ไม่มีกิจ | No event | Sem evento | `leave.no_event` |
+| ไม่มีกิจวันนี้ (GL = อังคาร/พฤหัส · Overrun = อาทิตย์) | no event today (GL = Tue/Thu · Overrun = Sun) | sem evento hoje (GL = Ter/Qui · Overrun = Dom) | `leave.no_event_today` |
+| ยกเลิกลา | Cancel leave | Cancelar folga | `leave.cancel_leave` |
+| — ยังไม่มีรายการลา — | — No leave entries — | — Nenhuma folga registrada — | `leave.empty` |
+| ลงทะเบียนลาด้านบนได้เลย | Register a leave above | Registre uma folga acima | `leave.empty_hint` |
+| รายการลาจะถูกล้างทุกวันจันทร์ 00:00 | Leave entries are cleared every Monday 00:00 | As folgas são limpas toda segunda 00:00 | `leave.clear_note` |
+| เลือกชื่อ | Select name | Escolher nome | `leave.select_name` |
+| — เลือกสมาชิก — | — Select member — | — Selecionar membro — | `leave.select_member` |
+| วันที่ลา | Leave date | Data da folga | `leave.date_label` |
+| ➕ เพิ่มลา | ➕ Add leave | ➕ Adicionar folga | `leave.add_btn` |
+| ซ่อนวันที่ผ่านไปแล้ว | Hide past dates | Ocultar datas passadas | `leave.hide_past` |
+| N วัน | N days | N dias | `leave.days` |
+| 1 วัน (singular) | 1 day | 1 dia | `leave.days_one` |
+| N รายการ | N entries | N registros | `leave.entries` |
+| 1 รายการ (singular) | 1 entry | 1 registro | `leave.entries_one` |
+| Firebase ยังไม่พร้อม (toast) | Firebase not ready | Firebase não está pronto | `toast.fb_not_ready` |
+| เพิ่มลาไม่สำเร็จ (toast) | Failed to add leave | Falha ao adicionar folga | `toast.leave_add_fail` |
+| เพิ่มลาแล้ว (toast) | Leave added | Folga adicionada | `toast.leave_added` |

@@ -3052,6 +3052,28 @@ const LOCALES = {
     "ai.over_target_post": "ajuste a meta ou faça rotação",
     "summary.title": "📊 Resumo de classes da guild",
     "summary.empty": "Ainda não há membros — clique em Refresh da Sheet",
+    "leave.title": "🌴 Folga",
+    "leave.hero": "🌴 Folga · evento WoE",
+    "leave.event_label": "evento",
+    "leave.today_word": "hoje",
+    "leave.no_event": "Sem evento",
+    "leave.no_event_today": "sem evento hoje (GL = Ter/Qui · Overrun = Dom)",
+    "leave.cancel_leave": "Cancelar folga",
+    "leave.empty": "— Nenhuma folga registrada —",
+    "leave.empty_hint": "Registre uma folga acima",
+    "leave.clear_note": "As folgas são limpas toda segunda 00:00",
+    "leave.select_name": "Escolher nome",
+    "leave.select_member": "— Selecionar membro —",
+    "leave.date_label": "Data da folga",
+    "leave.add_btn": "➕ Adicionar folga",
+    "leave.hide_past": "Ocultar datas passadas",
+    "leave.days": "{n} dias",
+    "leave.days_one": "{n} dia",
+    "leave.entries": "{n} registros",
+    "leave.entries_one": "{n} registro",
+    "toast.fb_not_ready": "Firebase não está pronto",
+    "toast.leave_add_fail": "Falha ao adicionar folga",
+    "toast.leave_added": "Folga adicionada",
   },
   "en": {
     "common.save": "Save",
@@ -3211,6 +3233,28 @@ const LOCALES = {
     "ai.over_target_post": "adjust the target or rotate out",
     "summary.title": "📊 Guild job summary",
     "summary.empty": "No members yet — click Refresh from Sheet",
+    "leave.title": "🌴 Leave",
+    "leave.hero": "🌴 Leave · WoE event",
+    "leave.event_label": "event",
+    "leave.today_word": "today",
+    "leave.no_event": "No event",
+    "leave.no_event_today": "no event today (GL = Tue/Thu · Overrun = Sun)",
+    "leave.cancel_leave": "Cancel leave",
+    "leave.empty": "— No leave entries —",
+    "leave.empty_hint": "Register a leave above",
+    "leave.clear_note": "Leave entries are cleared every Monday 00:00",
+    "leave.select_name": "Select name",
+    "leave.select_member": "— Select member —",
+    "leave.date_label": "Leave date",
+    "leave.add_btn": "➕ Add leave",
+    "leave.hide_past": "Hide past dates",
+    "leave.days": "{n} days",
+    "leave.days_one": "{n} day",
+    "leave.entries": "{n} entries",
+    "leave.entries_one": "{n} entry",
+    "toast.fb_not_ready": "Firebase not ready",
+    "toast.leave_add_fail": "Failed to add leave",
+    "toast.leave_added": "Leave added",
   },
 };
 let currentLocale = (function () {
@@ -3348,7 +3392,6 @@ function bkkDow(isoStr) {
   const [y, m, d] = isoStr.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
 }
-const DOW_TH = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
 function isEventDay(isoStr) {
   // Tuesday/Thursday → GL · Sunday → Overrun · else null
   const d = bkkDow(isoStr);
@@ -3356,13 +3399,7 @@ function isEventDay(isoStr) {
   if (d === 0) return "Overrun";
   return null;
 }
-function fmtThaiDate(isoStr) {
-  const [y, m, d] = isoStr.split("-").map(Number);
-  const TH_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-  return `${d} ${TH_MONTHS[m-1]} ${y+543}`;
-}
-/* Locale-aware weekday + date display (replaces the Thai-Buddhist DOW_TH/fmtThaiDate
- * at display sites; isEventDay's NUMERIC weekday logic is unaffected). 0=Sun..6=Sat. */
+/* Locale-aware weekday + date display. 0=Sun..6=Sat. */
 const DOW_LOCALES = {
   "pt-BR": ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"],
   "en":    ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
@@ -9191,13 +9228,13 @@ function buildLeaveHtml() {
     return `
       <div class="leave-view">
         <div class="leave-hero">
-          <h2>🌴 ลา</h2>
+          <h2>${t('leave.title')}</h2>
         </div>
-        <div class="auction-warning">⚠️ Firebase ยังไม่ได้ตั้งค่า</div>
+        <div class="auction-warning">⚠️ ${t('roster.fb_not_set')}</div>
       </div>`;
   }
   const today    = todayBkkISO();
-  const todayDow = DOW_TH[bkkDow(today)];
+  const todayDow = dowName(bkkDow(today));
   const todayEv  = isEventDay(today);
   // Default form values (only set if not already set by user this session)
   if (!_leaveFormDate) _leaveFormDate = nextEventDayISO();
@@ -9213,8 +9250,8 @@ function buildLeaveHtml() {
   const formDow = bkkDow(_leaveFormDate);
   const formEv  = isEventDay(_leaveFormDate);
   const hintHtml = formEv
-    ? `<div class="leave-hint has-event">📅 ${DOW_TH[formDow]} · มีกิจ <b>${formEv}</b> วันนี้</div>`
-    : `<div class="leave-hint no-event">📅 ${DOW_TH[formDow]} · ไม่มีกิจวันนี้ (กิจ GL = อังคาร/พฤหัส · Overrun = อาทิตย์)</div>`;
+    ? `<div class="leave-hint has-event">📅 ${dowName(formDow)} · ${t('leave.event_label')} <b>${formEv}</b> ${t('leave.today_word')}</div>`
+    : `<div class="leave-hint no-event">📅 ${dowName(formDow)} · ${t('leave.no_event_today')}</div>`;
   // Group all leave entries by date
   const byDate = {}; // { "YYYY-MM-DD": [ {id, name, job}, ... ] }
   for (const [memId, dates] of Object.entries(state.leaves || {})) {
@@ -9237,59 +9274,59 @@ function buildLeaveHtml() {
     const isPast  = date < today;
     const evPill = ev
       ? `<span class="leave-group-event ${ev === "GL" ? "gl" : "overrun"}">${ev}</span>`
-      : `<span class="leave-group-event none">ไม่มีกิจ</span>`;
-    const todayBadge = isToday ? `<span class="leave-group-event" style="background:rgba(34,197,94,0.18);border-color:#22c55e;color:#4ade80">วันนี้</span>` : "";
+      : `<span class="leave-group-event none">${t('leave.no_event')}</span>`;
+    const todayBadge = isToday ? `<span class="leave-group-event" style="background:rgba(34,197,94,0.18);border-color:#22c55e;color:#4ade80">${t('leave.today_word')}</span>` : "";
     const cardsHtml = entries.map(e => `
       <div class="leave-card">
         ${e.job ? `<span class="leave-card-job">${escapeHtml(e.job)}</span>` : ""}
         <span class="leave-card-name">${escapeHtml(e.name)}</span>
-        <button class="leave-card-del" onclick="leaveRemove('${e.id}','${date}')" title="ยกเลิกลา">✕</button>
+        <button class="leave-card-del" onclick="leaveRemove('${e.id}','${date}')" title="${t('leave.cancel_leave')}">✕</button>
       </div>
     `).join("");
     return `
       <div class="leave-group ${isToday ? "is-today" : ""} ${isPast ? "is-past" : ""}">
         <div class="leave-group-head">
-          <span class="leave-group-date">${fmtThaiDate(date)} <span class="leave-group-dow">· ${DOW_TH[dow]}</span></span>
+          <span class="leave-group-date">${fmtDate(date)} <span class="leave-group-dow">· ${dowName(dow)}</span></span>
           ${evPill}
           ${todayBadge}
-          <span class="leave-group-count">${entries.length} คน</span>
+          <span class="leave-group-count">${plural(entries.length, 'unit.people')}</span>
         </div>
         <div class="leave-list">${cardsHtml}</div>
       </div>`;
   }).join("");
   const emptyHtml = visibleDates.length === 0
-    ? `<div class="leave-empty">— ยังไม่มีรายการลา —<br><span style="font-size:11px">ลงทะเบียนลาด้านบนได้เลย</span></div>`
+    ? `<div class="leave-empty">${t('leave.empty')}<br><span style="font-size:11px">${t('leave.empty_hint')}</span></div>`
     : "";
   return `
     <div class="leave-view">
       <div class="leave-hero">
-        <h2>🌴 ลา · กิจ WoE</h2>
+        <h2>${t('leave.hero')}</h2>
         <span class="leave-today ${todayEv ? "" : "no-event"}">
-          วันนี้ ${todayDow} · ${todayEv ? `มีกิจ ${todayEv}` : "ไม่มีกิจ"}
+          ${t('leave.today_word')} ${todayDow} · ${todayEv ? `${t('leave.event_label')} ${todayEv}` : t('leave.no_event')}
         </span>
         <div style="flex:1"></div>
-        <span style="font-size:11px;color:var(--muted)">รายการลาจะถูกล้างทุกวันจันทร์ 00:00</span>
+        <span style="font-size:11px;color:var(--muted)">${t('leave.clear_note')}</span>
       </div>
       <div class="leave-form">
         <div class="leave-form-field">
-          <label>เลือกชื่อ</label>
+          <label>${t('leave.select_name')}</label>
           <select id="leaveMemberSelect" onchange="leaveFormSetMember(this.value)">
-            <option value="">— เลือกสมาชิก —</option>
+            <option value="">${t('leave.select_member')}</option>
             ${memOpts}
           </select>
         </div>
         <div class="leave-form-field">
-          <label>วันที่ลา</label>
+          <label>${t('leave.date_label')}</label>
           <input type="date" id="leaveDateInput" min="${today}" value="${_leaveFormDate}" onchange="leaveFormSetDate(this.value)" />
         </div>
         <button class="leave-add-btn" onclick="leaveAdd()" ${!_leaveFormMemberId || !_leaveFormDate ? "disabled" : ""}>
-          ➕ เพิ่มลา
+          ${t('leave.add_btn')}
         </button>
         ${hintHtml}
       </div>
       <div class="leave-filter-bar">
-        <label><input type="checkbox" ${_leaveHideToday ? "checked" : ""} onchange="leaveSetHidePast(this.checked)" /> ซ่อนวันที่ผ่านไปแล้ว</label>
-        <span style="color:var(--muted);font-size:11px;margin-left:auto">รวม ${allDates.length} วัน · ${Object.values(byDate).reduce((s,a)=>s+a.length,0)} รายการ</span>
+        <label><input type="checkbox" ${_leaveHideToday ? "checked" : ""} onchange="leaveSetHidePast(this.checked)" /> ${t('leave.hide_past')}</label>
+        <span style="color:var(--muted);font-size:11px;margin-left:auto">Total ${plural(allDates.length, 'leave.days')} · ${plural(Object.values(byDate).reduce((s,a)=>s+a.length,0), 'leave.entries')}</span>
       </div>
       <div class="leave-groups">
         ${groupsHtml}
@@ -9305,7 +9342,7 @@ function leaveSetHidePast(v)   { _leaveHideToday    = !!v; render(); }
 
 function leaveAdd() {
   if (!_leaveFormMemberId || !_leaveFormDate) return;
-  if (!_fbDB) { toast("Firebase ยังไม่พร้อม", "error"); return; }
+  if (!_fbDB) { toast(t("toast.fb_not_ready"), "error"); return; }
   const memId = _leaveFormMemberId;
   const date  = _leaveFormDate;
   // Reflect locally for snappy UI; Firebase listener will confirm.
@@ -9313,12 +9350,12 @@ function leaveAdd() {
   state.leaves[memId][date] = true;
   // Push to Firebase. Path-level write so race-safe.
   _fbDB.ref(`leaves/${memId}/${date}`).set(true)
-    .catch(e => { console.warn("[leave] write failed", e); toast("เพิ่มลาไม่สำเร็จ", "error"); });
+    .catch(e => { console.warn("[leave] write failed", e); toast(t("toast.leave_add_fail"), "error"); });
   // Keep member selected but offer to clear for the next add — clearing makes
   // it easier to add many people for the same date.
   _leaveFormMemberId = "";
   render();
-  toast("เพิ่มลาแล้ว", "success");
+  toast(t("toast.leave_added"), "success");
 }
 
 function leaveRemove(memId, date) {

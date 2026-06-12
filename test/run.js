@@ -1586,6 +1586,16 @@ t("i18n: Summary + AI keys resolve in both locales", () => {
   app.call("setLocale", "pt-BR");
 });
 
+t("i18n: Leave keys + day/date helpers", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "leave.add_btn"), "➕ Adicionar folga");
+  eq(app.call("plural", 1, "leave.days"), "1 dia");
+  eq(app.call("plural", 3, "leave.days"), "3 dias");
+  app.call("setLocale", "en");
+  eq(app.call("t", "leave.no_event"), "No event");
+  app.call("setLocale", "pt-BR");
+});
+
 console.log("\n[plural]");
 t("i18n: plural picks singular at n=1", () => {
   app.call("setLocale", "pt-BR");
