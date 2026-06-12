@@ -15,6 +15,7 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ซ่อนคนลา | Hide on leave | Ocultar quem está de folga | `sidebar.hide_leave` |
 | ตี้ N | Party N | Grupo N | `party.label` |
 | N คน | N people | N pessoas | `unit.people` |
+| 1 คน (singular) | 1 person | 1 pessoa | `unit.people_one` |
 | (ตี้ 1–8 / 9–16) | (Parties 1–8 / 9–16) | (Grupos 1–8 / 9–16) | `league.party_range` |
 | จัดเรียงตามอาชีพ (Knight → …) | Sort by job (Knight → …) | Ordenar por classe (Knight → …) | `party.sort_by_job` |
 | จัดเรียงทุกตี้ตามอาชีพ (Knight → …) | Sort all parties by job (Knight → …) | Ordenar todos os grupos por classe (Knight → …) | `party.sort_all_by_job` |
@@ -60,6 +61,7 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | 💾 เซฟ | 💾 Save | 💾 Salvar | `roster.save_btn` |
 | เซฟข้อมูลของฉัน | Save my data | Salvar meus dados | `roster.save_mine_tip` |
 | N อาชีพ | N jobs | N classes | `roster.job_count` |
+| 1 อาชีพ (singular) | 1 job | 1 classe | `roster.job_count_one` |
 | แก้ในชื่อ: | Editing as: | Editando como: | `roster.editing_as` |
 | เปลี่ยน / ออก | Change / Leave | Trocar / Sair | `roster.change_leave` |
 | — เลือกชื่อตัวเอง เพื่อแก้ข้อมูล — | — Select your name to edit — | — Selecione seu nome para editar — | `roster.claim_ph` |
@@ -133,21 +135,20 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ใช้/มี | Used/Have | Usado/Tem | `auction.used_have` |
 | ⚠️ ยังไม่มีสมาชิก — กด Refresh จาก Sheet เพื่อให้วิเคราะห์ได้ | ⚠️ No members yet — click Refresh from Sheet to analyze | ⚠️ Ainda não há membros — clique em Refresh da Sheet para analisar | `ai.no_members` |
 | อาชีพเยอะที่สุด: | Most common job: | Classe mais numerosa: | `ai.top_job` |
-| {n} คน · {pct}% | {n} people · {pct}% | {n} pessoas · {pct}% | `ai.people_pct` |
+| {ppl} · {pct}% | {ppl} · {pct}% | {ppl} · {pct}% | `ai.people_pct` |
 | อาชีพน้อยที่สุด: | Least common job: | Classe menos numerosa: | `ai.bottom_job` |
 | ⚠️ ยังไม่ได้ตั้งเป้าหมาย — … | ⚠️ No targets set — fill the "Target" field to analyze over/under | ⚠️ Metas não definidas — preencha o campo "Meta" para analisar excesso/falta | `ai.no_targets` |
-| เกินสุทธิ {n} คน | Net excess of {n} people | Excesso líquido de {n} pessoas | `ai.net_over` |
-| ขาดสุทธิ {n} คน | Net shortfall of {n} people | Falta líquida de {n} pessoas | `ai.net_short` |
+| เกินสุทธิ {ppl} | Net excess of {ppl} | Excesso líquido de {ppl} | `ai.net_over` |
+| ขาดสุทธิ {ppl} | Net shortfall of {ppl} | Falta líquida de {ppl} | `ai.net_short` |
 | เทียบเป้ารวม (เฉพาะอาชีพที่ตั้งเป้า): มี | Vs target (jobs with a target): have | Comparado à meta (só classes com meta): tem | `ai.vs_target_pre` |
 | / เป้า | / target | / meta | `ai.vs_target_mid` |
 | (ตรงเป้า {b} · เกิน {m} · ขาด {f} อาชีพ) | (on target {b} · over {m} · short {f} jobs) | (no alvo {b} · excesso {m} · falta {f} classes) | `ai.vs_target_break` |
 | เยอะเกินไป ({n}): | Too many ({n}): | Excesso ({n}): | `ai.too_many_hdr` |
 | น้อยเกินไป / ขาด ({n}): | Too few / short ({n}): | Insuficiente / falta ({n}): | `ai.too_few_hdr` |
 | สมดุล ({n}): | Balanced ({n}): | Equilibrado ({n}): | `ai.balanced_hdr` |
-| เกิน {n} คน | over by {n} people | excesso de {n} pessoas | `ai.over_by` |
-| ขาด {n} คน | short by {n} people | falta {n} pessoas | `ai.short_by` |
+| เกิน {ppl} | over by {ppl} | excesso de {ppl} | `ai.over_by` |
+| ขาด {ppl} | short by {ppl} | falta {ppl} | `ai.short_by` |
 | ย้าย | Move | Mover | `ai.move` |
-| คน: | people: | pessoas: | `ai.people_colon` |
 | คำแนะนำ (ให้ตรงเป้าพอดี): | Suggestion (to hit target exactly): | Sugestão (para bater a meta exata): | `ai.advice_exact` |
 | ที่เหลือต้องหาเพิ่ม | Still need to recruit | Ainda faltam recrutar | `ai.still_need` |
 | อีก {n} คน | {n} more | mais {n} | `ai.more_n` |

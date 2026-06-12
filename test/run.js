@@ -1157,8 +1157,8 @@ console.log("\n[summary exact targets]");
     ok(html.includes("Comparado à meta"), "net summary line present");
     ok(html.includes("<b>34</b> / meta <b>34</b>"), "exact have/target sums");
     ok(html.includes("Exato"), "net zero stated precisely");
-    ok(html.includes("High Priest") && html.includes("falta 1 pessoas"), "off-by-one ขาด reported");
-    ok(html.includes("Paladin") && html.includes("excesso de 1 pessoas"), "off-by-one เกิน reported");
+    ok(html.includes("High Priest") && html.includes("falta 1 pessoa"), "off-by-one ขาด reported");
+    ok(html.includes("Paladin") && html.includes("excesso de 1 pessoa"), "off-by-one เกิน reported");
     ok(html.includes("Mover <b>1</b>"), "quantified move suggestion");
   });
 
@@ -1579,10 +1579,22 @@ t("i18n: auction status labels resolve in both locales", () => {
 t("i18n: Summary + AI keys resolve in both locales", () => {
   app.call("setLocale", "pt-BR");
   eq(app.call("t", "summary.title"), "📊 Resumo de classes da guild");
-  eq(app.call("t", "ai.over_by", { n: 3 }), "excesso de 3 pessoas");
+  eq(app.call("t", "ai.over_by", { ppl: "3 pessoas" }), "excesso de 3 pessoas");
   eq(app.call("t", "ai.vs_target_break", { b: 1, m: 2, f: 0 }), "(no alvo 1 · excesso 2 · falta 0 classes)");
   app.call("setLocale", "en");
-  eq(app.call("t", "ai.short_by", { n: 2 }), "short by 2 people");
+  eq(app.call("t", "ai.short_by", { ppl: "2 people" }), "short by 2 people");
+  app.call("setLocale", "pt-BR");
+});
+
+console.log("\n[plural]");
+t("i18n: plural picks singular at n=1", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("plural", 1, "unit.people"), "1 pessoa");
+  eq(app.call("plural", 3, "unit.people"), "3 pessoas");
+  eq(app.call("plural", 1, "roster.job_count"), "1 classe");
+  app.call("setLocale", "en");
+  eq(app.call("plural", 1, "unit.people"), "1 person");
+  eq(app.call("plural", 2, "unit.people"), "2 people");
   app.call("setLocale", "pt-BR");
 });
 

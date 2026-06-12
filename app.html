@@ -2908,6 +2908,7 @@ const LOCALES = {
     "sidebar.hide_leave": "Ocultar quem está de folga",
     "party.label": "Grupo {n}",
     "unit.people": "{n} pessoas",
+    "unit.people_one": "{n} pessoa",
     "league.party_range": "(Grupos {range})",
     "party.sort_by_job": "Ordenar por classe (Knight → Paladin → Wizard → …)",
     "party.sort_all_by_job": "Ordenar todos os grupos por classe (Knight → Paladin → Wizard → …)",
@@ -2953,6 +2954,7 @@ const LOCALES = {
     "roster.save_btn": "💾 Salvar",
     "roster.save_mine_tip": "Salvar meus dados",
     "roster.job_count": "{n} classes",
+    "roster.job_count_one": "{n} classe",
     "roster.editing_as": "Editando como:",
     "roster.change_leave": "Trocar / Sair",
     "roster.claim_ph": "— Selecione seu nome para editar —",
@@ -3026,21 +3028,20 @@ const LOCALES = {
     "auction.used_have": "Usado/Tem",
     "ai.no_members": "⚠️ Ainda não há membros — clique em Refresh da Sheet para analisar",
     "ai.top_job": "Classe mais numerosa:",
-    "ai.people_pct": "{n} pessoas · {pct}%",
+    "ai.people_pct": "{ppl} · {pct}%",
     "ai.bottom_job": "Classe menos numerosa:",
     "ai.no_targets": "⚠️ Metas não definidas — preencha o campo \"Meta\" para analisar excesso/falta",
-    "ai.net_over": "Excesso líquido de {n} pessoas",
-    "ai.net_short": "Falta líquida de {n} pessoas",
+    "ai.net_over": "Excesso líquido de {ppl}",
+    "ai.net_short": "Falta líquida de {ppl}",
     "ai.vs_target_pre": "Comparado à meta (só classes com meta): tem",
     "ai.vs_target_mid": "/ meta",
     "ai.vs_target_break": "(no alvo {b} · excesso {m} · falta {f} classes)",
     "ai.too_many_hdr": "Excesso ({n}):",
     "ai.too_few_hdr": "Insuficiente / falta ({n}):",
     "ai.balanced_hdr": "Equilibrado ({n}):",
-    "ai.over_by": "excesso de {n} pessoas",
-    "ai.short_by": "falta {n} pessoas",
+    "ai.over_by": "excesso de {ppl}",
+    "ai.short_by": "falta {ppl}",
     "ai.move": "Mover",
-    "ai.people_colon": "pessoas:",
     "ai.advice_exact": "Sugestão (para bater a meta exata):",
     "ai.still_need": "Ainda faltam recrutar",
     "ai.more_n": "mais {n}",
@@ -3066,6 +3067,7 @@ const LOCALES = {
     "sidebar.hide_leave": "Hide on leave",
     "party.label": "Party {n}",
     "unit.people": "{n} people",
+    "unit.people_one": "{n} person",
     "league.party_range": "(Parties {range})",
     "party.sort_by_job": "Sort by job (Knight → Paladin → Wizard → …)",
     "party.sort_all_by_job": "Sort all parties by job (Knight → Paladin → Wizard → …)",
@@ -3111,6 +3113,7 @@ const LOCALES = {
     "roster.save_btn": "💾 Save",
     "roster.save_mine_tip": "Save my data",
     "roster.job_count": "{n} jobs",
+    "roster.job_count_one": "{n} job",
     "roster.editing_as": "Editing as:",
     "roster.change_leave": "Change / Leave",
     "roster.claim_ph": "— Select your name to edit —",
@@ -3184,21 +3187,20 @@ const LOCALES = {
     "auction.used_have": "Used/Have",
     "ai.no_members": "⚠️ No members yet — click Refresh from Sheet to analyze",
     "ai.top_job": "Most common job:",
-    "ai.people_pct": "{n} people · {pct}%",
+    "ai.people_pct": "{ppl} · {pct}%",
     "ai.bottom_job": "Least common job:",
     "ai.no_targets": "⚠️ No targets set — fill the \"Target\" field to analyze over/under",
-    "ai.net_over": "Net excess of {n} people",
-    "ai.net_short": "Net shortfall of {n} people",
+    "ai.net_over": "Net excess of {ppl}",
+    "ai.net_short": "Net shortfall of {ppl}",
     "ai.vs_target_pre": "Vs target (jobs with a target): have",
     "ai.vs_target_mid": "/ target",
     "ai.vs_target_break": "(on target {b} · over {m} · short {f} jobs)",
     "ai.too_many_hdr": "Too many ({n}):",
     "ai.too_few_hdr": "Too few / short ({n}):",
     "ai.balanced_hdr": "Balanced ({n}):",
-    "ai.over_by": "over by {n} people",
-    "ai.short_by": "short by {n} people",
+    "ai.over_by": "over by {ppl}",
+    "ai.short_by": "short by {ppl}",
     "ai.move": "Move",
-    "ai.people_colon": "people:",
     "ai.advice_exact": "Suggestion (to hit target exactly):",
     "ai.still_need": "Still need to recruit",
     "ai.more_n": "{n} more",
@@ -3228,6 +3230,10 @@ function t(key, params) {
   }
   return s;
 }
+
+/* pt/en pluralization: n===1 → the "<base>_one" key, else "<base>" key. Both
+ * receive {n}. Define both keys in LOCALES (e.g. unit.people + unit.people_one). */
+function plural(n, baseKey) { return t(n === 1 ? baseKey + "_one" : baseKey, { n }); }
 
 /* Fill static markup: <el data-i18n="key"> sets textContent;
  * <el data-i18n-attr="placeholder:key,title:key2"> sets attributes. */
@@ -5206,7 +5212,7 @@ function buildBfHtml(bfIdx) {
     <div class="bf ${bfIdx===1?'sub':''}">
       <div class="bf-head">
         <span>${bfIdx===0?'🏰':'🏯'} ${title}</span>
-        <span class="count">${t("unit.people", { n: totalInBf })}</span>
+        <span class="count">${plural(totalInBf, "unit.people")}</span>
         ${sortAllBtn ? '<div style="flex:1"></div>' + sortAllBtn : ''}
       </div>
       ${partiesHtml}
@@ -5231,7 +5237,7 @@ function buildOverrunHtml() {
       <div class="bg-card" style="--gc:${g.color}">
         <div class="bg-head">
           <span>● ${g.name} Party</span>
-          <span class="count">${t("unit.people", { n: total })}</span>
+          <span class="count">${plural(total, "unit.people")}</span>
           ${sortAllBtn ? '<div style="flex:1"></div>' + sortAllBtn : ''}
         </div>
         ${rows}
@@ -5432,9 +5438,9 @@ function buildAiComment(jobs, counts, targets, total) {
   const bottom = sorted[sorted.length - 1];
 
   const lines = [];
-  lines.push(`<div class="ai-line">🏆 ${t('ai.top_job')} <b>${escapeHtml(top)}</b> (${t('ai.people_pct',{n:counts[top]||0, pct:((counts[top]||0)/total*100).toFixed(0)})})</div>`);
+  lines.push(`<div class="ai-line">🏆 ${t('ai.top_job')} <b>${escapeHtml(top)}</b> (${t('ai.people_pct',{ppl: plural(counts[top]||0,'unit.people'), pct:((counts[top]||0)/total*100).toFixed(0)})})</div>`);
   if (bottom !== top) {
-    lines.push(`<div class="ai-line">📉 ${t('ai.bottom_job')} <b>${escapeHtml(bottom)}</b> (${t('unit.people',{n:counts[bottom]||0})})</div>`);
+    lines.push(`<div class="ai-line">📉 ${t('ai.bottom_job')} <b>${escapeHtml(bottom)}</b> (${plural(counts[bottom]||0, 'unit.people')})</div>`);
   }
 
   const hasTargets = tooMany.length || tooFew.length || balanced.length;
@@ -5448,21 +5454,21 @@ function buildAiComment(jobs, counts, targets, total) {
   const netTxt = net === 0
     ? `<b class="balanced">${t('auction.status_exact')}</b>`
     : net > 0
-      ? `<b class="too-many">${t('ai.net_over',{n:net})}</b>`
-      : `<b class="too-few">${t('ai.net_short',{n:-net})}</b>`;
+      ? `<b class="too-many">${t('ai.net_over',{ppl: plural(net,'unit.people')})}</b>`
+      : `<b class="too-few">${t('ai.net_short',{ppl: plural(-net,'unit.people')})}</b>`;
   lines.push(`<div class="ai-line" style="margin-top:6px">🎯 ${t('ai.vs_target_pre')} <b>${haveSum}</b> ${t('ai.vs_target_mid')} <b>${targetSum}</b> → ${netTxt}` +
     ` <span style="color:var(--muted)">${t('ai.vs_target_break',{b:balanced.length,m:tooMany.length,f:tooFew.length})}</span></div>`);
 
   if (tooMany.length) {
     lines.push(`<div class="ai-line" style="margin-top:8px">🔴 <b class="too-many">${t('ai.too_many_hdr',{n:tooMany.length})}</b></div>`);
     tooMany.sort((a,b)=>b.by-a.by).forEach(it => {
-      lines.push(`<div class="ai-sub">• ${escapeHtml(it.job)} ${t('ai.over_by',{n:it.by})} <span style="color:var(--muted)">(${it.c}/${it.t})</span></div>`);
+      lines.push(`<div class="ai-sub">• ${escapeHtml(it.job)} ${t('ai.over_by',{ppl: plural(it.by,'unit.people')})} <span style="color:var(--muted)">(${it.c}/${it.t})</span></div>`);
     });
   }
   if (tooFew.length) {
     lines.push(`<div class="ai-line" style="margin-top:8px">🟡 <b class="too-few">${t('ai.too_few_hdr',{n:tooFew.length})}</b></div>`);
     tooFew.sort((a,b)=>b.by-a.by).forEach(it => {
-      lines.push(`<div class="ai-sub">• ${escapeHtml(it.job)} ${t('ai.short_by',{n:it.by})} <span style="color:var(--muted)">(${it.c}/${it.t})</span></div>`);
+      lines.push(`<div class="ai-sub">• ${escapeHtml(it.job)} ${t('ai.short_by',{ppl: plural(it.by,'unit.people')})} <span style="color:var(--muted)">(${it.c}/${it.t})</span></div>`);
     });
   }
   if (balanced.length) {
@@ -5480,7 +5486,7 @@ function buildAiComment(jobs, counts, targets, total) {
         if (g.by <= 0) break;
         if (k.by <= 0) continue;
         const n = Math.min(g.by, k.by);
-        moves.push(`${t('ai.move')} <b>${n}</b> ${t('ai.people_colon')} <b class="too-many">${escapeHtml(g.job)}</b> → <b class="too-few">${escapeHtml(k.job)}</b>`);
+        moves.push(`${t('ai.move')} <b>${n}</b>: <b class="too-many">${escapeHtml(g.job)}</b> → <b class="too-few">${escapeHtml(k.job)}</b>`);
         g.by -= n; k.by -= n;
       }
     }
@@ -5493,9 +5499,9 @@ function buildAiComment(jobs, counts, targets, total) {
       lines.push(`<div class="ai-sub">• ${t('ai.still_need')}: ${leftShort.map(k => `<b class="too-few">${escapeHtml(k.job)}</b> ${t('ai.more_n',{n:k.by})}`).join(", ")}</div>`);
     }
   } else if (tooFew.length) {
-    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>${t('ai.advice')}</b> ${t('ai.recruit_pre')} ${tooFew.map(k => `<b class="too-few">${escapeHtml(k.job)}</b> ${t('unit.people',{n:k.by})}`).join(", ")} ${t('ai.recruit_post')}</div>`);
+    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>${t('ai.advice')}</b> ${t('ai.recruit_pre')} ${tooFew.map(k => `<b class="too-few">${escapeHtml(k.job)}</b> ${plural(k.by,'unit.people')}`).join(", ")} ${t('ai.recruit_post')}</div>`);
   } else if (tooMany.length) {
-    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>${t('ai.advice')}</b> ${t('ai.over_target_pre')} ${tooMany.map(it => `<b class="too-many">${escapeHtml(it.job)}</b> ${t('unit.people',{n:it.by})}`).join(", ")} — ${t('ai.over_target_post')}</div>`);
+    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>${t('ai.advice')}</b> ${t('ai.over_target_pre')} ${tooMany.map(it => `<b class="too-many">${escapeHtml(it.job)}</b> ${plural(it.by,'unit.people')}`).join(", ")} — ${t('ai.over_target_post')}</div>`);
   }
   return lines.join("");
 }
@@ -5534,8 +5540,8 @@ function buildSummaryHtml() {
       <div class="summary-total">
         <span>${t('summary.title')}</span>
         <div class="badges">
-          <span>${t('unit.people',{n:total})}</span>
-          <span>${t('roster.job_count',{n:jobs.length})}</span>
+          <span>${plural(total, 'unit.people')}</span>
+          <span>${plural(jobs.length, 'roster.job_count')}</span>
         </div>
       </div>
       <div class="summary-grid">
@@ -5551,7 +5557,7 @@ function buildSummaryHtml() {
           <tbody>${rows || `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">${t('summary.empty')}</td></tr>`}</tbody>
           ${jobs.length ? `<tfoot>
             <tr>
-              <td class="label">${t('roster.job_count',{n:jobs.length})}</td>
+              <td class="label">${plural(jobs.length, 'roster.job_count')}</td>
               <td class="count">${jobs.reduce((s,j) => s + (counts[j] || 0), 0)}</td>
               <td class="target" style="text-align:center">${jobs.reduce((s,j) => s + (targets[j] || 0), 0)}</td>
               <td class="status-cell">—</td>
@@ -5577,7 +5583,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.12.7";
+const APP_VERSION = "2026.06.12.8";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -7532,7 +7538,7 @@ function buildJobBreakdownSection() {
           <tbody>${rows}</tbody>
           <tfoot>
             <tr>
-              <td class="label">${t('roster.job_count', { n: jobs.length })}</td>
+              <td class="label">${plural(jobs.length, 'roster.job_count')}</td>
               <td class="count">${total}</td>
               <td class="target" style="text-align:center">${jobs.reduce((s,j) => s + (targets[j] || 0), 0)}</td>
               <td class="status-cell">—</td>

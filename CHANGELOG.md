@@ -10,6 +10,16 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.12.8]
+### Added
+- **i18n Fase 2 — plural() helper + strings concordam com n=1.** `plural(n, baseKey)` escolhe
+  `<key>_one` quando `n===1`, caso contrário `<key>`. Adicionadas chaves singulares:
+  `unit.people_one` ("1 pessoa" / "1 person") e `roster.job_count_one` ("1 classe" / "1 job").
+  Todos os call sites de `t('unit.people',…)` e `t('roster.job_count',…)` migrados para
+  `plural(…)`. Chaves `ai.*` que tinham `{n} pessoas` embutido refatoradas para receber
+  `{ppl}` (já pluralizado). Linha "Mover N:" simplificada (removido `ai.people_colon`).
+  Glossário `docs/i18n-glossary.md` atualizado.
+
 ## [2026.06.12.7]
 ### Added
 - **i18n Fase 1 — traduzidas as telas principais (pt-BR / English).** nav + sidebar,
