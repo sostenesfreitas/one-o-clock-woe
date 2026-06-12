@@ -2740,7 +2740,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <header>
-  <button id="hamburgerBtn" class="hamburger-btn" onclick="toggleSidebar()" aria-label="เปิดเมนูรายชื่อ" title="รายชื่อสมาชิก">☰</button>
+  <button id="hamburgerBtn" class="hamburger-btn" onclick="toggleSidebar()" aria-label="Abrir menu de membros" title="Lista de membros" data-i18n-attr="aria-label:nav.members_menu, title:nav.members_title">☰</button>
   <div class="brand">⚔️ ROO Party</div>
   <div class="mode-toggle cols-8" id="modeToggle">
     <button class="seg active" data-mode="league" onclick="switchMode('league')">⚔️ League</button>
@@ -2748,9 +2748,9 @@
     <button class="seg" data-mode="roster" onclick="switchMode('roster')">📋 Roster</button>
     <button class="seg" data-mode="auction-gl" onclick="switchMode('auction-gl')">🎴 Auction GL</button>
     <button class="seg" data-mode="auction-overrun" onclick="switchMode('auction-overrun')">🎴 Auction Overrun</button>
-    <button class="seg" data-mode="auction-request" onclick="switchMode('auction-request')">🙋 ขอประมูล</button>
-    <button class="seg" data-mode="leave" onclick="switchMode('leave')">🌴 ลา</button>
-    <button class="seg seg-admin" data-mode="wheel" onclick="switchMode('wheel')">🎡 สุ่มรางวัล</button>
+    <button class="seg" data-mode="auction-request" onclick="switchMode('auction-request')" data-i18n="nav.auction_request">🙋 Pedir leilão</button>
+    <button class="seg" data-mode="leave" onclick="switchMode('leave')" data-i18n="nav.leave">🌴 Folga</button>
+    <button class="seg seg-admin" data-mode="wheel" onclick="switchMode('wheel')" data-i18n="nav.wheel">🎡 Sorteio</button>
     <button class="seg seg-admin" data-mode="users" onclick="switchMode('users')">👥 Users</button>
     <span class="seg-indicator"></span>
   </div>
@@ -2760,9 +2760,9 @@
     <option value="roster">📋 Roster</option>
     <option value="auction-gl">🎴 Auction GL</option>
     <option value="auction-overrun">🎴 Auction Overrun</option>
-    <option value="auction-request">🙋 ขอประมูล</option>
-    <option value="leave">🌴 ลา</option>
-    <option value="wheel" class="user-option-admin">🎡 สุ่มรางวัล</option>
+    <option value="auction-request" data-i18n="nav.auction_request">🙋 Pedir leilão</option>
+    <option value="leave" data-i18n="nav.leave">🌴 Folga</option>
+    <option value="wheel" class="user-option-admin" data-i18n="nav.wheel">🎡 Sorteio</option>
     <option value="users" class="user-option-admin">👥 Users</option>
   </select>
   <div class="locale-switch" id="localeSwitch">
@@ -2780,20 +2780,20 @@
   <aside class="sidebar">
     <h3>
       <span>👥 Members <span id="memberCount" style="color:var(--muted);font-weight:400;font-size:11px"></span></span>
-      <button onclick="addManualMember()" style="background:var(--panel);color:var(--text);border:1px solid var(--border);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">+ เพิ่ม</button>
+      <button onclick="addManualMember()" style="background:var(--panel);color:var(--text);border:1px solid var(--border);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px" data-i18n="sidebar.add_member">+ Adicionar</button>
     </h3>
     <div class="filters">
-      <input id="searchInput" placeholder="🔎 ค้นหาชื่อ..." oninput="renderMembers()" />
+      <input id="searchInput" placeholder="🔎 Buscar nome..." oninput="renderMembers()" data-i18n-attr="placeholder:sidebar.search_ph" />
       <select id="jobFilter" onchange="renderMembers()">
         <option value="">All Jobs</option>
       </select>
       <label class="toggle" id="hideAssignedWrap">
         <input type="checkbox" id="hideAssigned" onchange="onSidebarFilterChange(this,'hideAssigned')" />
-        <span>ซ่อนคนที่จัดตี้แล้ว</span>
+        <span data-i18n="sidebar.hide_assigned">Ocultar quem já está em grupo</span>
       </label>
       <label class="toggle" id="hideLeaveWrap" style="display:none">
         <input type="checkbox" id="hideLeave" onchange="onSidebarFilterChange(this,'hideLeave')" />
-        <span>ซ่อนคนลา</span>
+        <span data-i18n="sidebar.hide_leave">Ocultar quem está de folga</span>
       </label>
     </div>
     <div class="member-list" id="memberList"></div>
@@ -2897,10 +2897,28 @@ const LOCALES = {
   "pt-BR": {
     "common.save": "Salvar",
     "queue.badge": "Fila #{n}",
+    "nav.auction_request": "🙋 Pedir leilão",
+    "nav.leave": "🌴 Folga",
+    "nav.wheel": "🎡 Sorteio",
+    "nav.members_menu": "Abrir menu de membros",
+    "nav.members_title": "Lista de membros",
+    "sidebar.add_member": "+ Adicionar",
+    "sidebar.search_ph": "🔎 Buscar nome...",
+    "sidebar.hide_assigned": "Ocultar quem já está em grupo",
+    "sidebar.hide_leave": "Ocultar quem está de folga",
   },
   "en": {
     "common.save": "Save",
     "queue.badge": "Queue #{n}",
+    "nav.auction_request": "🙋 Auction request",
+    "nav.leave": "🌴 Leave",
+    "nav.wheel": "🎡 Raffle",
+    "nav.members_menu": "Open members menu",
+    "nav.members_title": "Members",
+    "sidebar.add_member": "+ Add",
+    "sidebar.search_ph": "🔎 Search name...",
+    "sidebar.hide_assigned": "Hide already-assigned",
+    "sidebar.hide_leave": "Hide on leave",
   },
 };
 let currentLocale = (function () {

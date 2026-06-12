@@ -1425,7 +1425,7 @@ console.log("\n[wheel]");
     const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
     ok(appHtml.includes('data-mode="wheel"'), "header tab present");
     ok((appHtml.match(/seg-admin/g) || []).length >= 3, "wheel tab is admin-gated (seg-admin)");
-    ok(appHtml.includes('<option value="wheel" class="user-option-admin">'), "mobile dropdown option (admin-gated)");
+    ok(appHtml.includes('<option value="wheel" class="user-option-admin"'), "mobile dropdown option (admin-gated)");
     ok(appHtml.includes('body[data-mode="wheel"]'), "css hides sidebar on wheel page");
     ok(appHtml.includes('t.classList.toggle("wheel-active", state.mode === "wheel")'), "indicator class wired");
     ok(/state\.mode === "users" \|\| state\.mode === "wheel"\) \{\s*\n\s*state\.parties = state\.partiesLeague/.test(appHtml),
@@ -1501,6 +1501,15 @@ t("i18n: getLocale reflects setLocale", () => {
   eq(app.getLocale(), "en");
   app.call("setLocale", "pt-BR");
   eq(app.getLocale(), "pt-BR");
+});
+t("i18n: nav+sidebar keys present in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "nav.leave"), "🌴 Folga");
+  eq(app.call("t", "sidebar.hide_leave"), "Ocultar quem está de folga");
+  app.call("setLocale", "en");
+  eq(app.call("t", "nav.leave"), "🌴 Leave");
+  eq(app.call("t", "sidebar.hide_assigned"), "Hide already-assigned");
+  app.call("setLocale", "pt-BR"); // reset for later groups
 });
 
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
