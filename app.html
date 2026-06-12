@@ -2935,6 +2935,42 @@ const LOCALES = {
     "map.show_all_groups": "Mostrar todos os grupos",
     "map.tick_multi_groups": "Pode marcar vários grupos ao mesmo tempo",
     "overrun.map_title": "Overrun Map · {n} grupos",
+    "common.delete": "Excluir",
+    "common.confirm": "Confirmar",
+    "status.over": "Excesso {n}",
+    "status.short": "Falta {n}",
+    "status.balanced": "Equilibrado",
+    "roster.empty_title": "Ainda não há membros no Roster",
+    "roster.empty_admin": "Admin: clique em ➕ Adicionar membro ou 📥 Importar da Sheet",
+    "roster.empty_member": "Aguardando o Admin adicionar membros",
+    "roster.not_found": "Nada encontrado para \"{q}\"",
+    "roster.col_name": "Nome",
+    "roster.col_job": "Classe",
+    "roster.col_have": "Tem",
+    "roster.col_target": "Meta",
+    "roster.col_status": "Status",
+    "roster.select_job": "— Selecionar Job —",
+    "roster.updated_by": "Editado por último por {by}",
+    "roster.save_btn": "💾 Salvar",
+    "roster.save_mine_tip": "Salvar meus dados",
+    "roster.job_count": "{n} classes",
+    "roster.editing_as": "Editando como:",
+    "roster.change_leave": "Trocar / Sair",
+    "roster.claim_ph": "— Selecione seu nome para editar —",
+    "roster.fb_not_set": "Firebase ainda não configurado",
+    "roster.fb_unavailable": "O Roster está indisponível no momento.",
+    "roster.fb_setup": "Siga os passos de setup que o admin preparou → o apiKey + databaseURL serão adicionados na próxima versão.",
+    "roster.meta_members": "Membros:",
+    "roster.meta_total_cp": "CP total:",
+    "roster.meta_avg": "Média:",
+    "roster.search_ph2": "🔎 Buscar nome/Job...",
+    "roster.btn_add": "➕ Adicionar membro",
+    "roster.import_tip": "Puxar Name / Job / Discord / Discord ID / CP do Google Sheet",
+    "roster.btn_import": "📥 Importar da Sheet",
+    "roster.dedupe_tip": "Mesclar linhas duplicadas (mesmo Nome + Job)",
+    "roster.btn_dedupe": "🧹 Limpar duplicados",
+    "roster.status_admin": "🟢 Admin · preenche todos os campos · salva em tempo real",
+    "roster.status_member": "🔵 Membro · selecione seu nome → edite sua linha → clique 💾 Salvar",
   },
   "en": {
     "common.save": "Save",
@@ -2977,6 +3013,42 @@ const LOCALES = {
     "map.show_all_groups": "Show all groups",
     "map.tick_multi_groups": "Select multiple groups at once",
     "overrun.map_title": "Overrun Map · {n} groups",
+    "common.delete": "Delete",
+    "common.confirm": "Confirm",
+    "status.over": "Over {n}",
+    "status.short": "Short {n}",
+    "status.balanced": "Balanced",
+    "roster.empty_title": "No members in Roster yet",
+    "roster.empty_admin": "Admin: click ➕ Add member or 📥 Import from Sheet",
+    "roster.empty_member": "Waiting for Admin to add members",
+    "roster.not_found": "No results for \"{q}\"",
+    "roster.col_name": "Name",
+    "roster.col_job": "Job",
+    "roster.col_have": "Have",
+    "roster.col_target": "Target",
+    "roster.col_status": "Status",
+    "roster.select_job": "— Select Job —",
+    "roster.updated_by": "Last edited by {by}",
+    "roster.save_btn": "💾 Save",
+    "roster.save_mine_tip": "Save my data",
+    "roster.job_count": "{n} jobs",
+    "roster.editing_as": "Editing as:",
+    "roster.change_leave": "Change / Leave",
+    "roster.claim_ph": "— Select your name to edit —",
+    "roster.fb_not_set": "Firebase not configured",
+    "roster.fb_unavailable": "Roster is unavailable right now.",
+    "roster.fb_setup": "Follow the setup steps the admin prepared → apiKey + databaseURL will be added in the next version.",
+    "roster.meta_members": "Members:",
+    "roster.meta_total_cp": "Total CP:",
+    "roster.meta_avg": "Average:",
+    "roster.search_ph2": "🔎 Search name/Job...",
+    "roster.btn_add": "➕ Add member",
+    "roster.import_tip": "Pull Name / Job / Discord / Discord ID / CP from Google Sheet",
+    "roster.btn_import": "📥 Import from Sheet",
+    "roster.dedupe_tip": "Merge duplicate rows (same Name + Job)",
+    "roster.btn_dedupe": "🧹 Clean duplicates",
+    "roster.status_admin": "🟢 Admin · fill all fields · saves in realtime",
+    "roster.status_member": "🔵 Member · select your name → edit your row → press 💾 Save",
   },
 };
 let currentLocale = (function () {
@@ -5077,9 +5149,9 @@ function classifyJobStatus(count, target) {
   if (!target || target <= 0) return { status: "—", cls: "status-none" };
   // EXACT match only (2026-06-12): any mismatch flags immediately with the
   // exact gap — the old ±1 "ใกล้เคียง = สมดุล" tolerance hid real holes.
-  if (count > target) return { status: `เกิน ${count - target}`, cls: "status-too-many" };
-  if (count < target) return { status: `ขาด ${target - count}`, cls: "status-too-few" };
-  return { status: "สมดุล", cls: "status-balanced" };
+  if (count > target) return { status: t('status.over', { n: count - target }), cls: "status-too-many" };
+  if (count < target) return { status: t('status.short', { n: target - count }), cls: "status-too-few" };
+  return { status: t('status.balanced'), cls: "status-balanced" };
 }
 
 /* Merge paired jobs into a single row in Summary (e.g., Bard + Dancer). */
@@ -7157,12 +7229,11 @@ function buildRosterRowsHtml() {
   if (!filtered.length) {
     if (!rosterCache.length) {
       return `<tr><td colspan="8" class="roster-empty">
-        ยังไม่มีสมาชิกใน Roster<br>
-        ${admin ? '<b>Admin:</b> กด <b>➕ เพิ่มสมาชิก</b> หรือ <b>📥 Import จาก Sheet</b>'
-                : 'รอ Admin เพิ่มสมาชิก'}
+        ${t('roster.empty_title')}<br>
+        ${admin ? t('roster.empty_admin') : t('roster.empty_member')}
       </td></tr>`;
     }
-    return `<tr><td colspan="8" class="roster-empty">ไม่พบ "${escapeHtml(search)}"</td></tr>`;
+    return `<tr><td colspan="8" class="roster-empty">${t('roster.not_found', { q: escapeHtml(search) })}</td></tr>`;
   }
   return rosterApplySort(filtered).map((m, i) => {
     // Self-edit rendering, three modes per cell:
@@ -7174,7 +7245,7 @@ function buildRosterRowsHtml() {
     return `
     <tr data-id="${m.id}"${mine ? ' class="r-mine"' : ""}>
       <td class="r-rk">${i + 1}</td>
-      <td data-label="ชื่อ">${admin
+      <td data-label="${t('roster.col_name')}">${admin
         ? `<input class="r-input" value="${escapeHtml(m.name)}" onchange="rosterUpdate('${m.id}','name',this.value)" />`
         : mine
         ? `<input class="r-input" data-rme="name" value="${escapeHtml(m.name)}" oninput="rosterMarkMineDirty()" />`
@@ -7187,7 +7258,7 @@ function buildRosterRowsHtml() {
           `<option value="${j}" ${j === cur ? "selected" : ""}>${j}</option>`).join("");
         const customOpt = (cur && !inList)
           ? `<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)} (custom)</option>`
-          : `<option value="" ${!cur ? "selected" : ""}>— เลือก Job —</option>`;
+          : `<option value="" ${!cur ? "selected" : ""}>${t('roster.select_job')}</option>`;
         return `<select class="r-input r-job-select"${mine
           ? ' data-rme="job" onchange="rosterMarkMineDirty()"'
           : ` onchange="rosterUpdate('${m.id}','job',this.value)"`}>
@@ -7211,11 +7282,11 @@ function buildRosterRowsHtml() {
         ? `<input class="r-input r-cp" data-rme="cp" type="text" inputmode="numeric" pattern="[0-9]*"
                value="${m.cp || 0}" oninput="rosterMarkMineDirty()" />`
         : rosterStaticCell("r-cp-static", (m.cp || 0).toLocaleString())}</td>
-      <td data-label="Last Update" class="r-updated-at">${fmtUpdatedAt(m.updatedAt)}${m.updatedBy ? `<div class="r-updated-by" title="แก้ล่าสุดโดย ${escapeHtml(m.updatedBy)}">${escapeHtml(m.updatedBy)}</div>` : ""}</td>
+      <td data-label="Last Update" class="r-updated-at">${fmtUpdatedAt(m.updatedAt)}${m.updatedBy ? `<div class="r-updated-by" title="${t('roster.updated_by', { by: escapeHtml(m.updatedBy) })}">${escapeHtml(m.updatedBy)}</div>` : ""}</td>
       <td class="r-actions">${admin
-        ? `<button class="r-del" onclick="rosterDelete('${m.id}')" title="ลบ">×</button>`
+        ? `<button class="r-del" onclick="rosterDelete('${m.id}')" title="${t('common.delete')}">×</button>`
         : mine
-        ? `<button class="r-save" id="rosterSaveBtn" onclick="rosterSaveMine('${m.id}')" title="เซฟข้อมูลของฉัน">💾 เซฟ</button>`
+        ? `<button class="r-save" id="rosterSaveBtn" onclick="rosterSaveMine('${m.id}')" title="${t('roster.save_mine_tip')}">${t('roster.save_btn')}</button>`
         : ""}</td>
     </tr>`;
   }).join("");
@@ -7267,16 +7338,16 @@ function buildJobBreakdownSection() {
         <table class="summary-table">
           <thead>
             <tr>
-              <th>อาชีพ</th>
-              <th style="text-align:center">มี</th>
-              <th style="text-align:center">เป้า</th>
-              <th style="text-align:center">สถานะ</th>
+              <th>${t('roster.col_job')}</th>
+              <th style="text-align:center">${t('roster.col_have')}</th>
+              <th style="text-align:center">${t('roster.col_target')}</th>
+              <th style="text-align:center">${t('roster.col_status')}</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
           <tfoot>
             <tr>
-              <td class="label">${jobs.length} อาชีพ</td>
+              <td class="label">${t('roster.job_count', { n: jobs.length })}</td>
               <td class="count">${total}</td>
               <td class="target" style="text-align:center">${jobs.reduce((s,j) => s + (targets[j] || 0), 0)}</td>
               <td class="status-cell">—</td>
@@ -7302,16 +7373,16 @@ function buildRosterClaimHtml() {
   const me = rosterClaimedMember();
   if (me) {
     return `<span class="roster-claim">
-      <span class="roster-claim-chip">👤 แก้ในชื่อ: <b>${escapeHtml(me.name)}</b>${me.job ? ` (${escapeHtml(me.job)})` : ""}</span>
-      <button class="ghost" onclick="claimSetMember('')">เปลี่ยน / ออก</button>
+      <span class="roster-claim-chip">👤 ${t('roster.editing_as')} <b>${escapeHtml(me.name)}</b>${me.job ? ` (${escapeHtml(me.job)})` : ""}</span>
+      <button class="ghost" onclick="claimSetMember('')">${t('roster.change_leave')}</button>
     </span>`;
   }
   return `<span class="roster-claim">
     <select id="rosterClaimSelect" class="r-input">
-      <option value="">— เลือกชื่อตัวเอง เพื่อแก้ข้อมูล —</option>
+      <option value="">${t('roster.claim_ph')}</option>
       ${claimOptionsHtml(rosterCache)}
     </select>
-    <button onclick="claimSetMember(document.getElementById('rosterClaimSelect').value)">ยืนยัน</button>
+    <button onclick="claimSetMember(document.getElementById('rosterClaimSelect').value)">${t('common.confirm')}</button>
   </span>`;
 }
 
@@ -7325,8 +7396,8 @@ function buildRosterHtml() {
           <h2>📋 Roster</h2>
         </div>
         <div class="auction-warning" style="background:linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.05));border-color:#fbbf24;border-left-color:#fbbf24;color:var(--text);font-size:13px;line-height:1.7">
-          ⚠️ <b>Firebase ยังไม่ได้ตั้งค่า</b> — ตอนนี้ Roster ใช้งานไม่ได้ครับ.<br>
-          กรุณาทำตามขั้นตอน setup ที่ admin จัดเตรียมไว้ → แล้ว apiKey + databaseURL จะถูกเพิ่มเข้ามาในรุ่นถัดไป.
+          ⚠️ <b>${t('roster.fb_not_set')}</b> — ${t('roster.fb_unavailable')}<br>
+          ${t('roster.fb_setup')}
         </div>
       </div>`;
   }
@@ -7339,18 +7410,18 @@ function buildRosterHtml() {
         <h2>📋 Roster · CP Sheet</h2>
         <div style="flex:1"></div>
         <div class="roster-meta">
-          <span class="rate-pill">สมาชิก: <b>${total}</b></span>
-          <span class="rate-pill">รวม CP: <b>${totalCP.toLocaleString()}</b></span>
-          <span class="rate-pill">เฉลี่ย: <b>${avgCP.toLocaleString()}</b></span>
+          <span class="rate-pill">${t('roster.meta_members')} <b>${total}</b></span>
+          <span class="rate-pill">${t('roster.meta_total_cp')} <b>${totalCP.toLocaleString()}</b></span>
+          <span class="rate-pill">${t('roster.meta_avg')} <b>${avgCP.toLocaleString()}</b></span>
         </div>
       </div>
       ${buildJobBreakdownSection()}
       <div class="roster-toolbar">
-        <input class="r-search" placeholder="🔎 ค้นหาชื่อ/Job..." oninput="rosterSearchInput(this.value)" value="${escapeHtml(_rosterSearch)}" />
+        <input class="r-search" placeholder="${t('roster.search_ph2')}" oninput="rosterSearchInput(this.value)" value="${escapeHtml(_rosterSearch)}" />
         ${admin ? `
-          <button class="primary" onclick="rosterAdd()">➕ เพิ่มสมาชิก</button>
-          <button onclick="rosterImportFromSheet()" title="ดึง Name / Job / Discord / Discord ID / CP จาก Google Sheet">📥 Import จาก Sheet</button>
-          <button onclick="rosterDedupe()" title="รวมแถวซ้ำ (ชื่อ + Job เดียวกัน)">🧹 ล้างของซ้ำ</button>
+          <button class="primary" onclick="rosterAdd()">${t('roster.btn_add')}</button>
+          <button onclick="rosterImportFromSheet()" title="${t('roster.import_tip')}">${t('roster.btn_import')}</button>
+          <button onclick="rosterDedupe()" title="${t('roster.dedupe_tip')}">${t('roster.btn_dedupe')}</button>
         ` : buildRosterClaimHtml()}
       </div>
       <div class="roster-table-wrap">
@@ -7358,7 +7429,7 @@ function buildRosterHtml() {
           <thead>
             <tr>
               <th style="width:36px">#</th>
-              <th class="r-th-sort" onclick="rosterSort('name')">ชื่อ${rosterSortArrow("name")}</th>
+              <th class="r-th-sort" onclick="rosterSort('name')">${t('roster.col_name')}${rosterSortArrow("name")}</th>
               <th class="r-th-sort" onclick="rosterSort('job')">Job${rosterSortArrow("job")}</th>
               <th class="r-th-sort" onclick="rosterSort('discord')">Discord${rosterSortArrow("discord")}</th>
               <th class="r-th-sort" onclick="rosterSort('discordId')">Discord ID${rosterSortArrow("discordId")}</th>
@@ -7371,8 +7442,8 @@ function buildRosterHtml() {
         </table>
         <div class="roster-status">
           ${admin
-            ? "🟢 Admin · กรอกได้ทุกช่อง · บันทึก Realtime"
-            : "🔵 Member · เลือกชื่อตัวเอง → แก้ข้อมูลแถวตัวเอง → กด 💾 เซฟ"}
+            ? t('roster.status_admin')
+            : t('roster.status_member')}
         </div>
       </div>
     </div>`;

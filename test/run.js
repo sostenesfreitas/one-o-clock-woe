@@ -951,11 +951,11 @@ console.log("\n[roster self-edit — guest claims own row]");
     let html = app.call("buildRosterClaimHtml");
     ok(html.includes("rosterClaimSelect"), "chooser shown when unclaimed");
     ok(html.includes("Alice") && html.includes('value="m1"'), "members listed");
-    ok(html.includes("ยืนยัน"), "confirm button labelled ยืนยัน");
+    ok(html.includes("Confirmar"), "confirm button labelled Confirmar");
     setup(false, "m1");
     html = app.call("buildRosterClaimHtml");
-    ok(html.includes("แก้ในชื่อ") && html.includes("Alice"), "chip shows claimed name");
-    ok(html.includes("claimSetMember('')"), "เปลี่ยน/ออก wired");
+    ok(html.includes("Editando como:") && html.includes("Alice"), "chip shows claimed name");
+    ok(html.includes("claimSetMember('')"), "Trocar/Sair wired");
     setup(false, "ghost");
     html = app.call("buildRosterClaimHtml");
     ok(html.includes("rosterClaimSelect"), "dangling claim falls back to chooser");
@@ -1139,12 +1139,12 @@ console.log("\n[landing — front door wiring]");
 // 2026-06-12: มี ≠ เป้า flags immediately with the exact gap — no ±1 grace.
 console.log("\n[summary exact targets]");
 (() => {
-  t("exact: off-by-one is NOT สมดุล anymore (the 15/16 screenshot case)", () => {
-    eq(app.call("classifyJobStatus", 15, 16), { status: "ขาด 1", cls: "status-too-few" });
-    eq(app.call("classifyJobStatus", 11, 10), { status: "เกิน 1", cls: "status-too-many" });
-    eq(app.call("classifyJobStatus", 10, 10), { status: "สมดุล", cls: "status-balanced" });
-    eq(app.call("classifyJobStatus", 10, 8),  { status: "เกิน 2", cls: "status-too-many" });
-    eq(app.call("classifyJobStatus", 14, 16), { status: "ขาด 2", cls: "status-too-few" });
+  t("exact: off-by-one is NOT Equilibrado anymore (the 15/16 screenshot case)", () => {
+    eq(app.call("classifyJobStatus", 15, 16), { status: "Falta 1", cls: "status-too-few" });
+    eq(app.call("classifyJobStatus", 11, 10), { status: "Excesso 1", cls: "status-too-many" });
+    eq(app.call("classifyJobStatus", 10, 10), { status: "Equilibrado", cls: "status-balanced" });
+    eq(app.call("classifyJobStatus", 10, 8),  { status: "Excesso 2", cls: "status-too-many" });
+    eq(app.call("classifyJobStatus", 14, 16), { status: "Falta 2", cls: "status-too-few" });
     eq(app.call("classifyJobStatus", 5, 0),   { status: "—", cls: "status-none" });
   });
 
@@ -1538,6 +1538,17 @@ t("i18n: Overrun keys resolve in both locales", () => {
   eq(app.call("t", "overrun.map_title", { n: 5 }), "Overrun Map · 5 grupos");
   app.call("setLocale", "en");
   eq(app.call("t", "overrun.map_title", { n: 5 }), "Overrun Map · 5 groups");
+  app.call("setLocale", "pt-BR");
+});
+
+t("i18n: Roster keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "roster.meta_total_cp"), "CP total:");
+  eq(app.call("t", "status.short", { n: 2 }), "Falta 2");
+  eq(app.call("t", "roster.not_found", { q: "abc" }), 'Nada encontrado para "abc"');
+  app.call("setLocale", "en");
+  eq(app.call("t", "roster.btn_dedupe"), "🧹 Clean duplicates");
+  eq(app.call("t", "status.short", { n: 2 }), "Short 2");
   app.call("setLocale", "pt-BR");
 });
 

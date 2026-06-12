@@ -42,3 +42,39 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | แสดงทุกกลุ่ม | Show all groups | Mostrar todos os grupos | `map.show_all_groups` |
 | ติ๊กได้หลายกลุ่มพร้อมกัน | Select multiple groups at once | Pode marcar vários grupos ao mesmo tempo | `map.tick_multi_groups` |
 | Overrun Map · N กลุ่ม | Overrun Map · N groups | Overrun Map · N grupos | `overrun.map_title` |
+| ลบ | Delete | Excluir | `common.delete` |
+| ยืนยัน | Confirm | Confirmar | `common.confirm` |
+| เกิน N | Over N | Excesso N | `status.over` |
+| ขาด N | Short N | Falta N | `status.short` |
+| สมดุล | Balanced | Equilibrado | `status.balanced` |
+| ยังไม่มีสมาชิกใน Roster | No members in Roster yet | Ainda não há membros no Roster | `roster.empty_title` |
+| Admin: กด ➕ เพิ่มสมาชิก หรือ 📥 Import จาก Sheet | Admin: click ➕ Add member or 📥 Import from Sheet | Admin: clique em ➕ Adicionar membro ou 📥 Importar da Sheet | `roster.empty_admin` |
+| รอ Admin เพิ่มสมาชิก | Waiting for Admin to add members | Aguardando o Admin adicionar membros | `roster.empty_member` |
+| ไม่พบ "{q}" | No results for "{q}" | Nada encontrado para "{q}" | `roster.not_found` |
+| ชื่อ | Name | Nome | `roster.col_name` |
+| อาชีพ (Roster) | Job | Classe | `roster.col_job` |
+| มี | Have | Tem | `roster.col_have` |
+| เป้า | Target | Meta | `roster.col_target` |
+| สถานะ | Status | Status | `roster.col_status` |
+| — เลือก Job — | — Select Job — | — Selecionar Job — | `roster.select_job` |
+| แก้ล่าสุดโดย {by} | Last edited by {by} | Editado por último por {by} | `roster.updated_by` |
+| 💾 เซฟ | 💾 Save | 💾 Salvar | `roster.save_btn` |
+| เซฟข้อมูลของฉัน | Save my data | Salvar meus dados | `roster.save_mine_tip` |
+| N อาชีพ | N jobs | N classes | `roster.job_count` |
+| แก้ในชื่อ: | Editing as: | Editando como: | `roster.editing_as` |
+| เปลี่ยน / ออก | Change / Leave | Trocar / Sair | `roster.change_leave` |
+| — เลือกชื่อตัวเอง เพื่อแก้ข้อมูล — | — Select your name to edit — | — Selecione seu nome para editar — | `roster.claim_ph` |
+| Firebase ยังไม่ได้ตั้งค่า | Firebase not configured | Firebase ainda não configurado | `roster.fb_not_set` |
+| ตอนนี้ Roster ใช้งานไม่ได้ | Roster is unavailable right now. | O Roster está indisponível no momento. | `roster.fb_unavailable` |
+| กรุณาทำตามขั้นตอน setup ... | Follow the setup steps the admin prepared → ... | Siga os passos de setup que o admin preparou → ... | `roster.fb_setup` |
+| สมาชิก: | Members: | Membros: | `roster.meta_members` |
+| รวม CP: | Total CP: | CP total: | `roster.meta_total_cp` |
+| เฉลี่ย: | Average: | Média: | `roster.meta_avg` |
+| 🔎 ค้นหาชื่อ/Job... | 🔎 Search name/Job... | 🔎 Buscar nome/Job... | `roster.search_ph2` |
+| ➕ เพิ่มสมาชิก | ➕ Add member | ➕ Adicionar membro | `roster.btn_add` |
+| ดึง Name / Job / Discord / Discord ID / CP จาก Google Sheet | Pull Name / Job / Discord / Discord ID / CP from Google Sheet | Puxar Name / Job / Discord / Discord ID / CP do Google Sheet | `roster.import_tip` |
+| 📥 Import จาก Sheet | 📥 Import from Sheet | 📥 Importar da Sheet | `roster.btn_import` |
+| รวมแถวซ้ำ (ชื่อ + Job เดียวกัน) | Merge duplicate rows (same Name + Job) | Mesclar linhas duplicadas (mesmo Nome + Job) | `roster.dedupe_tip` |
+| 🧹 ล้างของซ้ำ | 🧹 Clean duplicates | 🧹 Limpar duplicados | `roster.btn_dedupe` |
+| 🟢 Admin · กรอกได้ทุกช่อง · บันทึก Realtime | 🟢 Admin · fill all fields · saves in realtime | 🟢 Admin · preenche todos os campos · salva em tempo real | `roster.status_admin` |
+| 🔵 Member · เลือกชื่อตัวเอง → แก้ข้อมูลแถวตัวเอง → กด 💾 เซฟ | 🔵 Member · select your name → edit your row → press 💾 Save | 🔵 Membro · selecione seu nome → edite sua linha → clique 💾 Salvar | `roster.status_member` |
