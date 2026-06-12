@@ -1456,5 +1456,25 @@ console.log("\n[wheel]");
   });
 })();
 
+console.log("\n[i18n]");
+t("i18n: default locale is pt-BR", () => {
+  eq(app.call("t", "common.save"), "Salvar");
+});
+t("i18n: setLocale('en') switches output", () => {
+  app.call("setLocale", "en");
+  eq(app.call("t", "common.save"), "Save");
+});
+t("i18n: unknown key returns the key (fallback tail)", () => {
+  eq(app.call("t", "__definitely_missing__"), "__definitely_missing__");
+});
+t("i18n: interpolates {n}", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "queue.badge", { n: 3 }), "Fila #3");
+});
+t("i18n: invalid locale is a no-op (stays pt-BR)", () => {
+  app.call("setLocale", "xx-XX");
+  eq(app.call("t", "common.save"), "Salvar");
+});
+
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
 if (fail) { console.log("FAILURES:\n  - " + failures.join("\n  - ") + "\n"); process.exit(1); }

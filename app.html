@@ -2879,6 +2879,38 @@ const SAVED_TEAM_DATA = null; /* savedteam-end */
 const PARTY_SLOTS = 5;
 const PARTIES = 16;
 
+/* ===== i18n — pt-BR / English (see docs/superpowers/specs/2026-06-12-i18n-language-toggle-design.md) =====
+ * Central dictionary + t() lookup. Game jargon (Card, Knight, party, item
+ * names) stays literal in English and is NOT keyed here. currentLocale lives
+ * OUTSIDE `state` so it never syncs to Firebase and save() never serializes it. */
+const LOCALES = {
+  "pt-BR": {
+    "common.save": "Salvar",
+    "queue.badge": "Fila #{n}",
+  },
+  "en": {
+    "common.save": "Save",
+    "queue.badge": "Queue #{n}",
+  },
+};
+let currentLocale = (function () {
+  try {
+    const v = localStorage.getItem("woe_locale");
+    return (v && LOCALES[v]) ? v : "pt-BR";
+  } catch (e) { return "pt-BR"; }
+})();
+
+function t(key, params) {
+  const dict = LOCALES[currentLocale] || LOCALES["pt-BR"];
+  let s = dict[key];
+  if (s == null) s = LOCALES["pt-BR"][key];
+  if (s == null) s = key;
+  if (params) {
+    for (const k in params) s = s.split("{" + k + "}").join(String(params[k]));
+  }
+  return s;
+}
+
 function makeEmptyParties() {
   return Array.from({length: PARTIES}, (_, i) => ({
     id: i + 1,
