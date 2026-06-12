@@ -70,6 +70,12 @@
   header .sync-indicator.writing { color: #fbbf24; border-color: rgba(251,191,36,0.4); }
   header .sync-indicator.error   { color: #f85149; border-color: rgba(248,81,73,0.4); }
   header .sync-indicator.viewer  { color: var(--muted); border-color: var(--border); }
+  .locale-switch { display: inline-flex; gap: 2px; margin: 0 6px; }
+  .locale-switch button {
+    background: var(--panel); color: var(--muted); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;
+  }
+  .locale-switch button.locale-active { color: var(--text); border-color: var(--accent, #fbbf24); }
 
   /* ===== Viewer mode (no PAT) — disable edit controls ===== */
   body.viewer-mode .admin-only { display: none !important; }
@@ -2759,6 +2765,10 @@
     <option value="wheel" class="user-option-admin">🎡 สุ่มรางวัล</option>
     <option value="users" class="user-option-admin">👥 Users</option>
   </select>
+  <div class="locale-switch" id="localeSwitch">
+    <button type="button" data-loc="pt-BR" onclick="setLocale('pt-BR')">PT</button>
+    <button type="button" data-loc="en" onclick="setLocale('en')">EN</button>
+  </div>
   <span class="status" id="statusInfo">Loading…</span>
   <div class="spacer"></div>
   <span class="status sync-indicator" id="syncIndicator">🔵 Connecting…</span>
@@ -2936,6 +2946,14 @@ function setLocale(loc) {
   applyStaticI18n(document);
   if (typeof render === "function") render();
   if (typeof updateLocaleSwitcherUI === "function") updateLocaleSwitcherUI();
+}
+
+function updateLocaleSwitcherUI() {
+  const wrap = document.getElementById("localeSwitch");
+  if (!wrap) return;
+  wrap.querySelectorAll("button[data-loc]").forEach(function (b) {
+    b.classList.toggle("locale-active", b.getAttribute("data-loc") === currentLocale);
+  });
 }
 
 function makeEmptyParties() {
