@@ -2911,6 +2911,7 @@ const LOCALES = {
     "league.party_range": "(Grupos {range})",
     "party.sort_by_job": "Ordenar por classe (Knight → Paladin → Wizard → …)",
     "party.sort_all_by_job": "Ordenar todos os grupos por classe (Knight → Paladin → Wizard → …)",
+    "party.sort_all_btn": "Ordenar por classe",
     "party.clear_this": "Limpar este grupo",
     "party.remove_from": "Remover do grupo",
     "slot.leave_back": "Esta pessoa está de folga — clique para marcá-la como disponível",
@@ -2930,6 +2931,7 @@ const LOCALES = {
     "map.clear_arrows_tip": "Limpar setas de movimento",
     "map.readonly_tip": "Marcadores/setas são só do Admin — convidado só filtra/visualiza",
     "map.readonly_badge": "🔒 Somente leitura",
+    "map.expand_tip": "Tela cheia",
   },
   "en": {
     "common.save": "Save",
@@ -2948,6 +2950,7 @@ const LOCALES = {
     "league.party_range": "(Parties {range})",
     "party.sort_by_job": "Sort by job (Knight → Paladin → Wizard → …)",
     "party.sort_all_by_job": "Sort all parties by job (Knight → Paladin → Wizard → …)",
+    "party.sort_all_btn": "Sort by job",
     "party.clear_this": "Clear this party",
     "party.remove_from": "Remove from party",
     "slot.leave_back": "On leave — click to mark available",
@@ -2967,6 +2970,7 @@ const LOCALES = {
     "map.clear_arrows_tip": "Clear movement arrows",
     "map.readonly_tip": "Pins/arrows are admin-only — guests can only filter the view",
     "map.readonly_badge": "🔒 View only",
+    "map.expand_tip": "Fullscreen",
   },
 };
 let currentLocale = (function () {
@@ -4514,7 +4518,7 @@ function toggleMapFullscreen(mapNum) {
     document.body.style.overflow = "";
     _fullscreenMap = null;
     const btn = card.querySelector(`.btn-expand-${mapNum}`);
-    if (btn) { btn.innerHTML = "⛶ Expand"; btn.title = "ขยายเต็มจอ"; }
+    if (btn) { btn.innerHTML = "⛶ Expand"; btn.title = t('map.expand_tip'); }
   } else {
     // Close other map if currently fullscreen
     if (_fullscreenMap !== null) toggleMapFullscreen(_fullscreenMap);
@@ -4933,7 +4937,7 @@ function buildBfHtml(bfIdx) {
   // it sorts ALL 16 parties (League uses one state.parties array shared
   // between Main and Sub cards, so we only need the button in one place).
   const sortAllBtn = (bfIdx === 0 && typeof isAdmin === "function" && isAdmin())
-    ? `<button class="header-sort-btn" onclick="sortAllPartiesByJob()" title="${t('party.sort_all_by_job')}">🔀 ${t('party.sort_all_by_job')}</button>`
+    ? `<button class="header-sort-btn" onclick="sortAllPartiesByJob()" title="${t('party.sort_all_by_job')}">🔀 ${t('party.sort_all_btn')}</button>`
     : "";
   return `
     <div class="bf ${bfIdx===1?'sub':''}">
@@ -4995,7 +4999,7 @@ function buildOverrunMapHtml() {
         <span>🗺️ Overrun Map · ${OVERRUN_GROUPS.length} กลุ่ม</span>
         <span class="actions">
           <span class="map-filter-chips" title="ติ๊กได้หลายกลุ่มพร้อมกัน">${filterChips}</span>
-          <button onclick="toggleMapFullscreen(3)" class="btn-expand-3" title="ขยายเต็มจอ">⛶ Expand</button>
+          <button onclick="toggleMapFullscreen(3)" class="btn-expand-3" title="${t('map.expand_tip')}">⛶ Expand</button>
           ${(typeof isAdmin === "function" && isAdmin())
             ? `<button onclick="clearArrows(3)" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>`
             : `<span class="map-readonly-hint" title="หมุด/ลูกศรจัดการได้เฉพาะ Admin — guest ใช้ filter ดูได้อย่างเดียว">🔒 ดูอย่างเดียว</span>`}
@@ -5049,7 +5053,7 @@ function buildMapHtml(mapNum) {
         <span class="actions">
           <span class="map-filter-chips" title="${t('map.tick_multi_parties')}">${filterChips}</span>
           ${rangeCircleBtns}
-          <button onclick="toggleMapFullscreen(${mapNum})" class="btn-expand-${mapNum}" title="ขยายเต็มจอ">⛶ Expand</button>
+          <button onclick="toggleMapFullscreen(${mapNum})" class="btn-expand-${mapNum}" title="${t('map.expand_tip')}">⛶ Expand</button>
           ${(typeof isAdmin === "function" && isAdmin())
             ? `<button onclick="clearArrows(${mapNum})" title="${t('map.clear_arrows_tip')}">🗑 Clear arrows</button>`
             : `<span class="map-readonly-hint" title="${t('map.readonly_tip')}">${t('map.readonly_badge')}</span>`}

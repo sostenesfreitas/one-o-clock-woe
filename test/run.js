@@ -1511,6 +1511,15 @@ t("i18n: nav+sidebar keys present in both locales", () => {
   eq(app.call("t", "sidebar.hide_assigned"), "Hide already-assigned");
   app.call("setLocale", "pt-BR"); // reset for later groups
 });
+t("i18n: sort-all button uses short label + expand tip", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "party.sort_all_btn"), "Ordenar por classe");
+  eq(app.call("t", "map.expand_tip"), "Tela cheia");
+  app.call("setLocale", "en");
+  eq(app.call("t", "party.sort_all_btn"), "Sort by job");
+  eq(app.call("t", "map.expand_tip"), "Fullscreen");
+  app.call("setLocale", "pt-BR");
+});
 t("i18n: League keys + partyLabel resolve in both locales", () => {
   app.call("setLocale", "pt-BR");
   eq(app.call("t", "party.clear_this"), "Limpar este grupo");
