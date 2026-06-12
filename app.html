@@ -2948,7 +2948,6 @@ const LOCALES = {
     "roster.col_job": "Job",
     "roster.col_have": "Tem",
     "roster.col_target": "Meta",
-    "roster.col_status": "Status",
     "roster.select_job": "— Selecionar Job —",
     "roster.updated_by": "Última edição por {by}",
     "roster.save_btn": "💾 Salvar",
@@ -2977,7 +2976,7 @@ const LOCALES = {
     "auction.field_sub_short": "Secundário",
     "auction.field_main": "Campo principal",
     "auction.field_sub": "Campo secundário",
-    "auction.not_dragged": "Ainda não arrastado",
+    "auction.not_dragged": "Ainda não atribuído",
     "auction.status_exact": "Exato",
     "auction.status_left": "Sobra {n}",
     "auction.not_enough": "Itens insuficientes",
@@ -2997,7 +2996,7 @@ const LOCALES = {
     "auction.cov_over": "✅ Completo · sobra {n} un.",
     "auction.cov_done": "✅ Todas as páginas cobertas",
     "auction.cov_short": "👥 Coberto até a pág. {page} · faltam {n} un.{pages}",
-    "auction.cov_short_pages": " ({n} págs)",
+    "auction.cov_short_pages": " · +{n} pág.",
     "auction.stat_people": "Pessoas",
     "auction.stat_used": "Usado/{pool}",
     "auction.col_no_match": "Sem \"{q}\" nesta coluna",
@@ -3013,7 +3012,7 @@ const LOCALES = {
     "auction.page_n": "Pág. {n}",
     "auction.page_range": "Pág. {a}–{b}",
     "auction.pm_empty": "📄 Quantidades não preenchidas — informe as quantidades acima e o sistema calcula as páginas do leilão",
-    "auction.pm_today_total": "Hoje no total",
+    "auction.pm_today_total": "Total de hoje",
     "auction.unit_pcs": "un.",
     "auction.unit_pages": "páginas",
     "auction.pm_note_gl": "4 un./página · ordenado por coluna",
@@ -3080,7 +3079,6 @@ const LOCALES = {
     "roster.col_job": "Job",
     "roster.col_have": "Have",
     "roster.col_target": "Target",
-    "roster.col_status": "Status",
     "roster.select_job": "— Select Job —",
     "roster.updated_by": "Last edited by {by}",
     "roster.save_btn": "💾 Save",
@@ -3129,7 +3127,7 @@ const LOCALES = {
     "auction.cov_over": "✅ Done · {n} pcs over",
     "auction.cov_done": "✅ All pages covered",
     "auction.cov_short": "👥 Covered to page {page} · {n} pcs left{pages}",
-    "auction.cov_short_pages": " ({n} pages)",
+    "auction.cov_short_pages": " · +{n} pg",
     "auction.stat_people": "People",
     "auction.stat_used": "Used/{pool}",
     "auction.col_no_match": "No \"{q}\" in this column",
@@ -7449,7 +7447,7 @@ function buildJobBreakdownSection() {
               <th>${t('roster.col_job')}</th>
               <th style="text-align:center">${t('roster.col_have')}</th>
               <th style="text-align:center">${t('roster.col_target')}</th>
-              <th style="text-align:center">${t('roster.col_status')}</th>
+              <th style="text-align:center">${t('common.status')}</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -7901,15 +7899,17 @@ function buildAuctionView(kind) {
   const rateLabel = `1 / ${data.rate.white} / ${data.rate.black}`;
 
   // Item-count inputs (admin types the FINAL quantities — no multiplier)
+  // per-person unit is one label in pt/en (the 3 Thai classifiers ใบ/ชิ้น/ขน collapse)
+  const ppLbl = t('auction.per_person_unit');
   const itemCountInputs = ["cards","illusion","white","black"].map(field => {
     const it = data.items.find(i => i.key === field);
     const labelMap = {
-      cards:    ["🎴","Card",           t('auction.per_person_unit')],
-      illusion: ["🔮","Illusion Frag.", t('auction.per_person_unit')],
-      white:    ["🪶","White",          t('auction.per_person_unit')],
-      black:    ["🪶","Black",          t('auction.per_person_unit')]
+      cards:    ["🎴","Card"],
+      illusion: ["🔮","Illusion Frag."],
+      white:    ["🪶","White"],
+      black:    ["🪶","Black"]
     };
-    const [icon, lbl, ppLbl] = labelMap[field];
+    const [icon, lbl] = labelMap[field];
     // Map the item field → its rates key ("cards" item uses the "card" rate).
     const RATE_KEY = { cards: "card", illusion: "illusion", white: "white", black: "black" };
     return buildAuctionInputCard({
@@ -7955,11 +7955,11 @@ function buildAuctionView(kind) {
       if (it[f].diff < 0) shortPairs.push({ label: it.label, field: f, short: -it[f].diff });
     });
   });
-  const fieldThai = (f) => f === "main" ? t('auction.field_main') : t('auction.field_sub');
+  const fieldLabel = (f) => f === "main" ? t('auction.field_main') : t('auction.field_sub');
   const warning = (data.people > 0 && shortPairs.length) ? `
     <div class="auction-warning">
       ⚠️ <b>${t('auction.not_enough')}</b> — ${shortPairs.map(s => data.hasSubField
-          ? `${s.label.replace(/^[^\s]+\s/, "")}(${fieldThai(s.field)}) ${t('status.short',{n:s.short})}`
+          ? `${s.label.replace(/^[^\s]+\s/, "")}(${fieldLabel(s.field)}) ${t('status.short',{n:s.short})}`
           : `${s.label.replace(/^[^\s]+\s/, "")} ${t('status.short',{n:s.short})}`).join(", ")}
     </div>` : "";
 
@@ -8053,6 +8053,7 @@ function buildAuctionView(kind) {
         </div>`;
     }).join("");
 
+    // per-person unit is one label in pt/en (the 3 Thai classifiers ใบ/ชิ้น/ขน collapse)
     const ppLabel = t('auction.per_person_unit');
     const poolLabel = !data.hasSubField ? t('auction.total_short')
                     : field === "main"  ? (t('auction.field_main_short') + data.splitMainPercent + "%")

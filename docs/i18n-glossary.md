@@ -55,7 +55,6 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | อาชีพ (Roster) | Job | Job | `roster.col_job` |
 | มี | Have | Tem | `roster.col_have` |
 | เป้า | Target | Meta | `roster.col_target` |
-| สถานะ | Status | Status | `roster.col_status` |
 | — เลือก Job — | — Select Job — | — Selecionar Job — | `roster.select_job` |
 | แก้ล่าสุดโดย {by} | Last edited by {by} | Última edição por {by} | `roster.updated_by` |
 | 💾 เซฟ | 💾 Save | 💾 Salvar | `roster.save_btn` |
@@ -84,7 +83,7 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | รอง (short) | Sub | Secundário | `auction.field_sub_short` |
 | สนามหลัก | Main field | Campo principal | `auction.field_main` |
 | สนามรอง | Sub field | Campo secundário | `auction.field_sub` |
-| ยังไม่ลาก | Not assigned yet | Ainda não arrastado | `auction.not_dragged` |
+| ยังไม่ลาก | Not assigned yet | Ainda não atribuído | `auction.not_dragged` |
 | พอดี | Exact | Exato | `auction.status_exact` |
 | เหลือ {n} | {n} left | Sobra {n} | `auction.status_left` |
 | ของไม่พอ | Not enough items | Itens insuficientes | `auction.not_enough` |
@@ -104,7 +103,7 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ✅ ครบแล้ว · เกินมา {n} ชิ้น | ✅ Done · {n} pcs over | ✅ Completo · sobra {n} un. | `auction.cov_over` |
 | ✅ ลากครบทุกหน้าแล้ว | ✅ All pages covered | ✅ Todas as páginas cobertas | `auction.cov_done` |
 | 👥 ลากถึงหน้า {page} · ขาดอีก {n} ชิ้น{pages} | 👥 Covered to page {page} · {n} pcs left{pages} | 👥 Coberto até a pág. {page} · faltam {n} un.{pages} | `auction.cov_short` |
-| ({n} หน้า) | ({n} pages) | ({n} págs) | `auction.cov_short_pages` |
+| · +{n} หน้า | · +{n} pg | · +{n} pág. | `auction.cov_short_pages` |
 | คน (label) | People | Pessoas | `auction.stat_people` |
 | ใช้/{pool} | Used/{pool} | Usado/{pool} | `auction.stat_used` |
 | ไม่มี "{q}" ในคอลัมน์นี้ | No "{q}" in this column | Sem "{q}" nesta coluna | `auction.col_no_match` |
@@ -120,7 +119,7 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | หน้า {n} | Page {n} | Pág. {n} | `auction.page_n` |
 | หน้า {a}–{b} | Pages {a}–{b} | Pág. {a}–{b} | `auction.page_range` |
 | 📄 ยังไม่ได้กรอกจำนวนของ — … | 📄 No quantities entered — enter quantities above and the system will compute the auction pages | 📄 Quantidades não preenchidas — informe as quantidades acima e o sistema calcula as páginas do leilão | `auction.pm_empty` |
-| วันนี้รวม | Today total | Hoje no total | `auction.pm_today_total` |
+| วันนี้รวม | Today total | Total de hoje | `auction.pm_today_total` |
 | ชิ้น | pcs | un. | `auction.unit_pcs` |
 | หน้า | pages | páginas | `auction.unit_pages` |
 | 4 ชิ้น/หน้า · เรียงตามคอลัมน์ | 4 pcs/page · ordered by column | 4 un./página · ordenado por coluna | `auction.pm_note_gl` |

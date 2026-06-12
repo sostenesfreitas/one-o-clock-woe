@@ -369,7 +369,7 @@ t("under-filled column shows pages covered + items/pages remaining", () => {
   Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   app.state.auctionGL.assignments.main.white = ["w1"]; // rate 3 → need 3 of pool 7
   const cov = coveragesOf(app.call("buildAuctionView", "gl"));
-  eq(cov[0], "👥 Coberto até a pág. 1 · faltam 4 un. (1 págs)", "white main under-filled");
+  eq(cov[0], "👥 Coberto até a pág. 1 · faltam 4 un. · +1 pág.", "white main under-filled");
   eq(cov[1], "Ninguém arrastado ainda — precisa cobrir 3 un.", "white sub untouched");
 });
 t("exactly-filled column shows ครบ", () => {
@@ -646,7 +646,7 @@ t("single-item column shows a single slot", function () {
   (function () { var A = app.state.auctionGL.assignments; if (A && A.main && A.main.white) A.main.white = ["w1"]; })();
   const html = app.call("buildAuctionView", "gl");
   const chips = [...html.matchAll(/ac-pagemap[^>]*>([^<]+)</g)].map(function (m) { return m[1]; });
-  ok(chips.some(function (cc) { return cc.indexOf("Pág. 1") >= 0 && cc.indexOf("un. 1") >= 0; }), "got: " + JSON.stringify(chips));
+  ok(chips.some(function (cc) { return cc.indexOf("Pág. 1") >= 0 && cc.indexOf("un. 1") >= 0 && cc.indexOf("un. 1-") < 0; }), "got: " + JSON.stringify(chips));
 });
 
 console.log("\n[range circles — GL main map]");
@@ -1556,7 +1556,7 @@ t("i18n: Auction keys resolve + interpolate in both locales", () => {
   app.call("setLocale", "pt-BR");
   eq(app.call("t", "auction.field_main"), "Campo principal");
   eq(app.call("t", "auction.page_badge", { page: 2, items: "un. 1-3" }), "Pág. 2 · un. 1-3");
-  eq(app.call("t", "auction.cov_short", { page: 6, n: 4, pages: " (1 págs)" }), "👥 Coberto até a pág. 6 · faltam 4 un. (1 págs)");
+  eq(app.call("t", "auction.cov_short", { page: 6, n: 4, pages: " · +1 pág." }), "👥 Coberto até a pág. 6 · faltam 4 un. · +1 pág.");
   app.call("setLocale", "en");
   eq(app.call("t", "auction.field_main"), "Main field");
   eq(app.call("t", "auction.no_items"), "📄 No items");
