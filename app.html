@@ -3301,6 +3301,30 @@ function fmtThaiDate(isoStr) {
   const TH_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
   return `${d} ${TH_MONTHS[m-1]} ${y+543}`;
 }
+/* Locale-aware weekday + date display (replaces the Thai-Buddhist DOW_TH/fmtThaiDate
+ * at display sites; isEventDay's NUMERIC weekday logic is unaffected). 0=Sun..6=Sat. */
+const DOW_LOCALES = {
+  "pt-BR": ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"],
+  "en":    ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+};
+const DOW_SHORT_LOCALES = {
+  "pt-BR": ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"],
+  "en":    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+};
+const MONTH_LOCALES = {
+  "pt-BR": ["jan.","fev.","mar.","abr.","mai.","jun.","jul.","ago.","set.","out.","nov.","dez."],
+  "en":    ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+};
+function dowName(dow)  { const a = DOW_LOCALES[currentLocale]       || DOW_LOCALES["pt-BR"];       return a[dow] != null ? a[dow] : ""; }
+function dowShort(dow) { const a = DOW_SHORT_LOCALES[currentLocale] || DOW_SHORT_LOCALES["pt-BR"]; return a[dow] != null ? a[dow] : ""; }
+/* Gregorian, BKK, locale month abbrev — e.g. "12 jun. 2026" / "12 Jun 2026". */
+function fmtDate(iso) {
+  const parts = String(iso).split("-").map(Number);
+  const y = parts[0], m = parts[1], d = parts[2];
+  if (!y || !m || !d) return String(iso);
+  const mon = (MONTH_LOCALES[currentLocale] || MONTH_LOCALES["pt-BR"])[m - 1];
+  return d + " " + mon + " " + y;
+}
 /** Format an epoch ms timestamp into compact "D/M, H:MM" using BKK time.
  *  Used by the Roster's Last Update column. Returns "—" if ms is falsy. */
 function fmtUpdatedAt(ms) {

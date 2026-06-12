@@ -1572,5 +1572,30 @@ t("i18n: auction status labels resolve in both locales", () => {
   app.call("setLocale", "pt-BR");
 });
 
+console.log("\n[date i18n]");
+t("date: dowName returns locale weekday", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("dowName", 0), "Domingo");
+  eq(app.call("dowName", 2), "Terça");
+  app.call("setLocale", "en");
+  eq(app.call("dowName", 0), "Sunday");
+  eq(app.call("dowName", 4), "Thursday");
+  app.call("setLocale", "pt-BR");
+});
+t("date: dowShort returns locale short weekday", () => {
+  app.call("setLocale", "pt-BR"); eq(app.call("dowShort", 1), "Seg");
+  app.call("setLocale", "en");    eq(app.call("dowShort", 1), "Mon");
+  app.call("setLocale", "pt-BR");
+});
+t("date: fmtDate is Gregorian + locale month, no Buddhist year", () => {
+  app.call("setLocale", "pt-BR");
+  const s = app.call("fmtDate", "2026-06-12");
+  ok(s.indexOf("2569") < 0, "no Buddhist year");
+  ok(s.indexOf("2026") >= 0, "Gregorian year present");
+  ok(/jun/i.test(s), "pt month abbrev present");
+  const e = (function(){ app.call("setLocale","en"); var r = app.call("fmtDate","2026-06-12"); app.call("setLocale","pt-BR"); return r; })();
+  ok(/Jun/.test(e) && e.indexOf("2026") >= 0, "en month + year");
+});
+
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
 if (fail) { console.log("FAILURES:\n  - " + failures.join("\n  - ") + "\n"); process.exit(1); }
