@@ -39,3 +39,6 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | 🔒 ดูอย่างเดียว | 🔒 View only | 🔒 Somente leitura | `map.readonly_badge` |
 | ขยายเต็มจอ | Fullscreen | Tela cheia | `map.expand_tip` |
 | จัดเรียงทุกตี้ตามอาชีพ (ปุ่มสั้น) | Sort by job | Ordenar por classe | `party.sort_all_btn` |
+| แสดงทุกกลุ่ม | Show all groups | Mostrar todos os grupos | `map.show_all_groups` |
+| ติ๊กได้หลายกลุ่มพร้อมกัน | Select multiple groups at once | Pode marcar vários grupos ao mesmo tempo | `map.tick_multi_groups` |
+| Overrun Map · N กลุ่ม | Overrun Map · N groups | Overrun Map · N grupos | `overrun.map_title` |

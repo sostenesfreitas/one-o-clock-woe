@@ -1023,7 +1023,7 @@ console.log("\n[map admin gate — guests view-only, filters allowed]");
   t("buildOverrunHtml: same gate on the Overrun map card", () => {
     app.setAdmin(false);
     let html = app.call("buildOverrunHtml");
-    ok(!html.includes("clearArrows(3)") && html.includes("ดูอย่างเดียว"), "guest gated");
+    ok(!html.includes("clearArrows(3)") && html.includes("map-readonly-hint"), "guest gated");
     ok(html.includes("toggleMapFilterOverrun"), "overrun filters kept for guest");
     app.setAdmin(true);
     html = app.call("buildOverrunHtml");
@@ -1223,7 +1223,7 @@ console.log("\n[overrun groups]");
     const html = app.call("buildOverrunHtml");
     ok(html.includes("toggleMapFilterOverrun(5)"), "5th group filter chip wired");
     ok(html.includes("● Purple"), "Purple chip label");
-    ok(html.includes("Overrun Map · 5 กลุ่ม"), "map title reflects group count");
+    ok(html.includes("Overrun Map · 5 grupos"), "map title reflects group count");
   });
 
   t("overrun: no hardcoded 4-group loops remain in marker/arrow code", () => {
@@ -1529,6 +1529,15 @@ t("i18n: League keys + partyLabel resolve in both locales", () => {
   app.call("setLocale", "en");
   eq(app.call("t", "map.readonly_badge"), "🔒 View only");
   eq(app.call("partyLabel", { name: "" }, 3), "Party 3");
+  app.call("setLocale", "pt-BR");
+});
+
+t("i18n: Overrun keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "map.show_all_groups"), "Mostrar todos os grupos");
+  eq(app.call("t", "overrun.map_title", { n: 5 }), "Overrun Map · 5 grupos");
+  app.call("setLocale", "en");
+  eq(app.call("t", "overrun.map_title", { n: 5 }), "Overrun Map · 5 groups");
   app.call("setLocale", "pt-BR");
 });
 

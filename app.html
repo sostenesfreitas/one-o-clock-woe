@@ -2932,6 +2932,9 @@ const LOCALES = {
     "map.readonly_tip": "Marcadores/setas são só do Admin — convidado só filtra/visualiza",
     "map.readonly_badge": "🔒 Somente leitura",
     "map.expand_tip": "Tela cheia",
+    "map.show_all_groups": "Mostrar todos os grupos",
+    "map.tick_multi_groups": "Pode marcar vários grupos ao mesmo tempo",
+    "overrun.map_title": "Overrun Map · {n} grupos",
   },
   "en": {
     "common.save": "Save",
@@ -2971,6 +2974,9 @@ const LOCALES = {
     "map.readonly_tip": "Pins/arrows are admin-only — guests can only filter the view",
     "map.readonly_badge": "🔒 View only",
     "map.expand_tip": "Fullscreen",
+    "map.show_all_groups": "Show all groups",
+    "map.tick_multi_groups": "Select multiple groups at once",
+    "overrun.map_title": "Overrun Map · {n} groups",
   },
 };
 let currentLocale = (function () {
@@ -4962,13 +4968,13 @@ function buildOverrunHtml() {
     // Same shared parties array → put the global "🔀 Sort all" button on
     // the first card only so we don't render duplicates on every card.
     const sortAllBtn = (gi === 0 && typeof isAdmin === "function" && isAdmin())
-      ? `<button class="header-sort-btn" onclick="sortAllPartiesByJob()" title="จัดเรียงทุกตี้ตามอาชีพ (Knight → Paladin → Wizard → …)">🔀 จัดเรียงทุกตี้</button>`
+      ? `<button class="header-sort-btn" onclick="sortAllPartiesByJob()" title="${t('party.sort_all_by_job')}">🔀 ${t('party.sort_all_btn')}</button>`
       : "";
     return `
       <div class="bg-card" style="--gc:${g.color}">
         <div class="bg-head">
           <span>● ${g.name} Party</span>
-          <span class="count">${total} คน</span>
+          <span class="count">${t("unit.people", { n: total })}</span>
           ${sortAllBtn ? '<div style="flex:1"></div>' + sortAllBtn : ''}
         </div>
         ${rows}
@@ -4986,7 +4992,7 @@ function buildOverrunMapHtml() {
   // each group chip toggles + lights up in its group color.
   const allActiveOv = _mapFilterOverrun.size === 0 ? " active" : "";
   const filterChips =
-    `<button class="map-filter-chip${allActiveOv}" onclick="clearMapFilterOverrun()" title="แสดงทุกกลุ่ม">🔍 ทุกกลุ่ม</button>` +
+    `<button class="map-filter-chip${allActiveOv}" onclick="clearMapFilterOverrun()" title="${t('map.show_all_groups')}">${t('map.all_parties')}</button>` +
     OVERRUN_GROUPS.map((g, idx) => {
       const groupId = idx + 1;
       const on = _mapFilterOverrun.has(groupId);
@@ -4996,13 +5002,13 @@ function buildOverrunMapHtml() {
   return `
     <div class="map-card" style="margin-top:10px">
       <div class="map-title overrun-map">
-        <span>🗺️ Overrun Map · ${OVERRUN_GROUPS.length} กลุ่ม</span>
+        <span>🗺️ ${t('overrun.map_title', { n: OVERRUN_GROUPS.length })}</span>
         <span class="actions">
-          <span class="map-filter-chips" title="ติ๊กได้หลายกลุ่มพร้อมกัน">${filterChips}</span>
+          <span class="map-filter-chips" title="${t('map.tick_multi_groups')}">${filterChips}</span>
           <button onclick="toggleMapFullscreen(3)" class="btn-expand-3" title="${t('map.expand_tip')}">⛶ Expand</button>
           ${(typeof isAdmin === "function" && isAdmin())
-            ? `<button onclick="clearArrows(3)" title="ล้างลูกศรเคลื่อนที่">🗑 Clear arrows</button>`
-            : `<span class="map-readonly-hint" title="หมุด/ลูกศรจัดการได้เฉพาะ Admin — guest ใช้ filter ดูได้อย่างเดียว">🔒 ดูอย่างเดียว</span>`}
+            ? `<button onclick="clearArrows(3)" title="${t('map.clear_arrows_tip')}">🗑 Clear arrows</button>`
+            : `<span class="map-readonly-hint" title="${t('map.readonly_tip')}">${t('map.readonly_badge')}</span>`}
           ${buildMapUploadBtns(3)}
         </span>
       </div>
