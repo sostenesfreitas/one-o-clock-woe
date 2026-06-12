@@ -3135,6 +3135,42 @@ const LOCALES = {
     "toast.users_del_confirm": "Excluir user \"{username}\"?\n\n(A conta do Firebase Auth precisa ser removida no Firebase Console — esta ação revoga o admin e remove da lista)",
     "toast.users_deleted": "✅ User \"{username}\" excluído — remova-o do Firebase Auth também",
     "toast.users_del_fail": "Falha ao excluir: {msg}",
+    "ar.hero_meta": "Só dá para pedir no dia do evento — o admin distribui em Campo principal/secundário automaticamente",
+    "ar.auction_time": "Leilão 21:00–22:00 no dia do evento · limpa 00:00",
+    "ar.tell_name": "👤 Diga seu nome",
+    "ar.select_name_opt": "— Selecionar nome —",
+    "ar.event_day": "dia de evento",
+    "ar.no_event_day": "sem evento hoje",
+    "ar.admin_open_note": "Aberto só nos dias de evento (Ter/Qui = GL · Dom = Overrun) — limpa automaticamente 00:00 BKK",
+    "ar.clear_today": "🧹 Limpar pedidos de hoje ({date})",
+    "ar.clear_auction_pages": "🧹 Limpar páginas Auction GL+Overrun",
+    "ar.locked_noevent": "Hoje não é dia de evento — só dá para pedir no dia do evento (Ter/Qui = GL, Dom = Overrun)",
+    "ar.locked_leave": "Você está de folga hoje — sem direito a pedir leilão",
+    "ar.request_btn": "🙋 Pedir leilão {ev} hoje ({day})",
+    "ar.lock_noevent_title": "🔒 Hoje não é dia de evento",
+    "ar.lock_noevent_sub": "Só dá para pedir no dia do evento — Ter/Qui = GL · Dom = Overrun · não dá para pedir antecipado",
+    "ar.lock_leave_title": "🌴 Você marcou folga em {date} — sem direito a pedir hoje",
+    "ar.lock_leave_sub": "Se for jogar, cancele a folga antes na aba \"🌴 Folga\"",
+    "ar.my_requests": "📋 Meus pedidos ({n})",
+    "ar.no_my_requests": "Nenhum pedido ainda — clique em \"Pedir leilão\" acima",
+    "ar.not_in_party": "Sem grupo ainda",
+    "ar.status_pending": "Aguardando",
+    "ar.status_approved": "Aprovado",
+    "ar.status_rejected": "Rejeitado",
+    "ar.approve": "✓ Aprovar",
+    "ar.reject": "✗ Rejeitar",
+    "ar.withdraw": "🗑 Retirar",
+    "ar.revert": "↩ Cancelar",
+    "ar.queue_tip": "Ordem da fila pela hora do pedido",
+    "ar.time_tip": "Hora do pedido",
+    "ar.reject_reason_prompt": "Motivo (opcional):",
+    "ar.auto_gl": "🤖 Alocar GL automático",
+    "ar.auto_overrun": "🤖 Alocar Overrun automático",
+    "ar.clear_past": "🧹 Limpar dias passados",
+    "ar.pending_title": "📥 Aguardando aprovação ({n})",
+    "ar.no_pending": "Nenhum pedido aguardando",
+    "ar.approved_title": "✅ Aprovados ({n})",
+    "ar.rejected_title": "❌ Rejeitados hoje ({n})",
   },
   "en": {
     "common.save": "Save",
@@ -3377,6 +3413,42 @@ const LOCALES = {
     "toast.users_del_confirm": "Delete user \"{username}\"?\n\n(Firebase Auth account must be deleted in Firebase Console — this revokes admin and removes from the list)",
     "toast.users_deleted": "✅ User \"{username}\" deleted — also remove from Firebase Auth",
     "toast.users_del_fail": "Delete failed: {msg}",
+    "ar.hero_meta": "Request only on the event day — admin auto-assigns to Main/Sub field",
+    "ar.auction_time": "Auction 21:00–22:00 on event day · clears 00:00",
+    "ar.tell_name": "👤 Tell your name",
+    "ar.select_name_opt": "— Select name —",
+    "ar.event_day": "event day",
+    "ar.no_event_day": "no event today",
+    "ar.admin_open_note": "Open only on event days (Tue/Thu = GL · Sun = Overrun) — auto-clears 00:00 BKK",
+    "ar.clear_today": "🧹 Clear today's requests ({date})",
+    "ar.clear_auction_pages": "🧹 Clear Auction GL+Overrun pages",
+    "ar.locked_noevent": "Today isn't an event day — request only on event days (Tue/Thu = GL, Sun = Overrun)",
+    "ar.locked_leave": "You're on leave today — can't request",
+    "ar.request_btn": "🙋 Request {ev} auction today ({day})",
+    "ar.lock_noevent_title": "🔒 Today isn't an event day",
+    "ar.lock_noevent_sub": "Request only on event days — Tue/Thu = GL · Sun = Overrun · no advance requests",
+    "ar.lock_leave_title": "🌴 You set leave on {date} — can't request today",
+    "ar.lock_leave_sub": "If you can attend, cancel the leave first in the \"🌴 Leave\" tab",
+    "ar.my_requests": "📋 My requests ({n})",
+    "ar.no_my_requests": "No requests yet — click \"Request\" above",
+    "ar.not_in_party": "Not in a party yet",
+    "ar.status_pending": "Pending",
+    "ar.status_approved": "Approved",
+    "ar.status_rejected": "Rejected",
+    "ar.approve": "✓ Approve",
+    "ar.reject": "✗ Reject",
+    "ar.withdraw": "🗑 Withdraw",
+    "ar.revert": "↩ Cancel",
+    "ar.queue_tip": "Queue order by request time",
+    "ar.time_tip": "Request time",
+    "ar.reject_reason_prompt": "Reason (optional):",
+    "ar.auto_gl": "🤖 Auto-allocate GL",
+    "ar.auto_overrun": "🤖 Auto-allocate Overrun",
+    "ar.clear_past": "🧹 Clear past dates",
+    "ar.pending_title": "📥 Awaiting approval ({n})",
+    "ar.no_pending": "No pending requests",
+    "ar.approved_title": "✅ Approved ({n})",
+    "ar.rejected_title": "❌ Rejected today ({n})",
   },
 };
 let currentLocale = (function () {
@@ -8892,12 +8964,12 @@ function buildAuctionRequestHtml() {
     <div class="ar-hero">
       <div>
         <h2>🙋 Auction Request</h2>
-        <div class="ar-meta">ขอได้เฉพาะวันกิจวันนี้ — แอดมินจัดให้ลงสนามหลัก/รองอัตโนมัติ</div>
+        <div class="ar-meta">${t('ar.hero_meta')}</div>
       </div>
       <div style="flex:1"></div>
       <div class="ar-meta">
         <b>📅 ${date}</b>
-        <br><span style="font-size:11px">ประมูล 21:00–22:00 ของวันกิจกรรม · เคลียร์ 00:00</span>
+        <br><span style="font-size:11px">${t('ar.auction_time')}</span>
       </div>
     </div>`;
 
@@ -8906,21 +8978,21 @@ function buildAuctionRequestHtml() {
     <div class="ar-section">
       <div class="ar-claim">
         <span class="ar-claimed">👤 ${escapeHtml(claimed.name)} (${escapeHtml(claimed.job || "?")})</span>
-        <button class="ghost" onclick="arSetClaimedMember('')">เปลี่ยน / ออก</button>
+        <button class="ghost" onclick="arSetClaimedMember('')">${t('roster.change_leave')}</button>
       </div>
     </div>
   ` : `
     <div class="ar-section">
-      <h3>👤 บอกชื่อตัวเอง</h3>
+      <h3>${t('ar.tell_name')}</h3>
       <div class="ar-claim">
-        <label>เลือกชื่อ:</label>
+        <label>${t('leave.select_name')}:</label>
         <select id="arClaimSelect">
-          <option value="">— เลือกชื่อ —</option>
+          <option value="">${t('ar.select_name_opt')}</option>
           ${claimOptionsHtml((state.members || [])
             .slice()
             .sort((a, b) => (a.name || "").localeCompare(b.name || "", "th")))}
         </select>
-        <button onclick="arSetClaimedMember(document.getElementById('arClaimSelect').value)">ยืนยัน</button>
+        <button onclick="arSetClaimedMember(document.getElementById('arClaimSelect').value)">${t('common.confirm')}</button>
       </div>
     </div>
   `;
@@ -8936,7 +9008,7 @@ function buildAuctionRequestHtml() {
     <div class="ar-day-tabs">
       <div class="ar-day-tab active ${eventMode ? (eventMode === "gl" ? "has-gl" : "has-overrun") : "closed"}">
         <span class="ar-day-num">${formatDayShortBkk(today)}</span>
-        <span class="ar-day-mode">${todayEvent ? "🟢 วันกิจ " + todayEvent : "🔒 ไม่มีกิจวันนี้"}</span>
+        <span class="ar-day-mode">${todayEvent ? "🟢 " + t('ar.event_day') + " " + todayEvent : "🔒 " + t('ar.no_event_day')}</span>
       </div>
     </div>`;
 
@@ -8945,10 +9017,10 @@ function buildAuctionRequestHtml() {
     <div class="ar-section">
       <h3>⚙️ Admin tools</h3>
       <div class="ar-bulk-bar">
-        <span style="font-size:12px;color:var(--muted)">เปิดรับเฉพาะวันกิจ (อังคาร/พฤหัส = GL · อาทิตย์ = Overrun) — เคลียร์อัตโนมัติ 00:00 BKK</span>
+        <span style="font-size:12px;color:var(--muted)">${t('ar.admin_open_note')}</span>
         <div style="flex:1"></div>
-        <button class="danger" onclick="arClearDay('${date}')">🧹 ล้างคำขอวันนี้ (${date})</button>
-        <button class="danger" onclick="arResetAuctionPages()">🧹 ล้างหน้า Auction GL+Overrun</button>
+        <button class="danger" onclick="arClearDay('${date}')">${t('ar.clear_today',{date})}</button>
+        <button class="danger" onclick="arResetAuctionPages()">${t('ar.clear_auction_pages')}</button>
       </div>
     </div>
   ` : "";
@@ -8960,29 +9032,29 @@ function buildAuctionRequestHtml() {
   // Lock priority: no event today → on leave → open.
   const lockReason = !eventMode ? "noevent" : onLeave ? "leave" : null;
   const lockedTitle = lockReason === "noevent"
-    ? "วันนี้ไม่ใช่วันกิจกรรม — ขอประมูลได้เฉพาะวันกิจ (อังคาร/พฤหัส = GL, อาทิตย์ = Overrun)"
-    : lockReason === "leave" ? "คุณลงลาวันนี้ไว้ — ไม่มีสิทธิ์ขอประมูล"
+    ? t('ar.locked_noevent')
+    : lockReason === "leave" ? t('ar.locked_leave')
     : "";
   const requestButtons = claimedId ? `
     <div class="ar-bulk-bar">
       ${eventMode ? `
       <button class="ar-request-btn" ${lockReason ? "disabled" : ""}
         title="${escapeHtml(lockedTitle)}"
-        onclick="arOpenRequestModal('${today}','${eventMode}')">🙋 ขอประมูล ${todayEvent} วันนี้ (${formatDayShortBkk(today)})</button>
+        onclick="arOpenRequestModal('${today}','${eventMode}')">${t('ar.request_btn',{ev: todayEvent, day: formatDayShortBkk(today)})}</button>
       ` : ""}
     </div>
     ${lockReason === "noevent"
-      ? `<div style="text-align:center;color:#94a3b8;padding:14px;font-size:13px;background:rgba(148,163,184,0.08);border:1px solid #475569;border-radius:6px;margin-top:8px">🔒 วันนี้ไม่ใช่วันกิจกรรม<br><span style="font-size:11px">ขอประมูลได้เฉพาะวันกิจ — อังคาร/พฤหัส = GL · อาทิตย์ = Overrun · ขอล่วงหน้าไม่ได้</span></div>`
+      ? `<div style="text-align:center;color:#94a3b8;padding:14px;font-size:13px;background:rgba(148,163,184,0.08);border:1px solid #475569;border-radius:6px;margin-top:8px">${t('ar.lock_noevent_title')}<br><span style="font-size:11px">${t('ar.lock_noevent_sub')}</span></div>`
       : lockReason === "leave"
-        ? `<div style="text-align:center;color:#fb923c;padding:10px;font-size:13px;background:rgba(249,115,22,0.1);border:1px solid #f97316;border-radius:6px;margin-top:8px">🌴 คุณลงลาวันที่ ${today} ไว้แล้ว — ไม่มีสิทธิ์ขอประมูลวันนี้ <br><span style="font-size:11px">ถ้าเข้าได้ ให้ยกเลิกลาก่อนในแท็บ "🌴 ลา"</span></div>`
+        ? `<div style="text-align:center;color:#fb923c;padding:10px;font-size:13px;background:rgba(249,115,22,0.1);border:1px solid #f97316;border-radius:6px;margin-top:8px">${t('ar.lock_leave_title',{date: today})} <br><span style="font-size:11px">${t('ar.lock_leave_sub')}</span></div>`
         : ""}
   ` : "";
   const mySection = claimedId ? `
     <div class="ar-section">
-      <h3>📋 คำขอของฉัน (${myRequests.length})</h3>
+      <h3>${t('ar.my_requests',{n: myRequests.length})}</h3>
       ${requestButtons}
       ${myRequests.length ? `<div class="ar-my-list">${myRequests.map(r => arRenderRow(r, false)).join("")}</div>`
-                          : `<div class="ar-queue-empty">ยังไม่มีคำขอ — กดปุ่ม "ขอประมูล" ด้านบน</div>`}
+                          : `<div class="ar-queue-empty">${t('ar.no_my_requests')}</div>`}
     </div>
   ` : "";
 
@@ -9012,7 +9084,7 @@ function arSelectDate(d) {
 function formatDayShortBkk(iso) {
   const [y, m, d] = iso.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
-  const wd = ["อา","จ","อ","พ","พฤ","ศ","ส"][dt.getUTCDay()];
+  const wd = dowShort(dt.getUTCDay());
   return `${wd} ${d}/${m}`;
 }
 
@@ -9029,35 +9101,35 @@ function arRenderRow(r, asAdmin, queueNo) {
   // Overrun has no main/sub split — only GL gets the field tag.
   const fieldTag = (r.mode !== "gl") ? ""
     : liveField
-      ? `<span class="ar-field-tag ${liveField === "sub" ? "sub" : ""}">${liveField === "sub" ? "สนามรอง" : "สนามหลัก"}</span>`
-      : `<span class="ar-field-tag" style="background:#3f3f46;color:#a1a1aa">ยังไม่อยู่ในตี้</span>`;
+      ? `<span class="ar-field-tag ${liveField === "sub" ? "sub" : ""}">${liveField === "sub" ? t('auction.field_sub_short') : t('auction.field_main_short')}</span>`
+      : `<span class="ar-field-tag" style="background:#3f3f46;color:#a1a1aa">${t('ar.not_in_party')}</span>`;
   const leaveTag = arHasLeaveOnDate(r.memberId, r.date)
-    ? `<span class="ar-field-tag" style="background:#7c2d12;color:#fdba74">🌴 ลา</span>` : "";
+    ? `<span class="ar-field-tag" style="background:#7c2d12;color:#fdba74">🌴 ${t('leave.title')}</span>` : "";
   const modeTag = `<span style="font-size:10px;color:var(--muted)">${r.mode === "gl" ? "GL" : "OR"} · ${r.date}</span>`;
-  const statusTag = `<span class="ar-status-tag ${r.status}">${r.status === "pending" ? "รออนุมัติ" : r.status === "approved" ? "อนุมัติ" : "ปฏิเสธ"}</span>`;
+  const statusTag = `<span class="ar-status-tag ${r.status}">${r.status === "pending" ? t('ar.status_pending') : r.status === "approved" ? t('ar.status_approved') : t('ar.status_rejected')}</span>`;
   const noteRow = r.note ? `<div class="ar-note">"${escapeHtml(r.note)}"</div>` : "";
   const rejectRow = r.rejectReason ? `<div class="ar-note" style="color:#fca5a5">⚠ ${escapeHtml(r.rejectReason)}</div>` : "";
 
   let actions = "";
   if (asAdmin && r.status === "pending") {
     actions = `
-      <button class="ar-action-btn approve" onclick="arApproveRequest('${r.date}','${r.mode}','${r.id}')">✓ อนุมัติ</button>
-      <button class="ar-action-btn reject" onclick="arPromptReject('${r.date}','${r.mode}','${r.id}')">✗ ปฏิเสธ</button>`;
+      <button class="ar-action-btn approve" onclick="arApproveRequest('${r.date}','${r.mode}','${r.id}')">${t('ar.approve')}</button>
+      <button class="ar-action-btn reject" onclick="arPromptReject('${r.date}','${r.mode}','${r.id}')">${t('ar.reject')}</button>`;
   } else if (!asAdmin && r.status === "pending") {
-    actions = `<button class="ar-action-btn reject" onclick="arWithdrawRequest('${r.date}','${r.mode}','${r.id}')">🗑 ถอน</button>`;
+    actions = `<button class="ar-action-btn reject" onclick="arWithdrawRequest('${r.date}','${r.mode}','${r.id}')">${t('ar.withdraw')}</button>`;
   } else if (asAdmin && r.status === "approved") {
-    actions = `<button class="ar-action-btn reject" onclick="arPromptReject('${r.date}','${r.mode}','${r.id}')">↩ ยกเลิก</button>`;
+    actions = `<button class="ar-action-btn reject" onclick="arPromptReject('${r.date}','${r.mode}','${r.id}')">${t('ar.revert')}</button>`;
   } else if (asAdmin && r.status === "rejected") {
     // Re-consider a rejected request (e.g. rejected by mistake) — approve it
     // back into the auction. History stays until the day is cleared.
-    actions = `<button class="ar-action-btn approve" onclick="arApproveRequest('${r.date}','${r.mode}','${r.id}')">✓ อนุมัติ</button>`;
+    actions = `<button class="ar-action-btn approve" onclick="arApproveRequest('${r.date}','${r.mode}','${r.id}')">${t('ar.approve')}</button>`;
   }
 
   return `<div class="ar-req-row ${r.status}">
-    ${queueNo ? `<span class="ar-queue-no" title="ลำดับคิวตามเวลาที่ขอ">#${queueNo}</span>` : ""}
+    ${queueNo ? `<span class="ar-queue-no" title="${t('ar.queue_tip')}">#${queueNo}</span>` : ""}
     <span class="ar-name">${escapeHtml(name)}</span>
     <span class="ar-job">${escapeHtml(job)}</span>
-    <span class="ar-time" title="เวลาที่ส่งคำขอ">🕐 ${arFormatTime(r.requestedAt)}</span>
+    <span class="ar-time" title="${t('ar.time_tip')}">🕐 ${arFormatTime(r.requestedAt)}</span>
     ${fieldTag}
     ${leaveTag}
     <span class="ar-items">${items}</span>
@@ -9070,7 +9142,7 @@ function arRenderRow(r, asAdmin, queueNo) {
 }
 
 function arPromptReject(date, mode, requestId) {
-  const reason = prompt("เหตุผล (ไม่บังคับ):", "");
+  const reason = prompt(t('ar.reject_reason_prompt'), "");
   if (reason === null) return;
   arRejectRequest(date, mode, requestId, reason);
 }
@@ -9109,25 +9181,25 @@ function arBuildAdminQueue(date, eventMode) {
   const bulkBar = `
     <div class="ar-bulk-bar">
       ${eventMode === "gl" ? `<button class="primary" ${!pendingGl.length ? "disabled" : ""}
-        onclick="arBulkApprove('${date}','gl')">🤖 จัดสรร GL อัตโนมัติ</button>` : ""}
+        onclick="arBulkApprove('${date}','gl')">${t('ar.auto_gl')}</button>` : ""}
       ${eventMode === "overrun" ? `<button class="primary" ${!pendingOverrun.length ? "disabled" : ""}
-        onclick="arBulkApprove('${date}','overrun')">🤖 จัดสรร Overrun อัตโนมัติ</button>` : ""}
+        onclick="arBulkApprove('${date}','overrun')">${t('ar.auto_overrun')}</button>` : ""}
       <div style="flex:1"></div>
-      <button onclick="arAutoClearPast()">🧹 ล้างวันที่ผ่านมา</button>
+      <button onclick="arAutoClearPast()">${t('ar.clear_past')}</button>
     </div>`;
 
   const pendingSection = `
     <div class="ar-section">
-      <h3>📥 รออนุมัติ (${totalPending})</h3>
+      <h3>${t('ar.pending_title',{n: totalPending})}</h3>
       ${bulkBar}
-      ${totalPending === 0 ? `<div class="ar-queue-empty">ไม่มีคำขอรออนุมัติ</div>` : ""}
+      ${totalPending === 0 ? `<div class="ar-queue-empty">${t('ar.no_pending')}</div>` : ""}
       ${renderGroup("⚔️ GL", "gl", pendingGl, true)}
       ${renderGroup("🏆 Overrun", "overrun", pendingOverrun, true)}
     </div>`;
 
   const approvedSection = (approvedGl.length || approvedOver.length) ? `
     <div class="ar-section">
-      <h3>✅ อนุมัติแล้ว (${approvedGl.length + approvedOver.length})</h3>
+      <h3>${t('ar.approved_title',{n: approvedGl.length + approvedOver.length})}</h3>
       ${renderGroup("⚔️ GL", "gl", approvedGl)}
       ${renderGroup("🏆 Overrun", "overrun", approvedOver)}
     </div>` : "";
@@ -9137,7 +9209,7 @@ function arBuildAdminQueue(date, eventMode) {
   // whole date by arClearDay / arAutoClearPast / the daily reset (same-day scope).
   const rejectedSection = (rejectedGl.length || rejectedOver.length) ? `
     <div class="ar-section ar-section-rejected">
-      <h3>❌ ปฏิเสธวันนี้ (${rejectedGl.length + rejectedOver.length})</h3>
+      <h3>${t('ar.rejected_title',{n: rejectedGl.length + rejectedOver.length})}</h3>
       ${renderGroup("⚔️ GL", "gl", rejectedGl)}
       ${renderGroup("🏆 Overrun", "overrun", rejectedOver)}
     </div>` : "";

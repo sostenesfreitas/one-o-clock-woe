@@ -1260,7 +1260,9 @@ console.log("\n[auction-request queue]");
   t("queue: pending renders in pure arrival order with #N (sub ที่มาก่อนขึ้นก่อน)", () => {
     seedQueue();
     const h = app.call("arBuildAdminQueue", date, "gl");
-    const pendingPart = h.split("อนุมัติแล้ว")[0];
+    // "ar-req-row approved" is the first token of the first approved row — everything
+    // before it is the pending section (pending rows use "ar-req-row pending").
+    const pendingPart = h.split("ar-req-row approved")[0];
     ok(pendingPart.includes("ar-queue-no"), "queue badges rendered");
     const iE = pendingPart.indexOf("EarlySub"), iM = pendingPart.indexOf("MidMain"), iL = pendingPart.indexOf("LateMain");
     ok(iE !== -1 && iM !== -1 && iL !== -1, "all three pending rows rendered");
@@ -1282,11 +1284,12 @@ console.log("\n[auction-request queue]");
   t("queue: approved history keeps main-before-sub grouping (unchanged)", () => {
     seedQueue();
     const h = app.call("arBuildAdminQueue", date, "gl");
-    const approvedPart = h.split("อนุมัติแล้ว")[1] || "";
-    const iMain = approvedPart.indexOf("WonGuy"), iSub = approvedPart.indexOf("OldSub");
+    // Split on the first approved row div — approved rows follow the pending section.
+    const approvedAndBeyond = h.split("ar-req-row approved").slice(1).join("ar-req-row approved");
+    const iMain = approvedAndBeyond.indexOf("WonGuy"), iSub = approvedAndBeyond.indexOf("OldSub");
     ok(iMain !== -1 && iSub !== -1, "both approved rows rendered");
     ok(iMain < iSub, "main (t=250) still before sub (t=50) in history — old grouping intact");
-    ok(!approvedPart.includes("ar-queue-no"), "no queue numbers on history rows");
+    ok(!approvedAndBeyond.includes("ar-queue-no"), "no queue numbers on history rows");
   });
 
   t("queue: arFormatTime formats BKK time and dashes invalid input", () => {
@@ -1614,6 +1617,16 @@ t("i18n: Users keys resolve in both locales", () => {
   eq(app.call("t", "users.created_meta", { dt: "X", by: "Y" }), "Criado em X por Y");
   app.call("setLocale", "en");
   eq(app.call("t", "users.del_btn"), "🗑 Delete");
+  app.call("setLocale", "pt-BR");
+});
+
+t("i18n: Auction-Request render keys", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "ar.status_pending"), "Aguardando");
+  eq(app.call("t", "ar.request_btn", { ev: "GL", day: "Ter 12/6" }), "🙋 Pedir leilão GL hoje (Ter 12/6)");
+  eq(app.call("t", "ar.pending_title", { n: 3 }), "📥 Aguardando aprovação (3)");
+  app.call("setLocale", "en");
+  eq(app.call("t", "ar.status_approved"), "Approved");
   app.call("setLocale", "pt-BR");
 });
 

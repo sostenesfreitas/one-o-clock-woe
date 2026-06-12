@@ -242,3 +242,39 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ลบ user "{username}" ? … (confirm) | Delete user "{username}"? … | Excluir user "{username}"? … | `toast.users_del_confirm` |
 | ✅ ลบ user "{username}" — โปรดลบใน Firebase Auth ด้วย | ✅ User "{username}" deleted — also remove from Firebase Auth | ✅ User "{username}" excluído — remova-o do Firebase Auth também | `toast.users_deleted` |
 | ลบไม่สำเร็จ: {msg} (users toast) | Delete failed: {msg} | Falha ao excluir: {msg} | `toast.users_del_fail` |
+| ขอได้เฉพาะวันกิจ — แอดมินจัดให้ลงสนามหลัก/รองอัตโนมัติ | Request only on the event day — admin auto-assigns to Main/Sub field | Só dá para pedir no dia do evento — o admin distribui em Campo principal/secundário automaticamente | `ar.hero_meta` |
+| ประมูล 21:00–22:00 ของวันกิจกรรม · เคลียร์ 00:00 | Auction 21:00–22:00 on event day · clears 00:00 | Leilão 21:00–22:00 no dia do evento · limpa 00:00 | `ar.auction_time` |
+| 👤 บอกชื่อตัวเอง | 👤 Tell your name | 👤 Diga seu nome | `ar.tell_name` |
+| — เลือกชื่อ — (AR dropdown) | — Select name — | — Selecionar nome — | `ar.select_name_opt` |
+| วันกิจ (badge) | event day | dia de evento | `ar.event_day` |
+| ไม่มีกิจวันนี้ (badge) | no event today | sem evento hoje | `ar.no_event_day` |
+| เปิดรับเฉพาะวันกิจ (อังคาร/พฤหัส = GL · อาทิตย์ = Overrun) — เคลียร์อัตโนมัติ 00:00 BKK | Open only on event days (Tue/Thu = GL · Sun = Overrun) — auto-clears 00:00 BKK | Aberto só nos dias de evento (Ter/Qui = GL · Dom = Overrun) — limpa automaticamente 00:00 BKK | `ar.admin_open_note` |
+| 🧹 ล้างคำขอวันนี้ ({date}) | 🧹 Clear today's requests ({date}) | 🧹 Limpar pedidos de hoje ({date}) | `ar.clear_today` |
+| 🧹 ล้างหน้า Auction GL+Overrun | 🧹 Clear Auction GL+Overrun pages | 🧹 Limpar páginas Auction GL+Overrun | `ar.clear_auction_pages` |
+| วันนี้ไม่ใช่วันกิจกรรม — ขอประมูลได้เฉพาะวันกิจ (อังคาร/พฤหัส = GL, อาทิตย์ = Overrun) | Today isn't an event day — request only on event days (Tue/Thu = GL, Sun = Overrun) | Hoje não é dia de evento — só dá para pedir no dia do evento (Ter/Qui = GL, Dom = Overrun) | `ar.locked_noevent` |
+| คุณลงลาวันนี้ไว้ — ไม่มีสิทธิ์ขอประมูล | You're on leave today — can't request | Você está de folga hoje — sem direito a pedir leilão | `ar.locked_leave` |
+| 🙋 ขอประมูล {ev} วันนี้ ({day}) | 🙋 Request {ev} auction today ({day}) | 🙋 Pedir leilão {ev} hoje ({day}) | `ar.request_btn` |
+| 🔒 วันนี้ไม่ใช่วันกิจกรรม (lock title) | 🔒 Today isn't an event day | 🔒 Hoje não é dia de evento | `ar.lock_noevent_title` |
+| ขอประมูลได้เฉพาะวันกิจ — อังคาร/พฤหัส = GL · อาทิตย์ = Overrun · ขอล่วงหน้าไม่ได้ | Request only on event days — Tue/Thu = GL · Sun = Overrun · no advance requests | Só dá para pedir no dia do evento — Ter/Qui = GL · Dom = Overrun · não dá para pedir antecipado | `ar.lock_noevent_sub` |
+| 🌴 คุณลงลาวันที่ {date} ไว้แล้ว — ไม่มีสิทธิ์ขอประมูลวันนี้ | 🌴 You set leave on {date} — can't request today | 🌴 Você marcou folga em {date} — sem direito a pedir hoje | `ar.lock_leave_title` |
+| ถ้าเข้าได้ ให้ยกเลิกลาก่อนในแท็บ "🌴 ลา" | If you can attend, cancel the leave first in the "🌴 Leave" tab | Se for jogar, cancele a folga antes na aba "🌴 Folga" | `ar.lock_leave_sub` |
+| 📋 คำขอของฉัน ({n}) | 📋 My requests ({n}) | 📋 Meus pedidos ({n}) | `ar.my_requests` |
+| ยังไม่มีคำขอ — กดปุ่ม "ขอประมูล" ด้านบน | No requests yet — click "Request" above | Nenhum pedido ainda — clique em "Pedir leilão" acima | `ar.no_my_requests` |
+| ยังไม่อยู่ในตี้ | Not in a party yet | Sem grupo ainda | `ar.not_in_party` |
+| รออนุมัติ (status) | Pending | Aguardando | `ar.status_pending` |
+| อนุมัติ (status) | Approved | Aprovado | `ar.status_approved` |
+| ปฏิเสธ (status) | Rejected | Rejeitado | `ar.status_rejected` |
+| ✓ อนุมัติ (button) | ✓ Approve | ✓ Aprovar | `ar.approve` |
+| ✗ ปฏิเสธ (button) | ✗ Reject | ✗ Rejeitar | `ar.reject` |
+| 🗑 ถอน (button) | 🗑 Withdraw | 🗑 Retirar | `ar.withdraw` |
+| ↩ ยกเลิก (revert button) | ↩ Cancel | ↩ Cancelar | `ar.revert` |
+| ลำดับคิวตามเวลาที่ขอ (tooltip) | Queue order by request time | Ordem da fila pela hora do pedido | `ar.queue_tip` |
+| เวลาที่ส่งคำขอ (tooltip) | Request time | Hora do pedido | `ar.time_tip` |
+| เหตุผล (ไม่บังคับ): (prompt) | Reason (optional): | Motivo (opcional): | `ar.reject_reason_prompt` |
+| 🤖 จัดสรร GL อัตโนมัติ | 🤖 Auto-allocate GL | 🤖 Alocar GL automático | `ar.auto_gl` |
+| 🤖 จัดสรร Overrun อัตโนมัติ | 🤖 Auto-allocate Overrun | 🤖 Alocar Overrun automático | `ar.auto_overrun` |
+| 🧹 ล้างวันที่ผ่านมา | 🧹 Clear past dates | 🧹 Limpar dias passados | `ar.clear_past` |
+| 📥 รออนุมัติ ({n}) | 📥 Awaiting approval ({n}) | 📥 Aguardando aprovação ({n}) | `ar.pending_title` |
+| ไม่มีคำขอรออนุมัติ | No pending requests | Nenhum pedido aguardando | `ar.no_pending` |
+| ✅ อนุมัติแล้ว ({n}) | ✅ Approved ({n}) | ✅ Aprovados ({n}) | `ar.approved_title` |
+| ❌ ปฏิเสธวันนี้ ({n}) | ❌ Rejected today ({n}) | ❌ Rejeitados hoje ({n}) | `ar.rejected_title` |
