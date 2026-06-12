@@ -127,7 +127,7 @@
      so tabs can have variable widths (long labels like "Auction Overrun"
      no longer overflow). CSS here only controls background color per mode. */
   .mode-toggle.overrun-active .seg-indicator {
-    background: linear-gradient(90deg, #ef4444, #eab308 33%, #22c55e 66%, #3b82f6);
+    background: linear-gradient(90deg, #ef4444, #eab308 25%, #22c55e 50%, #3b82f6 75%, #a855f7);
   }
   .mode-toggle.summary-active .seg-indicator {
     background: var(--success);
@@ -2033,7 +2033,7 @@
   .map-card .map-title.sub { color: var(--sub-bf); }
   .map-card .map-title.overrun-map {
     color: #fff;
-    background: linear-gradient(90deg, #ef4444, #eab308 33%, #22c55e 66%, #3b82f6);
+    background: linear-gradient(90deg, #ef4444, #eab308 25%, #22c55e 50%, #3b82f6 75%, #a855f7);
   }
   .map-card .map-title .actions { display: flex; gap: 6px; flex-shrink: 0; }
   .map-card .map-title button {
@@ -2837,12 +2837,17 @@ const TEAM_COLORS = [
   "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"
 ];
 
-/* Overrun: 4 big parties × 4 sub-parties — colors by big group */
+// 5 color groups partitioning the 16 shared overrun parties (2026-06-12:
+// Blue gave ตี้ 15,16 to the new purple "พิเศษ" group — no structural
+// change, party ids/slots untouched, only the group mapping).
+// `marker` = the group's default map pin (used only until a position is
+// saved) — 2×2 corners for the four classic groups, center for พิเศษ.
 const OVERRUN_GROUPS = [
-  { name: "Red",    color: "#ef4444", ids: [1,2,3,4] },
-  { name: "Yellow", color: "#eab308", ids: [5,6,7,8] },
-  { name: "Green",  color: "#22c55e", ids: [9,10,11,12] },
-  { name: "Blue",   color: "#3b82f6", ids: [13,14,15,16] }
+  { name: "Red",    color: "#ef4444", ids: [1,2,3,4],    marker: { x: 25, y: 35 } },
+  { name: "Yellow", color: "#eab308", ids: [5,6,7,8],    marker: { x: 75, y: 35 } },
+  { name: "Green",  color: "#22c55e", ids: [9,10,11,12], marker: { x: 25, y: 70 } },
+  { name: "Blue",   color: "#3b82f6", ids: [13,14],      marker: { x: 75, y: 70 } },
+  { name: "พิเศษ",  color: "#a855f7", ids: [15,16],      marker: { x: 50, y: 52 } }
 ];
 const TEAM_COLORS_OVERRUN = (() => {
   const out = new Array(16);
@@ -3073,11 +3078,11 @@ let _pendingRenderAfterDrag = false;
 // Map filter state — a SET of ids to show; EMPTY set = show ALL (preserves the
 // old "0 = all" semantics). Multi-select: click several party/group chips to view
 // them together (e.g. ตี้ 4 + 5 on the Main map). Each battlefield card has its
-// OWN filter (Main 1-8, Sub 9-16, Overrun groups 1-4 chosen independently).
+// OWN filter (Main 1-8, Sub 9-16, Overrun group ids chosen independently).
 // Per-viewer + in-memory only — reset to empty (all) on every page load, NOT synced.
 let _mapFilterMain    = new Set();   // empty = all; else party ids 1-8
 let _mapFilterSub     = new Set();   // empty = all; else party ids 9-16
-let _mapFilterOverrun = new Set();   // empty = all; else group ids 1-4
+let _mapFilterOverrun = new Set();   // empty = all; else OVERRUN_GROUPS ids (1..length)
 
 // Pure: should `id` render given a filter set? Empty/missing set = everyone visible.
 function mapFilterVisible(set, id) { return !set || set.size === 0 || set.has(id); }
@@ -3967,7 +3972,7 @@ function renderArrows(mapNum) {
 function clearArrows(mapNum) {
   if (mapNum === 3) {
     if (!state.overrunMarkers) state.overrunMarkers = {};
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= OVERRUN_GROUPS.length; i++) {
       if (state.overrunMarkers[i]) state.overrunMarkers[i].path = [];
     }
     save();
@@ -3998,7 +4003,7 @@ function undoLastSegment(idx, store) {
   return true;
 }
 
-/* ===== Overrun Map markers (4 big parties) ===== */
+/* ===== Overrun Map markers (one per OVERRUN_GROUPS entry) ===== */
 
 function renderOverrunMarkers() {
   const wrap = document.getElementById("mapWrap3");
@@ -4006,11 +4011,10 @@ function renderOverrunMarkers() {
   wrap.querySelectorAll(".marker").forEach(n => n.remove());
   if (!state.overrunMarkers) state.overrunMarkers = {};
 
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= OVERRUN_GROUPS.length; i++) {
     if (!state.overrunMarkers[i]) {
-      const col = (i - 1) % 2;
-      const row = Math.floor((i - 1) / 2);
-      state.overrunMarkers[i] = { x: 25 + col * 50, y: 35 + row * 35, path: [] };
+      const def = OVERRUN_GROUPS[i - 1].marker || { x: 50, y: 50 };
+      state.overrunMarkers[i] = { x: def.x, y: def.y, path: [] };
     }
     // Map filter — when set, only render the selected group's marker.
     if (!mapFilterVisible(_mapFilterOverrun, i)) continue;
@@ -4055,7 +4059,7 @@ function renderOverrunArrows() {
   const ns = "http://www.w3.org/2000/svg";
   const defs = document.createElementNS(ns, "defs");
   let defsHtml = "";
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= OVERRUN_GROUPS.length; i++) {
     const c = OVERRUN_GROUPS[i - 1].color;
     defsHtml +=
       `<marker id="ov-arrow-${i}" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">` +
@@ -4065,7 +4069,7 @@ function renderOverrunArrows() {
   svg.appendChild(defs);
 
   if (!state.overrunMarkers) return;
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= OVERRUN_GROUPS.length; i++) {
     if (!mapFilterVisible(_mapFilterOverrun, i)) continue;
     const m = state.overrunMarkers[i];
     if (!m || !m.path || m.path.length === 0) continue;
@@ -4695,7 +4699,7 @@ function buildOverrunHtml() {
     const total = g.ids.reduce((s, idx) =>
       s + state.parties.find(p=>p.id===idx).slots.filter(Boolean).length, 0);
     // Same shared parties array → put the global "🔀 Sort all" button on
-    // the first card only so we don't render four duplicates.
+    // the first card only so we don't render duplicates on every card.
     const sortAllBtn = (gi === 0 && typeof isAdmin === "function" && isAdmin())
       ? `<button class="header-sort-btn" onclick="sortAllPartiesByJob()" title="จัดเรียงทุกตี้ตามอาชีพ (Knight → Paladin → Wizard → …)">🔀 จัดเรียงทุกตี้</button>`
       : "";
@@ -4714,8 +4718,8 @@ function buildOverrunHtml() {
 }
 
 function buildOverrunMapHtml() {
-  // Overrun map filter — 4 colored groups (Red/Yellow/Green/Blue). Same
-  // shared-dropdown pattern: selecting a group hides the other three
+  // Overrun map filter — one chip per OVERRUN_GROUPS entry. Same
+  // shared-dropdown pattern: selecting groups hides the other groups'
   // markers + arrows on the map.
   // Multi-select group chips (same pattern as the League maps): "ทุกกลุ่ม" clears,
   // each group chip toggles + lights up in its group color.
@@ -4731,7 +4735,7 @@ function buildOverrunMapHtml() {
   return `
     <div class="map-card" style="margin-top:10px">
       <div class="map-title overrun-map">
-        <span>🗺️ Overrun Map · 4 ปาร์ตี้ใหญ่</span>
+        <span>🗺️ Overrun Map · ${OVERRUN_GROUPS.length} กลุ่ม</span>
         <span class="actions">
           <span class="map-filter-chips" title="ติ๊กได้หลายกลุ่มพร้อมกัน">${filterChips}</span>
           <button onclick="toggleMapFullscreen(3)" class="btn-expand-3" title="ขยายเต็มจอ">⛶ Expand</button>
@@ -5000,7 +5004,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.12.1";
+const APP_VERSION = "2026.06.12.2";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -5879,7 +5883,7 @@ function fbSubscribeAll() {
     if (typeof renderMarkers === "function" && state.mode === "league") renderMarkers();
   });
 
-  // overrun_markers (Overrun mode — 4 big-party positions)
+  // overrun_markers (Overrun mode — one position per color group)
   _fbDB.ref("overrun_markers").on("value", snap => {
     const v = snap.val() || {};
     _fbApplyingRemote = true;
