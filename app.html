@@ -3024,6 +3024,33 @@ const LOCALES = {
     "auction.col_item": "Item",
     "auction.used_slash": "Usado/",
     "auction.used_have": "Usado/Tem",
+    "ai.no_members": "⚠️ Ainda não há membros — clique em Refresh da Sheet para analisar",
+    "ai.top_job": "Classe mais numerosa:",
+    "ai.people_pct": "{n} pessoas · {pct}%",
+    "ai.bottom_job": "Classe menos numerosa:",
+    "ai.no_targets": "⚠️ Metas não definidas — preencha o campo \"Meta\" para analisar excesso/falta",
+    "ai.net_over": "Excesso líquido de {n} pessoas",
+    "ai.net_short": "Falta líquida de {n} pessoas",
+    "ai.vs_target_pre": "Comparado à meta (só classes com meta): tem",
+    "ai.vs_target_mid": "/ meta",
+    "ai.vs_target_break": "(no alvo {b} · excesso {m} · falta {f} classes)",
+    "ai.too_many_hdr": "Excesso ({n}):",
+    "ai.too_few_hdr": "Insuficiente / falta ({n}):",
+    "ai.balanced_hdr": "Equilibrado ({n}):",
+    "ai.over_by": "excesso de {n} pessoas",
+    "ai.short_by": "falta {n} pessoas",
+    "ai.move": "Mover",
+    "ai.people_colon": "pessoas:",
+    "ai.advice_exact": "Sugestão (para bater a meta exata):",
+    "ai.still_need": "Ainda faltam recrutar",
+    "ai.more_n": "mais {n}",
+    "ai.advice": "Sugestão:",
+    "ai.recruit_pre": "recrutar",
+    "ai.recruit_post": "para bater a meta",
+    "ai.over_target_pre": "acima da meta",
+    "ai.over_target_post": "ajuste a meta ou faça rotação",
+    "summary.title": "📊 Resumo de classes da guild",
+    "summary.empty": "Ainda não há membros — clique em Refresh da Sheet",
   },
   "en": {
     "common.save": "Save",
@@ -3155,6 +3182,33 @@ const LOCALES = {
     "auction.col_item": "Item",
     "auction.used_slash": "Used/",
     "auction.used_have": "Used/Have",
+    "ai.no_members": "⚠️ No members yet — click Refresh from Sheet to analyze",
+    "ai.top_job": "Most common job:",
+    "ai.people_pct": "{n} people · {pct}%",
+    "ai.bottom_job": "Least common job:",
+    "ai.no_targets": "⚠️ No targets set — fill the \"Target\" field to analyze over/under",
+    "ai.net_over": "Net excess of {n} people",
+    "ai.net_short": "Net shortfall of {n} people",
+    "ai.vs_target_pre": "Vs target (jobs with a target): have",
+    "ai.vs_target_mid": "/ target",
+    "ai.vs_target_break": "(on target {b} · over {m} · short {f} jobs)",
+    "ai.too_many_hdr": "Too many ({n}):",
+    "ai.too_few_hdr": "Too few / short ({n}):",
+    "ai.balanced_hdr": "Balanced ({n}):",
+    "ai.over_by": "over by {n} people",
+    "ai.short_by": "short by {n} people",
+    "ai.move": "Move",
+    "ai.people_colon": "people:",
+    "ai.advice_exact": "Suggestion (to hit target exactly):",
+    "ai.still_need": "Still need to recruit",
+    "ai.more_n": "{n} more",
+    "ai.advice": "Suggestion:",
+    "ai.recruit_pre": "recruit",
+    "ai.recruit_post": "to hit the target",
+    "ai.over_target_pre": "over target",
+    "ai.over_target_post": "adjust the target or rotate out",
+    "summary.title": "📊 Guild job summary",
+    "summary.empty": "No members yet — click Refresh from Sheet",
   },
 };
 let currentLocale = (function () {
@@ -5356,21 +5410,21 @@ function buildPieSvg(jobs, counts, total) {
 /** AI-style rule-based commentary on guild composition */
 function buildAiComment(jobs, counts, targets, total) {
   if (!total || !jobs.length) {
-    return `<div class="ai-line">⚠️ ยังไม่มีสมาชิก — กด Refresh จาก Sheet เพื่อให้วิเคราะห์ได้</div>`;
+    return `<div class="ai-line">${t('ai.no_members')}</div>`;
   }
-  // EXACT comparison — สมดุล means count === target, nothing else. Any
+  // EXACT comparison — balanced means count === target, nothing else. Any
   // mismatch is reported immediately with its exact size (no ±1 grace).
   const tooMany = [], tooFew = [], balanced = [];
   let haveSum = 0, targetSum = 0;
   for (const job of jobs) {
     const c = counts[job] || 0;
-    const t = targets[job] || 0;
-    if (t === 0) continue;
-    haveSum += c; targetSum += t;
-    const diff = c - t;
-    if (diff > 0) tooMany.push({ job, c, t, by: diff });
-    else if (diff < 0) tooFew.push({ job, c, t, by: -diff });
-    else balanced.push({ job, c, t });
+    const tgt = targets[job] || 0;
+    if (tgt === 0) continue;
+    haveSum += c; targetSum += tgt;
+    const diff = c - tgt;
+    if (diff > 0) tooMany.push({ job, c, t: tgt, by: diff });
+    else if (diff < 0) tooFew.push({ job, c, t: tgt, by: -diff });
+    else balanced.push({ job, c, t: tgt });
   }
 
   const sorted = jobs.slice().sort((a,b) => (counts[b] || 0) - (counts[a] || 0));
@@ -5378,45 +5432,45 @@ function buildAiComment(jobs, counts, targets, total) {
   const bottom = sorted[sorted.length - 1];
 
   const lines = [];
-  lines.push(`<div class="ai-line">🏆 อาชีพเยอะที่สุด: <b>${escapeHtml(top)}</b> (${counts[top] || 0} คน · ${((counts[top] || 0)/total*100).toFixed(0)}%)</div>`);
+  lines.push(`<div class="ai-line">🏆 ${t('ai.top_job')} <b>${escapeHtml(top)}</b> (${t('ai.people_pct',{n:counts[top]||0, pct:((counts[top]||0)/total*100).toFixed(0)})})</div>`);
   if (bottom !== top) {
-    lines.push(`<div class="ai-line">📉 อาชีพน้อยที่สุด: <b>${escapeHtml(bottom)}</b> (${counts[bottom] || 0} คน)</div>`);
+    lines.push(`<div class="ai-line">📉 ${t('ai.bottom_job')} <b>${escapeHtml(bottom)}</b> (${t('unit.people',{n:counts[bottom]||0})})</div>`);
   }
 
   const hasTargets = tooMany.length || tooFew.length || balanced.length;
   if (!hasTargets) {
-    lines.push(`<div class="ai-line" style="margin-top:6px;color:var(--muted)">⚠️ ยังไม่ได้ตั้งเป้าหมาย — กรอกช่อง "เป้าหมาย" เพื่อให้วิเคราะห์ส่วนเกิน/ขาด</div>`);
+    lines.push(`<div class="ai-line" style="margin-top:6px;color:var(--muted)">${t('ai.no_targets')}</div>`);
     return lines.join("");
   }
 
   // Exact net position across every job that has a target.
   const net = haveSum - targetSum;
   const netTxt = net === 0
-    ? `<b class="balanced">ครบพอดี</b>`
+    ? `<b class="balanced">${t('auction.status_exact')}</b>`
     : net > 0
-      ? `<b class="too-many">เกินสุทธิ ${net} คน</b>`
-      : `<b class="too-few">ขาดสุทธิ ${-net} คน</b>`;
-  lines.push(`<div class="ai-line" style="margin-top:6px">🎯 เทียบเป้ารวม (เฉพาะอาชีพที่ตั้งเป้า): มี <b>${haveSum}</b> / เป้า <b>${targetSum}</b> → ${netTxt}` +
-    ` <span style="color:var(--muted)">(ตรงเป้า ${balanced.length} · เกิน ${tooMany.length} · ขาด ${tooFew.length} อาชีพ)</span></div>`);
+      ? `<b class="too-many">${t('ai.net_over',{n:net})}</b>`
+      : `<b class="too-few">${t('ai.net_short',{n:-net})}</b>`;
+  lines.push(`<div class="ai-line" style="margin-top:6px">🎯 ${t('ai.vs_target_pre')} <b>${haveSum}</b> ${t('ai.vs_target_mid')} <b>${targetSum}</b> → ${netTxt}` +
+    ` <span style="color:var(--muted)">${t('ai.vs_target_break',{b:balanced.length,m:tooMany.length,f:tooFew.length})}</span></div>`);
 
   if (tooMany.length) {
-    lines.push(`<div class="ai-line" style="margin-top:8px">🔴 <b class="too-many">เยอะเกินไป (${tooMany.length}):</b></div>`);
-    tooMany.sort((a,b)=>b.by-a.by).forEach(t => {
-      lines.push(`<div class="ai-sub">• ${escapeHtml(t.job)} เกิน ${t.by} คน <span style="color:var(--muted)">(${t.c}/${t.t})</span></div>`);
+    lines.push(`<div class="ai-line" style="margin-top:8px">🔴 <b class="too-many">${t('ai.too_many_hdr',{n:tooMany.length})}</b></div>`);
+    tooMany.sort((a,b)=>b.by-a.by).forEach(it => {
+      lines.push(`<div class="ai-sub">• ${escapeHtml(it.job)} ${t('ai.over_by',{n:it.by})} <span style="color:var(--muted)">(${it.c}/${it.t})</span></div>`);
     });
   }
   if (tooFew.length) {
-    lines.push(`<div class="ai-line" style="margin-top:8px">🟡 <b class="too-few">น้อยเกินไป / ขาด (${tooFew.length}):</b></div>`);
-    tooFew.sort((a,b)=>b.by-a.by).forEach(t => {
-      lines.push(`<div class="ai-sub">• ${escapeHtml(t.job)} ขาด ${t.by} คน <span style="color:var(--muted)">(${t.c}/${t.t})</span></div>`);
+    lines.push(`<div class="ai-line" style="margin-top:8px">🟡 <b class="too-few">${t('ai.too_few_hdr',{n:tooFew.length})}</b></div>`);
+    tooFew.sort((a,b)=>b.by-a.by).forEach(it => {
+      lines.push(`<div class="ai-sub">• ${escapeHtml(it.job)} ${t('ai.short_by',{n:it.by})} <span style="color:var(--muted)">(${it.c}/${it.t})</span></div>`);
     });
   }
   if (balanced.length) {
-    lines.push(`<div class="ai-line" style="margin-top:8px">🟢 <b class="balanced">สมดุล (${balanced.length}):</b> <span style="color:var(--muted)">${balanced.map(b=>escapeHtml(b.job)).join(", ")}</span></div>`);
+    lines.push(`<div class="ai-line" style="margin-top:8px">🟢 <b class="balanced">${t('ai.balanced_hdr',{n:balanced.length})}</b> <span style="color:var(--muted)">${balanced.map(b=>escapeHtml(b.job)).join(", ")}</span></div>`);
   }
 
   // Suggestion — quantified: pair the biggest surplus into the biggest
-  // deficit with exact counts (no vague "ลองชวนเพิ่ม").
+  // deficit with exact counts (no vague language).
   if (tooMany.length && tooFew.length) {
     const moves = [];
     const give = tooMany.map(x => ({ ...x }));   // sorted desc already
@@ -5426,22 +5480,22 @@ function buildAiComment(jobs, counts, targets, total) {
         if (g.by <= 0) break;
         if (k.by <= 0) continue;
         const n = Math.min(g.by, k.by);
-        moves.push(`ย้าย <b>${n}</b> คน: <b class="too-many">${escapeHtml(g.job)}</b> → <b class="too-few">${escapeHtml(k.job)}</b>`);
+        moves.push(`${t('ai.move')} <b>${n}</b> ${t('ai.people_colon')} <b class="too-many">${escapeHtml(g.job)}</b> → <b class="too-few">${escapeHtml(k.job)}</b>`);
         g.by -= n; k.by -= n;
       }
     }
-    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>คำแนะนำ (ให้ตรงเป้าพอดี):</b></div>`);
+    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>${t('ai.advice_exact')}</b></div>`);
     // Render EVERY move — truncating would make the "exact plan" silently
     // incomplete (the list is small: bounded by the number of jobs).
     moves.forEach(m => lines.push(`<div class="ai-sub">• ${m}</div>`));
     const leftShort = take.filter(k => k.by > 0);
     if (leftShort.length) {
-      lines.push(`<div class="ai-sub">• ที่เหลือต้องหาเพิ่ม: ${leftShort.map(k => `<b class="too-few">${escapeHtml(k.job)}</b> อีก ${k.by} คน`).join(", ")}</div>`);
+      lines.push(`<div class="ai-sub">• ${t('ai.still_need')}: ${leftShort.map(k => `<b class="too-few">${escapeHtml(k.job)}</b> ${t('ai.more_n',{n:k.by})}`).join(", ")}</div>`);
     }
   } else if (tooFew.length) {
-    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>คำแนะนำ:</b> ต้องหาเพิ่ม ${tooFew.map(k => `<b class="too-few">${escapeHtml(k.job)}</b> ${k.by} คน`).join(", ")} ถึงจะครบเป้า</div>`);
+    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>${t('ai.advice')}</b> ${t('ai.recruit_pre')} ${tooFew.map(k => `<b class="too-few">${escapeHtml(k.job)}</b> ${t('unit.people',{n:k.by})}`).join(", ")} ${t('ai.recruit_post')}</div>`);
   } else if (tooMany.length) {
-    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>คำแนะนำ:</b> เกินเป้า ${tooMany.map(t => `<b class="too-many">${escapeHtml(t.job)}</b> ${t.by} คน`).join(", ")} — ปรับเป้าหรือ rotate ออก</div>`);
+    lines.push(`<div class="ai-line" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">💡 <b>${t('ai.advice')}</b> ${t('ai.over_target_pre')} ${tooMany.map(it => `<b class="too-many">${escapeHtml(it.job)}</b> ${t('unit.people',{n:it.by})}`).join(", ")} — ${t('ai.over_target_post')}</div>`);
   }
   return lines.join("");
 }
@@ -5478,26 +5532,26 @@ function buildSummaryHtml() {
   return `
     <div class="summary-view">
       <div class="summary-total">
-        <span>📊 สรุปอาชีพในกิลด์</span>
+        <span>${t('summary.title')}</span>
         <div class="badges">
-          <span>${total} คน</span>
-          <span>${jobs.length} อาชีพ</span>
+          <span>${t('unit.people',{n:total})}</span>
+          <span>${t('roster.job_count',{n:jobs.length})}</span>
         </div>
       </div>
       <div class="summary-grid">
         <table class="summary-table">
           <thead>
             <tr>
-              <th>อาชีพ</th>
-              <th style="text-align:center">มี</th>
-              <th style="text-align:center">เป้า</th>
-              <th style="text-align:center">สถานะ</th>
+              <th>${t('roster.col_job')}</th>
+              <th style="text-align:center">${t('roster.col_have')}</th>
+              <th style="text-align:center">${t('roster.col_target')}</th>
+              <th style="text-align:center">${t('common.status')}</th>
             </tr>
           </thead>
-          <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">ยังไม่มีสมาชิก — กด Refresh จาก Sheet</td></tr>'}</tbody>
+          <tbody>${rows || `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">${t('summary.empty')}</td></tr>`}</tbody>
           ${jobs.length ? `<tfoot>
             <tr>
-              <td class="label">${jobs.length} อาชีพ</td>
+              <td class="label">${t('roster.job_count',{n:jobs.length})}</td>
               <td class="count">${jobs.reduce((s,j) => s + (counts[j] || 0), 0)}</td>
               <td class="target" style="text-align:center">${jobs.reduce((s,j) => s + (targets[j] || 0), 0)}</td>
               <td class="status-cell">—</td>

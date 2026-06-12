@@ -131,3 +131,30 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | รายการ | Item | Item | `auction.col_item` |
 | ใช้/ | Used/ | Usado/ | `auction.used_slash` |
 | ใช้/มี | Used/Have | Usado/Tem | `auction.used_have` |
+| ⚠️ ยังไม่มีสมาชิก — กด Refresh จาก Sheet เพื่อให้วิเคราะห์ได้ | ⚠️ No members yet — click Refresh from Sheet to analyze | ⚠️ Ainda não há membros — clique em Refresh da Sheet para analisar | `ai.no_members` |
+| อาชีพเยอะที่สุด: | Most common job: | Classe mais numerosa: | `ai.top_job` |
+| {n} คน · {pct}% | {n} people · {pct}% | {n} pessoas · {pct}% | `ai.people_pct` |
+| อาชีพน้อยที่สุด: | Least common job: | Classe menos numerosa: | `ai.bottom_job` |
+| ⚠️ ยังไม่ได้ตั้งเป้าหมาย — … | ⚠️ No targets set — fill the "Target" field to analyze over/under | ⚠️ Metas não definidas — preencha o campo "Meta" para analisar excesso/falta | `ai.no_targets` |
+| เกินสุทธิ {n} คน | Net excess of {n} people | Excesso líquido de {n} pessoas | `ai.net_over` |
+| ขาดสุทธิ {n} คน | Net shortfall of {n} people | Falta líquida de {n} pessoas | `ai.net_short` |
+| เทียบเป้ารวม (เฉพาะอาชีพที่ตั้งเป้า): มี | Vs target (jobs with a target): have | Comparado à meta (só classes com meta): tem | `ai.vs_target_pre` |
+| / เป้า | / target | / meta | `ai.vs_target_mid` |
+| (ตรงเป้า {b} · เกิน {m} · ขาด {f} อาชีพ) | (on target {b} · over {m} · short {f} jobs) | (no alvo {b} · excesso {m} · falta {f} classes) | `ai.vs_target_break` |
+| เยอะเกินไป ({n}): | Too many ({n}): | Excesso ({n}): | `ai.too_many_hdr` |
+| น้อยเกินไป / ขาด ({n}): | Too few / short ({n}): | Insuficiente / falta ({n}): | `ai.too_few_hdr` |
+| สมดุล ({n}): | Balanced ({n}): | Equilibrado ({n}): | `ai.balanced_hdr` |
+| เกิน {n} คน | over by {n} people | excesso de {n} pessoas | `ai.over_by` |
+| ขาด {n} คน | short by {n} people | falta {n} pessoas | `ai.short_by` |
+| ย้าย | Move | Mover | `ai.move` |
+| คน: | people: | pessoas: | `ai.people_colon` |
+| คำแนะนำ (ให้ตรงเป้าพอดี): | Suggestion (to hit target exactly): | Sugestão (para bater a meta exata): | `ai.advice_exact` |
+| ที่เหลือต้องหาเพิ่ม | Still need to recruit | Ainda faltam recrutar | `ai.still_need` |
+| อีก {n} คน | {n} more | mais {n} | `ai.more_n` |
+| คำแนะนำ: | Suggestion: | Sugestão: | `ai.advice` |
+| ต้องหาเพิ่ม | recruit | recrutar | `ai.recruit_pre` |
+| ถึงจะครบเป้า | to hit the target | para bater a meta | `ai.recruit_post` |
+| เกินเป้า | over target | acima da meta | `ai.over_target_pre` |
+| ปรับเป้าหรือ rotate ออก | adjust the target or rotate out | ajuste a meta ou faça rotação | `ai.over_target_post` |
+| 📊 สรุปอาชีพในกิลด์ | 📊 Guild job summary | 📊 Resumo de classes da guild | `summary.title` |
+| ยังไม่มีสมาชิก — กด Refresh จาก Sheet | No members yet — click Refresh from Sheet | Ainda não há membros — clique em Refresh da Sheet | `summary.empty` |

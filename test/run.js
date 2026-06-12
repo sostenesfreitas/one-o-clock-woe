@@ -1149,43 +1149,47 @@ console.log("\n[summary exact targets]");
   });
 
   t("exact: AI comment reports off-by-one jobs + exact net totals", () => {
+    app.call("setLocale", "pt-BR");
     const jobs = ["High Priest", "Paladin", "Wizard"];
     const counts = { "High Priest": 15, "Paladin": 11, "Wizard": 8 };
     const targets = { "High Priest": 16, "Paladin": 10, "Wizard": 8 };
     const html = app.call("buildAiComment", jobs, counts, targets, 34);
-    ok(html.includes("เทียบเป้ารวม"), "net summary line present");
-    ok(html.includes("<b>34</b> / เป้า <b>34</b>"), "exact have/target sums");
-    ok(html.includes("ครบพอดี"), "net zero stated precisely");
-    ok(html.includes("High Priest") && html.includes("ขาด 1 คน"), "off-by-one ขาด reported");
-    ok(html.includes("Paladin") && html.includes("เกิน 1 คน"), "off-by-one เกิน reported");
-    ok(html.includes("ย้าย <b>1</b> คน"), "quantified move suggestion");
+    ok(html.includes("Comparado à meta"), "net summary line present");
+    ok(html.includes("<b>34</b> / meta <b>34</b>"), "exact have/target sums");
+    ok(html.includes("Exato"), "net zero stated precisely");
+    ok(html.includes("High Priest") && html.includes("falta 1 pessoas"), "off-by-one ขาด reported");
+    ok(html.includes("Paladin") && html.includes("excesso de 1 pessoas"), "off-by-one เกิน reported");
+    ok(html.includes("Mover <b>1</b>"), "quantified move suggestion");
   });
 
   t("exact: all-on-target comp reads as fully balanced", () => {
+    app.call("setLocale", "pt-BR");
     const html = app.call("buildAiComment", ["Wizard"], { Wizard: 8 }, { Wizard: 8 }, 8);
-    ok(html.includes("ครบพอดี"), "net = ครบพอดี");
-    ok(html.includes("สมดุล (1)"), "single balanced job listed");
-    ok(!html.includes("คำแนะนำ"), "no advice when nothing is off");
+    ok(html.includes("Exato"), "net = Exato");
+    ok(html.includes("Equilibrado (1)"), "single balanced job listed");
+    ok(!html.includes("Sugestão"), "no advice when nothing is off");
   });
 
-  t("exact: targeted job with ZERO members still surfaces as ขาด N (worst hole)", () => {
+  t("exact: targeted job with ZERO members still surfaces as short N (worst hole)", () => {
+    app.call("setLocale", "pt-BR");
     // Gunslinger has a target but nobody plays it — it must NOT vanish.
     const jobs = app.call("getSummaryJobs", { Wizard: 8 }, { Wizard: 8, Gunslinger: 3 });
     eq(jobs.includes("Gunslinger"), true, "union includes the 0-member targeted job");
     const html = app.call("buildAiComment", jobs, { Wizard: 8 }, { Wizard: 8, Gunslinger: 3 }, 8);
-    ok(html.includes("Gunslinger") && html.includes("ขาด 3 คน"), "0-member job reported with its exact gap");
-    ok(html.includes("เป้า <b>11</b>"), "target sum includes the invisible job's target");
+    ok(html.includes("Gunslinger") && html.includes("falta 3 pessoas"), "0-member job reported with its exact gap");
+    ok(html.includes("meta <b>11</b>"), "target sum includes the invisible job's target");
     eq(app.call("getSummaryJobs", { Wizard: 8 }, { Wizard: 8, Old: 0 }).includes("Old"), false,
        "target 0 jobs stay excluded");
   });
 
   t("exact: move plan renders EVERY pair (no silent slice-4 truncation)", () => {
+    app.call("setLocale", "pt-BR");
     const jobs = ["A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3", "B4", "B5"];
     const counts = { A1: 2, A2: 2, A3: 2, A4: 2, A5: 2, B1: 0, B2: 0, B3: 0, B4: 0, B5: 0 };
     const targets = { A1: 1, A2: 1, A3: 1, A4: 1, A5: 1, B1: 1, B2: 1, B3: 1, B4: 1, B5: 1 };
     const html = app.call("buildAiComment", jobs, counts, targets, 10);
-    eq((html.match(/ย้าย <b>/g) || []).length, 5, "all five moves rendered");
-    ok(!html.includes("ที่เหลือต้องหาเพิ่ม"), "no phantom leftover line when the plan is complete");
+    eq((html.match(/Mover <b>/g) || []).length, 5, "all five moves rendered");
+    ok(!html.includes("Ainda faltam recrutar"), "no phantom leftover line when the plan is complete");
   });
 })();
 
@@ -1569,6 +1573,16 @@ t("i18n: auction status labels resolve in both locales", () => {
   eq(app.call("t", "auction.status_left", { n: 3 }), "Sobra 3");
   app.call("setLocale", "en");
   eq(app.call("t", "auction.status_left", { n: 3 }), "3 left");
+  app.call("setLocale", "pt-BR");
+});
+
+t("i18n: Summary + AI keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "summary.title"), "📊 Resumo de classes da guild");
+  eq(app.call("t", "ai.over_by", { n: 3 }), "excesso de 3 pessoas");
+  eq(app.call("t", "ai.vs_target_break", { b: 1, m: 2, f: 0 }), "(no alvo 1 · excesso 2 · falta 0 classes)");
+  app.call("setLocale", "en");
+  eq(app.call("t", "ai.short_by", { n: 2 }), "short by 2 people");
   app.call("setLocale", "pt-BR");
 });
 
