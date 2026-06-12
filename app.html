@@ -2809,16 +2809,16 @@
 <!-- Dialogs -->
 <dialog id="sheetDialog">
   <h3>⚙ Google Sheets Settings</h3>
-  <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
-    URL ของ Google Sheet (ต้องตั้งเป็น Anyone with link – Viewer)
+  <div style="font-size:12px;color:var(--muted);margin-bottom:6px" data-i18n="dialog.sheet_url">
+    URL do Google Sheet (defina como Anyone with link – Viewer)
   </div>
   <input id="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit#gid=..." />
-  <div style="font-size:11px;color:var(--muted);margin-top:6px">
-    ระบบจะดึง: ชื่อ (column C), Job (column E)
+  <div style="font-size:11px;color:var(--muted);margin-top:6px" data-i18n="dialog.sheet_pull">
+    O sistema puxa: Nome (coluna C), Job (coluna E)
   </div>
   <div class="row">
-    <button onclick="document.getElementById('sheetDialog').close()">ยกเลิก</button>
-    <button class="primary" onclick="saveSheetSettings()">บันทึก & โหลด</button>
+    <button onclick="document.getElementById('sheetDialog').close()" data-i18n="common.cancel">Cancelar</button>
+    <button class="primary" onclick="saveSheetSettings()" data-i18n="dialog.save_load">Salvar & Carregar</button>
   </div>
 </dialog>
 
@@ -2826,7 +2826,7 @@
   <h3 id="ioTitle">Export / Import</h3>
   <textarea id="ioText"></textarea>
   <div class="row">
-    <button onclick="document.getElementById('ioDialog').close()">ปิด</button>
+    <button onclick="document.getElementById('ioDialog').close()" data-i18n="dialog.close">Fechar</button>
     <button class="primary" id="ioConfirm">Copy</button>
   </div>
 </dialog>
@@ -2837,7 +2837,7 @@
     <!-- Dynamic content (set by openSyncSettings) -->
   </div>
   <div class="row" style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
-    <button onclick="document.getElementById('syncDialog').close()">ปิด</button>
+    <button onclick="document.getElementById('syncDialog').close()" data-i18n="dialog.close">Fechar</button>
     <div style="flex:1"></div>
     <button id="loginActionBtn" class="primary"></button>
   </div>
@@ -3201,6 +3201,79 @@ const LOCALES = {
     "ar.block_today_only": "Só é possível pedir no dia atual — pedido antecipado não é permitido",
     "ar.block_wrong_mode": "Hoje é dia de {ev} — só dá para pedir de {ev}",
     "ar.block_on_leave": "Você marcou folga em {date} — sem direito a pedir leilão",
+    "dialog.sheet_url": "URL do Google Sheet (defina como Anyone with link – Viewer)",
+    "dialog.sheet_pull": "O sistema puxa: Nome (coluna C), Job (coluna E)",
+    "dialog.save_load": "Salvar & Carregar",
+    "dialog.close": "Fechar",
+    "header.status": "{ppl} · alocados {assigned} · livres {free}",
+    "toast.sheet_load_ok": "Carregado — {n}",
+    "toast.sheet_load_fail": "Falha ao carregar: {msg}",
+    "prompt.add_char_name": "Nome do personagem:",
+    "confirm.delete_member": "Excluir este membro?",
+    "confirm.clear_party": "Limpar todos os membros deste grupo?",
+    "prompt.rename_party": "Renomear grupo:",
+    "toast.party_full": "Grupo {id} está cheio",
+    "toast.range_admin_only": "Precisa ser admin para resetar os círculos de alcance",
+    "toast.range_reset_ok": "Círculos de alcance resetados",
+    "toast.arrows_cleared_overrun": "Setas do Overrun Map limpas",
+    "toast.arrows_cleared_map": "Setas do Map {n} limpas",
+    "toast.path_cleared_group": "Caminho do {name} Party limpo",
+    "toast.path_undo_group": "Undo segmento de {name}",
+    "toast.path_cleared_party": "Caminho do grupo {n} limpo",
+    "toast.path_undo_party": "Último segmento do grupo {n} desfeito",
+    "toast.map_admin_only": "Precisa ser admin + online para trocar a imagem",
+    "toast.map_compressing": "Comprimindo imagem…",
+    "toast.map_changed_ok": "✅ Imagem do mapa trocada — visível em todos os dispositivos",
+    "toast.map_change_fail": "Falha ao trocar imagem: {msg}",
+    "confirm.map_reset": "Voltar para a imagem padrão do mapa?",
+    "toast.map_reset_ok": "Imagem padrão restaurada",
+    "toast.map_delete_fail": "Falha ao excluir imagem: {msg}",
+    "toast.already_sorted": "Todos os grupos já estão ordenados por classe",
+    "toast.sorted_n": "🔀 {n} grupos ordenados",
+    "toast.party_already_sorted": "Este grupo já está ordenado",
+    "toast.save_fail": "Falha ao salvar: {msg}",
+    "toast.login_fill": "Preencha ID + password",
+    "toast.login_ok": "✅ Login bem-sucedido",
+    "toast.ghost_repaired": "🧹 {n} slot(s) fantasma reparado(s)",
+    "toast.ghost_none": "Nenhum slot fantasma encontrado — veja o Console ou clique × no slot diretamente",
+    "toast.login_fail": "Login falhou: {msg}",
+    "toast.login_wrong_pw": "ID ou senha incorretos",
+    "toast.login_no_account": "Conta não encontrada — peça ao admin para criar",
+    "toast.login_too_many": "Muitas tentativas — aguarde um momento",
+    "toast.login_no_network": "Sem conexão com Firebase — verifique a internet",
+    "toast.email_invalid": "Formato de e-mail inválido",
+    "toast.email_bad_chars": "E-mail não pode conter # $ [ ] /",
+    "toast.admin_added": "✅ Admin adicionado: {email}",
+    "toast.admin_add_fail": "Falha ao adicionar admin: {msg}",
+    "toast.admin_del_self": "Não é possível remover a si mesmo do admin",
+    "confirm.admin_del": "Remover admin \"{key}\"?",
+    "toast.admin_deleted": "✅ Admin removido",
+    "toast.admin_del_fail": "Falha ao remover admin: {msg}",
+    "confirm.migrate": "Migrar estado do localStorage → Firebase?\n\nSerá enviado:\n• members (nomes + job)\n• parties (League + Overrun)\n• auction state (GL + Overrun)\n• job targets\n\n(Os dados atuais no Firebase serão sobrescritos)",
+    "toast.migrated": "✅ Migrados {n} membros + parties + auction",
+    "toast.fb_not_set": "Firebase não configurado",
+    "prompt.add_job": "Job (pode deixar vazio — selecione no dropdown depois de adicionar):",
+    "prompt.add_discord": "Discord username (ex.: @johnny):",
+    "toast.roster_edit_own": "Só é possível editar sua própria linha — selecione seu nome primeiro",
+    "toast.cp_capped": "CP acima do limite — ajustado para {max}",
+    "toast.too_long": "Muito longo (limite {max} caracteres)",
+    "toast.name_required": "Nome não pode ser vazio",
+    "toast.field_too_long": "{field} excede {max} caracteres",
+    "toast.saved_ok": "✅ Salvo",
+    "confirm.delete_member_named": "Excluir {name} ({job})?",
+    "toast.no_sheet_url": "Sem URL da Sheet",
+    "toast.loading_sheet": "⏳ Carregando da Sheet…",
+    "toast.import_cancelled": "Import cancelado — não foi salvo",
+    "toast.import_done": "✅ Import concluído: adicionados {added} · atualizados {updated} — deduplicando…",
+    "toast.import_fail": "Falha no import: {msg}",
+    "confirm.dedupe": "Limpar duplicados?\nO sistema vai mesclar linhas com mesmo Nome + Job, mantendo a que tiver Discord + CP maior.",
+    "toast.dedupe_done": "✅ Dedupe concluído: mesclados {merged} grupos · removidas {removed} entradas duplicadas",
+    "confirm.clear_column": "Limpar todos os nomes desta coluna?",
+    "toast.rate_admin_only": "Precisa ser admin para editar a quantidade por pessoa",
+    "toast.split_admin_only": "Precisa ser admin para editar o % de divisão do campo",
+    "toast.team_saved": "✅ Salvo — carregado automaticamente na próxima vez",
+    "confirm.reset_all": "Resetar todos os dados?",
+    "confirm.import_sheet": "Importar do Google Sheet para o Roster?\n\nCampos que serão importados:\n  • Name (col C)\n  • Job (col E)\n  • Discord username (col F)\n  • CP (col L)\n  • Discord ID (col N)\n\nTotal de linhas: {rows}\n\nExemplo das 3 primeiras linhas (veja tudo no DevTools Console):\n{sample}\n\nClique OK se o mapeamento estiver correto — caso contrário clique em Cancelar\n(O sistema vai deduplicar automaticamente após o import)",
   },
   "en": {
     "common.save": "Save",
@@ -3509,6 +3582,79 @@ const LOCALES = {
     "ar.block_today_only": "You can only request on the current day — advance requests are not allowed",
     "ar.block_wrong_mode": "Today is a {ev} day — you can only request {ev}",
     "ar.block_on_leave": "You set leave on {date} — can't request auction",
+    "dialog.sheet_url": "Google Sheet URL (set to Anyone with link – Viewer)",
+    "dialog.sheet_pull": "Pulls: Name (column C), Job (column E)",
+    "dialog.save_load": "Save & Load",
+    "dialog.close": "Close",
+    "header.status": "{ppl} · assigned {assigned} · free {free}",
+    "toast.sheet_load_ok": "Loaded — {n}",
+    "toast.sheet_load_fail": "Load failed: {msg}",
+    "prompt.add_char_name": "Character name:",
+    "confirm.delete_member": "Delete this member?",
+    "confirm.clear_party": "Clear all members from this party?",
+    "prompt.rename_party": "Rename party:",
+    "toast.party_full": "Party {id} is full",
+    "toast.range_admin_only": "Must be admin to reset range circles",
+    "toast.range_reset_ok": "Range circles reset",
+    "toast.arrows_cleared_overrun": "Overrun Map arrows cleared",
+    "toast.arrows_cleared_map": "Map {n} arrows cleared",
+    "toast.path_cleared_group": "{name} Party path cleared",
+    "toast.path_undo_group": "Undo segment of {name}",
+    "toast.path_cleared_party": "Party {n} path cleared",
+    "toast.path_undo_party": "Last segment of party {n} undone",
+    "toast.map_admin_only": "Must be admin + online to change map image",
+    "toast.map_compressing": "Compressing image…",
+    "toast.map_changed_ok": "✅ Map image changed — visible on all devices immediately",
+    "toast.map_change_fail": "Map image change failed: {msg}",
+    "confirm.map_reset": "Restore standard map image?",
+    "toast.map_reset_ok": "Standard map restored",
+    "toast.map_delete_fail": "Map image delete failed: {msg}",
+    "toast.already_sorted": "All parties already sorted by job",
+    "toast.sorted_n": "🔀 {n} parties sorted",
+    "toast.party_already_sorted": "This party is already sorted",
+    "toast.save_fail": "Save failed: {msg}",
+    "toast.login_fill": "Enter ID + password",
+    "toast.login_ok": "✅ Logged in",
+    "toast.ghost_repaired": "🧹 {n} ghost slot(s) repaired",
+    "toast.ghost_none": "No ghost slots found — check Console for suspicious slots or click × on the slot directly",
+    "toast.login_fail": "Login failed: {msg}",
+    "toast.login_wrong_pw": "ID or password incorrect",
+    "toast.login_no_account": "Account not found — ask admin to create one",
+    "toast.login_too_many": "Too many attempts — wait a moment",
+    "toast.login_no_network": "Cannot connect to Firebase — check network",
+    "toast.email_invalid": "Invalid email format",
+    "toast.email_bad_chars": "Email must not contain # $ [ ] /",
+    "toast.admin_added": "✅ Admin added: {email}",
+    "toast.admin_add_fail": "Failed to add admin: {msg}",
+    "toast.admin_del_self": "Cannot remove yourself from admin",
+    "confirm.admin_del": "Remove admin \"{key}\"?",
+    "toast.admin_deleted": "✅ Admin removed",
+    "toast.admin_del_fail": "Failed to remove admin: {msg}",
+    "confirm.migrate": "Migrate localStorage state → Firebase?\n\nWill send:\n• members (names + job)\n• parties (League + Overrun)\n• auction state (GL + Overrun)\n• job targets\n\n(Current Firebase data will be overwritten)",
+    "toast.migrated": "✅ Migrated {n} members + parties + auction",
+    "toast.fb_not_set": "Firebase not configured",
+    "prompt.add_job": "Job (leave blank — select from dropdown after adding):",
+    "prompt.add_discord": "Discord username (e.g. @johnny):",
+    "toast.roster_edit_own": "Can only edit your own row — select your name first",
+    "toast.cp_capped": "CP over limit — adjusted to {max}",
+    "toast.too_long": "Too long (limit {max} chars)",
+    "toast.name_required": "Name cannot be empty",
+    "toast.field_too_long": "{field} exceeds {max} chars",
+    "toast.saved_ok": "✅ Saved",
+    "confirm.delete_member_named": "Delete {name} ({job})?",
+    "toast.no_sheet_url": "No Sheet URL",
+    "toast.loading_sheet": "⏳ Loading from Sheet…",
+    "toast.import_cancelled": "Import cancelled — not saved",
+    "toast.import_done": "✅ Import done: added {added} · updated {updated} — deduplicating…",
+    "toast.import_fail": "Import failed: {msg}",
+    "confirm.dedupe": "Clean duplicates?\nSystem will merge rows with the same Name + Job, keeping the one with Discord + highest CP.",
+    "toast.dedupe_done": "✅ Dedupe done: merged {merged} groups · removed {removed} duplicate entries",
+    "confirm.clear_column": "Clear all names from this column?",
+    "toast.rate_admin_only": "Must be admin to edit per-person count",
+    "toast.split_admin_only": "Must be admin to edit field split %",
+    "toast.team_saved": "✅ Saved — auto-loaded on next open",
+    "confirm.reset_all": "Reset all data?",
+    "confirm.import_sheet": "Import from Google Sheet into Roster?\n\nFields to import:\n  • Name (col C)\n  • Job (col E)\n  • Discord username (col F)\n  • CP (col L)\n  • Discord ID (col N)\n\nTotal rows: {rows}\n\nSample of first 3 rows (see all in DevTools Console):\n{sample}\n\nPress OK if the mapping looks correct — otherwise press Cancel\n(The system will dedupe automatically after import)",
   },
 };
 let currentLocale = (function () {
@@ -4233,10 +4379,10 @@ async function refreshFromSheet() {
     save();
     rebuildJobFilter();
     render();
-    toast(`โหลดสำเร็จ — ${fetched.length} คน`, "success");
+    toast(t('toast.sheet_load_ok', { n: plural(fetched.length, 'unit.people') }), "success");
   } catch (e) {
     console.error(e);
-    toast("โหลดไม่สำเร็จ: " + e.message, "error");
+    toast(t('toast.sheet_load_fail', { msg: e.message }), "error");
   } finally {
     btn.disabled = false; btn.textContent = "🔄 Refresh จาก Sheet";
   }
@@ -4257,14 +4403,14 @@ function saveSheetSettings() {
  * Member CRUD
  * ===================================================================== */
 function addManualMember() {
-  const name = prompt("ชื่อตัวละคร:");
+  const name = prompt(t('prompt.add_char_name'));
   if (!name || !name.trim()) return;
   const job = prompt("Job:", "Lord Knight") || "Other";
   state.members.push({ id: uid(), name: name.trim(), job: job.trim(), source: "manual" });
   save(); rebuildJobFilter(); render();
 }
 function deleteMember(id) {
-  if (!confirm("ลบสมาชิกนี้?")) return;
+  if (!confirm(t('confirm.delete_member'))) return;
   state.members = state.members.filter(m => m.id !== id);
   state.parties.forEach(p => p.slots = p.slots.map(s => s === id ? null : s));
   commitPartiesNow(); render();
@@ -4313,14 +4459,14 @@ function swapParties(idA, idB) {
   [a.slots, b.slots] = [b.slots, a.slots];
 }
 function clearParty(partyId) {
-  if (!confirm("เคลียร์สมาชิกทั้งหมดในตี้นี้?")) return;
+  if (!confirm(t('confirm.clear_party'))) return;
   const p = state.parties.find(p => p.id === partyId);
   p.slots = Array(PARTY_SLOTS).fill(null);
   commitPartiesNow(); render();
 }
 function renameParty(partyId) {
   const p = state.parties.find(p => p.id === partyId);
-  const v = prompt("เปลี่ยนชื่อตี้:", p.name);
+  const v = prompt(t('prompt.rename_party'), p.name);
   if (v !== null && v.trim()) { p.name = v.trim(); commitPartiesNow(); render(); }
 }
 
@@ -4376,7 +4522,7 @@ function dropPartyNum(e, partyId) {
     const target = state.parties.find(p => p.id === partyId);
     const emptyIdx = target.slots.indexOf(null);
     if (emptyIdx >= 0) target.slots[emptyIdx] = memId;
-    else toast("ตี้ " + partyId + " เต็มแล้ว", "error");
+    else toast(t('toast.party_full', { id: partyId }), "error");
   }
   commitPartiesNow(); render();
 }
@@ -4431,11 +4577,11 @@ function initRangeCircles() {
 }
 
 function resetRangeCircles() {
-  if (!isAdmin()) { toast("ต้องเป็น admin ถึงจะรีเซ็ตวงระยะได้", "error"); return; }
+  if (!isAdmin()) { toast(t('toast.range_admin_only'), "error"); return; }
   state.rangeCircles = DEFAULT_RANGE_CIRCLES.map(c => ({ ...c }));
   save();
   renderMarkers();
-  toast("รีเซ็ตวงระยะแล้ว", "success");
+  toast(t('toast.range_reset_ok'), "success");
 }
 
 /* =====================================================================
@@ -4707,7 +4853,7 @@ function clearArrows(mapNum) {
     }
     save();
     renderOverrunMarkers();
-    toast("ล้างลูกศรของ Overrun Map แล้ว", "success");
+    toast(t('toast.arrows_cleared_overrun'), "success");
     return;
   }
   const range = leagueRangeFor(mapNum);
@@ -4721,7 +4867,7 @@ function clearArrows(mapNum) {
   }
   save();
   renderMarkers();
-  toast(`ล้างลูกศรของ Map ${mapNum} แล้ว`, "success");
+  toast(t('toast.arrows_cleared_map', { n: mapNum }), "success");
 }
 
 function undoLastSegment(idx, store) {
@@ -4904,7 +5050,7 @@ function attachMarkerDragOverrun(el, wrap, idx) {
       if (m.path.length > 0) {
         m.path = [];
         save(); renderOverrunMarkers();
-        toast(`ล้างเส้นทางของ ${OVERRUN_GROUPS[idx-1].name} Party`, "");
+        toast(t('toast.path_cleared_group', { name: OVERRUN_GROUPS[idx-1].name }), "");
       }
       return;
     }
@@ -4922,7 +5068,7 @@ function attachMarkerDragOverrun(el, wrap, idx) {
     if (undoLastSegment(idx, state.overrunMarkers)) {
       save();
       renderOverrunMarkers();
-      toast(`Undo segment ของ ${OVERRUN_GROUPS[idx-1].name}`, "");
+      toast(t('toast.path_undo_group', { name: OVERRUN_GROUPS[idx-1].name }), "");
     }
   });
   el.addEventListener("mousedown", onDown);
@@ -5003,7 +5149,7 @@ function attachMarkerDrag(el, wrap, idx, mapNum) {
       if (m.path.length > 0) {
         m.path = [];
         save(); renderMarkers();
-        toast(`ล้างเส้นทางของตี้ ${idx}`, "");
+        toast(t('toast.path_cleared_party', { n: idx }), "");
       }
       return;
     }
@@ -5027,7 +5173,7 @@ function attachMarkerDrag(el, wrap, idx, mapNum) {
     if (undoLastSegment(idx, leagueMarkerStore(mapNum))) {
       save();
       renderMarkers();
-      toast(`Undo segment สุดท้ายของตี้ ${idx}`, "");
+      toast(t('toast.path_undo_party', { n: idx }), "");
     }
   });
 
@@ -5187,20 +5333,20 @@ function uploadMapImage(mapNum, input) {
   const file = input && input.files && input.files[0];
   if (input) input.value = ""; // allow re-picking the same file later
   if (!file) return;
-  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin + ออนไลน์ถึงจะเปลี่ยนรูปได้", "error"); return; }
-  toast("กำลังบีบอัดรูป…", "");
+  if (!isAdmin() || !_fbDB) { toast(t('toast.map_admin_only'), "error"); return; }
+  toast(t('toast.map_compressing'), "");
   compressMapImage(file)
     .then(dataUrl => _fbDB.ref("map_images/" + mapNum).set(dataUrl))
-    .then(() => toast("✅ เปลี่ยนรูปแผนที่แล้ว — ทุกเครื่องเห็นทันที", "success"))
-    .catch(e => toast("เปลี่ยนรูปไม่สำเร็จ: " + (e && e.message || e), "error"));
+    .then(() => toast(t('toast.map_changed_ok'), "success"))
+    .catch(e => toast(t('toast.map_change_fail', { msg: (e && e.message || e) }), "error"));
 }
 
 function resetMapImage(mapNum) {
   if (!isAdmin() || !_fbDB) return;
-  if (!confirm("กลับไปใช้รูปแผนที่มาตรฐาน?")) return;
+  if (!confirm(t('confirm.map_reset'))) return;
   _fbDB.ref("map_images/" + mapNum).remove()
-    .then(() => toast("กลับมาใช้รูปเดิมแล้ว", "success"))
-    .catch(e => toast("ลบรูปไม่สำเร็จ: " + (e && e.message || e), "error"));
+    .then(() => toast(t('toast.map_reset_ok'), "success"))
+    .catch(e => toast(t('toast.map_delete_fail', { msg: (e && e.message || e) }), "error"));
 }
 
 // Admin-only header controls for a map card (shared by GL + Overrun).
@@ -5963,22 +6109,22 @@ function sortPartySlotsByJob(p) {
  *  League sorts the 16 parties; Overrun sorts the 16 parties (same data
  *  shape) — both call sites are wired below. */
 function sortAllPartiesByJob() {
-  if (!isAdmin()) { toast("ต้องเป็น admin", "error"); return; }
+  if (!isAdmin()) { toast(t('toast.users_need_admin'), "error"); return; }
   if (!Array.isArray(state.parties)) return;
   let changed = 0;
   state.parties.forEach(p => { if (sortPartySlotsByJob(p)) changed++; });
-  if (changed === 0) { toast("ทุกตี้เรียงตามอาชีพอยู่แล้ว", ""); return; }
+  if (changed === 0) { toast(t('toast.already_sorted'), ""); return; }
   commitPartiesNow();
   render();
-  toast(`🔀 จัดเรียงแล้ว ${changed} ตี้`, "success");
+  toast(t('toast.sorted_n', { n: changed }), "success");
 }
 
 /** Sort one party only — used by the per-row 🔀 button. */
 function sortPartyByJob(partyId) {
-  if (!isAdmin()) { toast("ต้องเป็น admin", "error"); return; }
+  if (!isAdmin()) { toast(t('toast.users_need_admin'), "error"); return; }
   const p = state.parties.find(p => p.id === partyId);
   if (!p) return;
-  if (!sortPartySlotsByJob(p)) { toast("ตี้นี้เรียงอยู่แล้ว", ""); return; }
+  if (!sortPartySlotsByJob(p)) { toast(t('toast.party_already_sorted'), ""); return; }
   commitPartiesNow();
   render();
 }
@@ -6007,7 +6153,7 @@ function commitPartiesNow() {
   if (state.partiesOverrun) writes.push(_fbDB.ref("parties/overrun").set(state.partiesOverrun));
   Promise.all(writes).catch(e => {
     console.warn("[parties] direct push failed", e);
-    toast("เซฟไม่สำเร็จ: " + (e.message || e.code), "error");
+    toast(t('toast.save_fail', { msg: (e.message || e.code) }), "error");
   });
 }
 
@@ -6290,10 +6436,10 @@ function openSyncSettings() {
 async function handleLoginSubmit() {
   const username = (document.getElementById("loginUsername") || {}).value || "";
   const pw       = (document.getElementById("loginPassword") || {}).value || "";
-  if (!username || !pw) { toast("กรอก ID + password", "error"); return; }
+  if (!username || !pw) { toast(t('toast.login_fill'), "error"); return; }
   const ok = await signInWithUsername(username, pw);
   if (ok) {
-    toast("✅ เข้าสู่ระบบสำเร็จ", "success");
+    toast(t('toast.login_ok'), "success");
     document.getElementById("syncDialog").close();
   }
 }
@@ -6587,7 +6733,7 @@ function fbSubscribeAll() {
   // accidentally wiping rows mid-edit; the manual button is admin-
   // initiated so it's safe to go aggressive.
   window.repairGhostSlots = () => {
-    if (!isAdmin()) { toast && toast("ต้องเป็น admin", "error"); return false; }
+    if (!isAdmin()) { toast && toast(t('toast.users_need_admin'), "error"); return false; }
     let cleared = 0, trees = 0;
     const strictClean = (parties) => {
       if (!Array.isArray(parties)) return false;
@@ -6607,9 +6753,9 @@ function fbSubscribeAll() {
     console.log("[repair] cleaned", cleared, "slots across", trees, "tree(s)");
     if (typeof render === "function") render();
     if (typeof toast === "function") {
-      if (cleared) toast(`🧹 ซ่อม ${cleared} ช่องผีแล้ว`, "success");
+      if (cleared) toast(t('toast.ghost_repaired', { n: cleared }), "success");
       else {
-        toast("ไม่พบช่องผีตามเกณฑ์อัตโนมัติ — ดู Console สำหรับรายการ slot ที่น่าสงสัย หรือกด × ที่ slot นั้นเองได้", "");
+        toast(t('toast.ghost_none'), "");
         // Dump every populated slot's raw member data + char-by-char codes
         // so we can see what unicode the "ghost" actually contains.
         const dump = [];
@@ -7060,34 +7206,34 @@ function emailToUsername(email) {
 }
 
 async function signInWithGoogle() {
-  if (!_fbAuth) { toast("Firebase ยังไม่พร้อม", "error"); return false; }
+  if (!_fbAuth) { toast(t('toast.fb_not_ready'), "error"); return false; }
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
     await _fbAuth.signInWithPopup(provider);
     return true;
   } catch (e) {
     if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return false;
-    toast("Login ไม่สำเร็จ: " + (e.message || e.code), "error");
+    toast(t('toast.login_fail', { msg: (e.message || e.code) }), "error");
     return false;
   }
 }
 
 async function signInWithEmail(email, password) {
-  if (!_fbAuth) { toast("Firebase ยังไม่พร้อม", "error"); return false; }
+  if (!_fbAuth) { toast(t('toast.fb_not_ready'), "error"); return false; }
   try {
     await _fbAuth.signInWithEmailAndPassword(email.trim(), password);
     return true;
   } catch (e) {
     let msg = e.message || e.code || "Login failed";
     if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential")
-      msg = "ID หรือรหัสผ่านไม่ถูกต้อง";
+      msg = t('toast.login_wrong_pw');
     else if (e.code === "auth/user-not-found")
-      msg = "ไม่พบบัญชีนี้ — แจ้ง admin สร้างบัญชีให้";
+      msg = t('toast.login_no_account');
     else if (e.code === "auth/too-many-requests")
-      msg = "พยายามมากเกินไป รอสักครู่แล้วลองใหม่";
+      msg = t('toast.login_too_many');
     else if (e.code === "auth/network-request-failed")
-      msg = "เชื่อมต่อ Firebase ไม่ได้ — เช็คเน็ต";
-    toast("Login ไม่สำเร็จ: " + msg, "error");
+      msg = t('toast.login_no_network');
+    toast(t('toast.login_fail', { msg: msg }), "error");
     return false;
   }
 }
@@ -7228,39 +7374,39 @@ async function deleteAppUser(username) {
 
 /* ---------- Manage admins (admin-only) ---------- */
 async function addAdminEmail(rawEmail) {
-  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return false; }
+  if (!isAdmin() || !_fbDB) { toast(t('toast.users_need_admin'), "error"); return false; }
   const email = (rawEmail || "").trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    toast("รูปแบบอีเมลไม่ถูกต้อง", "error"); return false;
+    toast(t('toast.email_invalid'), "error"); return false;
   }
   // RTDB path keys disallow ". $ # [ ] /". emailToAdminKey only escapes
   // ".", so reject emails containing the other forbidden chars before
   // we try to write — otherwise Firebase rejects with a cryptic error.
   if (/[#$\[\]\/]/.test(email)) {
-    toast("อีเมลห้ามมีตัวอักษร # $ [ ] /", "error"); return false;
+    toast(t('toast.email_bad_chars'), "error"); return false;
   }
   const key = emailToAdminKey(email);
   try {
     await _fbDB.ref(`admins/${key}`).set(true);
-    toast(`✅ เพิ่ม admin: ${email}`, "success");
+    toast(t('toast.admin_added', { email: email }), "success");
     return true;
   } catch (e) {
-    toast(`เพิ่ม admin ไม่สำเร็จ: ${e.message}`, "error");
+    toast(t('toast.admin_add_fail', { msg: e.message }), "error");
     console.error("[admins] add failed", e);
     return false;
   }
 }
 
 async function removeAdminEmail(key) {
-  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return; }
+  if (!isAdmin() || !_fbDB) { toast(t('toast.users_need_admin'), "error"); return; }
   const myKey = emailToAdminKey(_fbUser && _fbUser.email);
-  if (key === myKey) { toast("ลบตัวเองออกจาก admin ไม่ได้", "error"); return; }
-  if (!confirm(`ลบ admin "${key.replace(/_/g, '.')}" ?`)) return;
+  if (key === myKey) { toast(t('toast.admin_del_self'), "error"); return; }
+  if (!confirm(t('confirm.admin_del', { key: key.replace(/_/g, '.') }))) return;
   try {
     await _fbDB.ref(`admins/${key}`).remove();
-    toast("✅ ลบ admin แล้ว", "success");
+    toast(t('toast.admin_deleted'), "success");
   } catch (e) {
-    toast(`ลบ admin ไม่สำเร็จ: ${e.message}`, "error");
+    toast(t('toast.admin_del_fail', { msg: e.message }), "error");
     console.error("[admins] remove failed", e);
   }
 }
@@ -7292,8 +7438,8 @@ function updateAuthUI() {
 /* ---------- Migration (one-time push of localStorage state) ---------- */
 function migrateToFirebase() {
   if (!isAdmin()) { toast("Admin only", "error"); return; }
-  if (!_fbDB) { toast("Firebase ยังไม่พร้อม", "error"); return; }
-  if (!confirm("Migrate localStorage state → Firebase?\n\nจะส่ง:\n• members (รายชื่อ + job)\n• parties (League + Overrun)\n• auction state (GL + Overrun)\n• job targets\n\n(ของใน Firebase ตอนนี้จะถูกเขียนทับ)")) return;
+  if (!_fbDB) { toast(t('toast.fb_not_ready'), "error"); return; }
+  if (!confirm(t('confirm.migrate'))) return;
 
   // Push members (preserves IDs)
   let memberCount = 0;
@@ -7315,17 +7461,17 @@ function migrateToFirebase() {
   });
   // Push parties + auction
   fbPushAll();
-  toast(`✅ Migrated ${memberCount} คน + parties + auction`, "success");
+  toast(t('toast.migrated', { n: memberCount }), "success");
 }
 
 /* ----- Roster CRUD ----- */
 function rosterAdd() {
   if (!isAdmin()) { toast("Admin only", "error"); return; }
-  if (!_fbMembersRef) { toast("Firebase ยังไม่ตั้งค่า", "error"); return; }
-  const name = prompt("ชื่อตัวละคร (Guild Member):");
+  if (!_fbMembersRef) { toast(t('toast.fb_not_set'), "error"); return; }
+  const name = prompt(t('prompt.add_char_name'));
   if (!name || !name.trim()) return;
-  const job         = prompt(`Job (ปล่อยว่างได้ — เลือกจาก dropdown หลังเพิ่ม):\n\n${JOB_LIST.join(" / ")}`, "") || "";
-  const discord     = prompt("Discord username (เช่น @johnny):", "") || "";
+  const job         = prompt(`${t('prompt.add_job')}\n\n${JOB_LIST.join(" / ")}`, "") || "";
+  const discord     = prompt(t('prompt.add_discord'), "") || "";
   const discordId   = prompt("Discord ID:", "") || "";
   _fbMembersRef.push(rosterClampFields({
     name:        name.trim(),
@@ -7398,14 +7544,14 @@ function rosterClampFields(obj) {
  *  the input still shows the typed value as if it saved). */
 function rosterWriteFailed(e) {
   console.warn("[roster] write failed", e);
-  toast("เซฟไม่สำเร็จ: " + ((e && (e.message || e.code)) || e), "error");
+  toast(t('toast.save_fail', { msg: ((e && (e.message || e.code)) || e) }), "error");
   renderBattlefields();  // resync UI with what's actually in Firebase
 }
 
 function rosterUpdate(id, field, value) {
   if (!_fbMembersRef) return;
   if (!rosterCanEdit(id)) {
-    toast("แก้ได้เฉพาะแถวของตัวเอง — กด \"เลือกชื่อตัวเอง\" ก่อน", "error");
+    toast(t('toast.roster_edit_own'), "error");
     renderBattlefields();
     return;
   }
@@ -7414,20 +7560,20 @@ function rosterUpdate(id, field, value) {
     val = Math.max(0, parseInt(String(value).replace(/[^0-9]/g, ""), 10) || 0);
     if (val > ROSTER_CP_MAX) {
       val = ROSTER_CP_MAX;
-      toast("CP เกินเพดาน — ปรับเป็น " + ROSTER_CP_MAX.toLocaleString(), "");
+      toast(t('toast.cp_capped', { max: ROSTER_CP_MAX.toLocaleString() }), "");
     }
   } else {
     val = String(value).trim();
     const max = ROSTER_FIELD_MAX[field] || 64;
     if (val.length > max) {
-      toast(`ยาวเกินไป (จำกัด ${max} ตัวอักษร)`, "error");
+      toast(t('toast.too_long', { max: max }), "error");
       renderBattlefields();
       return;
     }
     // Blank name would orphan the row from the claim chooser — admins may
     // still clear it (the ghost-row dedupe machinery handles those).
     if (field === "name" && !val && !isAdmin()) {
-      toast("ชื่อห้ามว่าง", "error");
+      toast(t('toast.name_required'), "error");
       renderBattlefields();
       return;
     }
@@ -7464,24 +7610,24 @@ function rosterApplyMineDraft(d) {
 function rosterSaveMine(id) {
   if (!_fbMembersRef) return;
   if (!rosterCanEdit(id)) {
-    toast("แก้ได้เฉพาะแถวของตัวเอง — กด \"เลือกชื่อตัวเอง\" ก่อน", "error");
+    toast(t('toast.roster_edit_own'), "error");
     renderBattlefields();
     return;
   }
   const d = rosterMineDraft();
   if (!d) return;
   const name = String(d.name).trim();
-  if (!name) { toast("ชื่อห้ามว่าง", "error"); return; }  // keep the draft so it can be fixed
+  if (!name) { toast(t('toast.name_required'), "error"); return; }  // keep the draft so it can be fixed
   for (const f of ["name", "job", "discord", "discordId"]) {
     if (String(d[f]).trim().length > ROSTER_FIELD_MAX[f]) {
-      toast(`${ROSTER_FIELD_LABEL[f]} ยาวเกิน ${ROSTER_FIELD_MAX[f]} ตัวอักษร`, "error");
+      toast(t('toast.field_too_long', { field: ROSTER_FIELD_LABEL[f], max: ROSTER_FIELD_MAX[f] }), "error");
       return;
     }
   }
   let cp = Math.max(0, parseInt(String(d.cp).replace(/[^0-9]/g, ""), 10) || 0);
   if (cp > ROSTER_CP_MAX) {
     cp = ROSTER_CP_MAX;
-    toast("CP เกินเพดาน — ปรับเป็น " + ROSTER_CP_MAX.toLocaleString(), "");
+    toast(t('toast.cp_capped', { max: ROSTER_CP_MAX.toLocaleString() }), "");
   }
   _rosterMineDirty = false;  // release the render hold; the listener refresh shows the saved row
   _fbMembersRef.child(id).update({
@@ -7494,25 +7640,25 @@ function rosterSaveMine(id) {
     // Guest renaming themselves: stamp the NEW name (not the stale cache
     // one), with the same 👤 guest-marker prefix as rosterActorName()
     updatedBy: isAdmin() ? rosterActorName() : "👤 " + name.slice(0, 61)
-  }).then(() => toast("✅ เซฟแล้ว", "success")).catch(rosterWriteFailed);
+  }).then(() => toast(t('toast.saved_ok'), "success")).catch(rosterWriteFailed);
 }
 
 function rosterDelete(id) {
   if (!isAdmin()) { toast("Admin only", "error"); return; }
   const m = rosterCache.find(r => r.id === id);
   if (!m) return;
-  if (!confirm(`ลบ ${m.name} (${m.job}) ?`)) return;
+  if (!confirm(t('confirm.delete_member_named', { name: m.name, job: m.job }))) return;
   _fbMembersRef.child(id).remove();
 }
 
 function rosterImportFromSheet() {
   if (!isAdmin()) { toast("Admin only", "error"); return; }
-  if (!_fbMembersRef) { toast("Firebase ยังไม่ตั้งค่า", "error"); return; }
+  if (!_fbMembersRef) { toast(t('toast.fb_not_set'), "error"); return; }
   const sheetUrl = state.sheetUrl || DEFAULT_SHEET;
-  if (!sheetUrl) { toast("ไม่มี Sheet URL", "error"); return; }
+  if (!sheetUrl) { toast(t('toast.no_sheet_url'), "error"); return; }
   (async () => {
     try {
-      toast("⏳ กำลังโหลดจาก Sheet…", "");
+      toast(t('toast.loading_sheet'), "");
       const { id, gid } = parseSheetUrl(sheetUrl);
       const resp = await fetchSheetJSON(id, gid);
       const rows = gvizToRows(resp);
@@ -7533,19 +7679,9 @@ function rosterImportFromSheet() {
       const sampleLines = fetched.slice(0, 3).map(m =>
         `  • ${m.name} (${m.job}) — Discord "${m.discord}" — Discord ID "${m.discordId}" — CP ${m.cp}`
       ).join("\n");
-      const msg = `Import จาก Google Sheet เข้า Roster?\n\n` +
-        `จะดึง 5 fields:\n` +
-        `  • Name (col C)\n` +
-        `  • Job (col E)\n` +
-        `  • Discord username (col F)\n` +
-        `  • CP (col L)\n` +
-        `  • Discord ID (col N)\n\n` +
-        `Total rows: ${fetched.length}\n\n` +
-        `ตัวอย่าง 3 แถวแรก (ดูครบใน DevTools Console):\n${sampleLines}\n\n` +
-        `กด OK ถ้า mapping ถูกต้อง — ไม่งั้นกด Cancel\n` +
-        `(ระบบจะ dedupe อัตโนมัติหลัง import)`;
+      const msg = t('confirm.import_sheet', { rows: fetched.length, sample: sampleLines });
       if (!confirm(msg)) {
-        toast("ยกเลิก import — ไม่ได้บันทึก", "");
+        toast(t('toast.import_cancelled'), "");
         return;
       }
 
@@ -7591,12 +7727,12 @@ function rosterImportFromSheet() {
           added++;
         }
       }
-      toast(`✅ Import เสร็จ: เพิ่ม ${added} · อัพเดต ${updated} — กำลัง dedupe…`, "success");
+      toast(t('toast.import_done', { added: added, updated: updated }), "success");
       // Auto-dedupe any leftover duplicates from previous broken imports
       await rosterDedupe(true);
     } catch (e) {
       console.error("[import] failed", e);
-      toast("Import ไม่สำเร็จ: " + e.message, "error");
+      toast(t('toast.import_fail', { msg: e.message }), "error");
     }
   })();
 }
@@ -7604,8 +7740,8 @@ function rosterImportFromSheet() {
 /* Merge duplicates by name+job — keeps the best entry (has discord + higher cp). */
 async function rosterDedupe(silent) {
   if (!isAdmin()) { toast("Admin only", "error"); return; }
-  if (!_fbMembersRef) { toast("Firebase ยังไม่พร้อม", "error"); return; }
-  if (!silent && !confirm("ล้างของซ้ำ?\nระบบจะ merge แถวที่ ชื่อ + Job ซ้ำกัน ให้เหลือแค่แถวเดียว (เลือกแถวที่มี Discord + CP สูงสุด).")) return;
+  if (!_fbMembersRef) { toast(t('toast.fb_not_ready'), "error"); return; }
+  if (!silent && !confirm(t('confirm.dedupe'))) return;
   // Pull latest snapshot — don't rely on local cache
   const snap = await _fbMembersRef.once("value");
   const all = [];
@@ -7649,7 +7785,7 @@ async function rosterDedupe(silent) {
       removed++;
     }
   }
-  toast(`✅ Dedupe เสร็จ: merge ${merged} กลุ่ม · ลบซ้ำ ${removed} entries`, "success");
+  toast(t('toast.dedupe_done', { merged: merged, removed: removed }), "success");
 }
 
 /* ----- Roster page render ----- */
@@ -8117,7 +8253,7 @@ function clearAuctionColumn(kind, field, item) {
   const a = getAuctionAssignments(kind);
   const bucket = a[field] && a[field][item];
   if (!bucket || !bucket.length) return;
-  if (!confirm("ล้างรายชื่อทั้งคอลัมน์นี้?")) return;
+  if (!confirm(t('confirm.clear_column'))) return;
   a[field][item] = [];
   save(); render();
 }
@@ -8179,7 +8315,7 @@ function setAuctionField(kind, field, value) {
  *  setAuctionField's focus/cursor/scroll preservation so admins can keep
  *  typing across the re-render without the page jumping. */
 function setAuctionRate(kind, rateKey, value) {
-  if (!isAdmin()) { toast("ต้องเป็น admin ถึงจะแก้จำนวนต่อคนได้", "error"); return; }
+  if (!isAdmin()) { toast(t('toast.rate_admin_only'), "error"); return; }
   const cleaned = String(value).replace(/[^0-9]/g, "");
   let n = parseInt(cleaned, 10);
   if (isNaN(n) || n < 1) n = 1;          // at least 1 item per person
@@ -8210,7 +8346,7 @@ function setAuctionRate(kind, rateKey, value) {
  *  preservation. GL only; clamps 0..100. Sub % is derived (100 − main). */
 function setAuctionSplitPercent(kind, value) {
   if (kind !== "gl") return;
-  if (!isAdmin()) { toast("ต้องเป็น admin ถึงจะแก้ % การแบ่งสนามได้", "error"); return; }
+  if (!isAdmin()) { toast(t('toast.split_admin_only'), "error"); return; }
   // Keep a leading "-" so a typed negative clamps to 0 (don't strip it to a positive).
   const cleaned = String(value).replace(/[^0-9-]/g, "");
   let n = parseInt(cleaned, 10);
@@ -9880,7 +10016,7 @@ function buildGlSummaryHtml() {
           <li>ฐานที่มั่น: <b style="color:#58a6ff">${B.us.fort}</b> vs <b style="color:#f85149">${B.them.fort}</b> = <b>${(B.us.fort/Math.max(B.them.fort,1)).toFixed(1)}×</b></li>
           <li>Top scorer: <b>${escapeHtml(B.usPlayers[0][1])}</b> (${B.usPlayers[0][7]})</li>
           <li>คะแนนเฉลี่ย/คน: <b style="color:#58a6ff">${Math.round(usAvg)}</b> vs <b style="color:#f85149">${Math.round(themAvg)}</b> (×${ratio.toFixed(1)})</li>
-          <li>1oClock under-perform: <b style="color:var(--danger)">${usUnder.length}</b> คน · ${escapeHtml(B.them.name)} under-perform: <b style="color:var(--danger)">${themUnder.length}</b> คน</li>
+          <li>1oClock under-perform: <b style="color:var(--danger)">${plural(usUnder.length, 'unit.people')}</b> · ${escapeHtml(B.them.name)} under-perform: <b style="color:var(--danger)">${plural(themUnder.length, 'unit.people')}</b></li>
         </ul>
       </div>
 
@@ -10400,7 +10536,7 @@ function updateStatusInfo() {
   const total = state.members.length;
   const assigned = state.members.filter(m => isAssigned(m.id)).length;
   document.getElementById("statusInfo").textContent =
-    `${total} คน · จัดแล้ว ${assigned} · ว่าง ${total - assigned}`;
+    t('header.status', { ppl: plural(total, 'unit.people'), assigned: assigned, free: total - assigned });
 }
 
 function render() {
@@ -10480,9 +10616,9 @@ function saveTeam() {
   try {
     const teamData = buildTeamData();
     localStorage.setItem(TEAM_SAVE_KEY, JSON.stringify(teamData));
-    toast("✅ บันทึกแล้ว — เปิดมาเรียกอัตโนมัติ", "success");
+    toast(t('toast.team_saved'), "success");
   } catch (e) {
-    toast("บันทึกไม่สำเร็จ: " + e.message, "error");
+    toast(t('toast.save_fail', { msg: e.message }), "error");
   }
 }
 
@@ -10495,7 +10631,7 @@ function loadSavedTeam() {
 }
 
 function resetAll() {
-  if (!confirm("รีเซ็ตข้อมูลทั้งหมด?")) return;
+  if (!confirm(t('confirm.reset_all'))) return;
   localStorage.removeItem("roo_party_v2");
   localStorage.removeItem(TEAM_SAVE_KEY);
   location.reload();

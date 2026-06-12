@@ -1654,6 +1654,15 @@ t("i18n: AR remaining toasts + block reasons", () => {
   app.call("setLocale", "pt-BR");
 });
 
+t("i18n: dialogs + header status", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "dialog.save_load"), "Salvar & Carregar");
+  eq(app.call("t", "header.status", { ppl: "5 pessoas", assigned: 3, free: 2 }), "5 pessoas · alocados 3 · livres 2");
+  app.call("setLocale", "en");
+  eq(app.call("t", "dialog.close"), "Close");
+  app.call("setLocale", "pt-BR");
+});
+
 console.log("\n[plural]");
 t("i18n: plural picks singular at n=1", () => {
   app.call("setLocale", "pt-BR");

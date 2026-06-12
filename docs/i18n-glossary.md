@@ -311,3 +311,76 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ขอประมูลได้เฉพาะวันปัจจุบันเท่านั้น — ขอล่วงหน้าไม่ได้ | You can only request on the current day — advance requests are not allowed | Só é possível pedir no dia atual — pedido antecipado não é permitido | `ar.block_today_only` |
 | วันนี้เป็นกิจ {ev} — ขอได้เฉพาะของกิจ {ev} เท่านั้น | Today is a {ev} day — you can only request {ev} | Hoje é dia de {ev} — só dá para pedir de {ev} | `ar.block_wrong_mode` |
 | คุณลงลาวันที่ {date} ไว้ — ไม่มีสิทธิ์ขอประมูล | You set leave on {date} — can't request auction | Você marcou folga em {date} — sem direito a pedir leilão | `ar.block_on_leave` |
+| URL ของ Google Sheet (ต้องตั้งเป็น Anyone with link – Viewer) | Google Sheet URL (set to Anyone with link – Viewer) | URL do Google Sheet (defina como Anyone with link – Viewer) | `dialog.sheet_url` |
+| ระบบจะดึง: ชื่อ (column C), Job (column E) | Pulls: Name (column C), Job (column E) | O sistema puxa: Nome (coluna C), Job (coluna E) | `dialog.sheet_pull` |
+| บันทึก & โหลด (sheetDialog button) | Save & Load | Salvar & Carregar | `dialog.save_load` |
+| ปิด (ioDialog / syncDialog button) | Close | Fechar | `dialog.close` |
+| {n} คน · จัดแล้ว {assigned} · ว่าง {free} (header) | {ppl} · assigned {assigned} · free {free} | {ppl} · alocados {assigned} · livres {free} | `header.status` |
+| โหลดสำเร็จ — {n} คน (sheet load toast) | Loaded — {n} | Carregado — {n} | `toast.sheet_load_ok` |
+| โหลดไม่สำเร็จ: {msg} | Load failed: {msg} | Falha ao carregar: {msg} | `toast.sheet_load_fail` |
+| ชื่อตัวละคร: (prompt) | Character name: | Nome do personagem: | `prompt.add_char_name` |
+| ลบสมาชิกนี้? (confirm) | Delete this member? | Excluir este membro? | `confirm.delete_member` |
+| เคลียร์สมาชิกทั้งหมดในตี้นี้? (confirm) | Clear all members from this party? | Limpar todos os membros deste grupo? | `confirm.clear_party` |
+| เปลี่ยนชื่อตี้: (prompt) | Rename party: | Renomear grupo: | `prompt.rename_party` |
+| ตี้ {id} เต็มแล้ว | Party {id} is full | Grupo {id} está cheio | `toast.party_full` |
+| ต้องเป็น admin ถึงจะรีเซ็ตวงระยะได้ | Must be admin to reset range circles | Precisa ser admin para resetar os círculos de alcance | `toast.range_admin_only` |
+| รีเซ็ตวงระยะแล้ว | Range circles reset | Círculos de alcance resetados | `toast.range_reset_ok` |
+| ล้างลูกศรของ Overrun Map แล้ว | Overrun Map arrows cleared | Setas do Overrun Map limpas | `toast.arrows_cleared_overrun` |
+| ล้างลูกศรของ Map {n} แล้ว | Map {n} arrows cleared | Setas do Map {n} limpas | `toast.arrows_cleared_map` |
+| ล้างเส้นทางของ {name} Party | {name} Party path cleared | Caminho do {name} Party limpo | `toast.path_cleared_group` |
+| Undo segment ของ {name} | Undo segment of {name} | Undo segmento de {name} | `toast.path_undo_group` |
+| ล้างเส้นทางของตี้ {n} | Party {n} path cleared | Caminho do grupo {n} limpo | `toast.path_cleared_party` |
+| Undo segment สุดท้ายของตี้ {n} | Last segment of party {n} undone | Último segmento do grupo {n} desfeito | `toast.path_undo_party` |
+| ต้องเป็น admin + ออนไลน์ถึงจะเปลี่ยนรูปได้ | Must be admin + online to change map image | Precisa ser admin + online para trocar a imagem | `toast.map_admin_only` |
+| กำลังบีบอัดรูป… | Compressing image… | Comprimindo imagem… | `toast.map_compressing` |
+| ✅ เปลี่ยนรูปแผนที่แล้ว — ทุกเครื่องเห็นทันที | ✅ Map image changed — visible on all devices immediately | ✅ Imagem do mapa trocada — visível em todos os dispositivos | `toast.map_changed_ok` |
+| เปลี่ยนรูปไม่สำเร็จ: {msg} | Map image change failed: {msg} | Falha ao trocar imagem: {msg} | `toast.map_change_fail` |
+| กลับไปใช้รูปแผนที่มาตรฐาน? (confirm) | Restore standard map image? | Voltar para a imagem padrão do mapa? | `confirm.map_reset` |
+| กลับมาใช้รูปเดิมแล้ว | Standard map restored | Imagem padrão restaurada | `toast.map_reset_ok` |
+| ลบรูปไม่สำเร็จ: {msg} | Map image delete failed: {msg} | Falha ao excluir imagem: {msg} | `toast.map_delete_fail` |
+| ทุกตี้เรียงตามอาชีพอยู่แล้ว | All parties already sorted by job | Todos os grupos já estão ordenados por classe | `toast.already_sorted` |
+| 🔀 จัดเรียงแล้ว {n} ตี้ | 🔀 {n} parties sorted | 🔀 {n} grupos ordenados | `toast.sorted_n` |
+| ตี้นี้เรียงอยู่แล้ว | This party is already sorted | Este grupo já está ordenado | `toast.party_already_sorted` |
+| เซฟไม่สำเร็จ: {msg} | Save failed: {msg} | Falha ao salvar: {msg} | `toast.save_fail` |
+| กรอก ID + password (login toast) | Enter ID + password | Preencha ID + password | `toast.login_fill` |
+| ✅ เข้าสู่ระบบสำเร็จ | ✅ Logged in | ✅ Login bem-sucedido | `toast.login_ok` |
+| 🧹 ซ่อม {n} ช่องผีแล้ว | 🧹 {n} ghost slot(s) repaired | 🧹 {n} slot(s) fantasma reparado(s) | `toast.ghost_repaired` |
+| ไม่พบช่องผีตามเกณฑ์อัตโนมัติ — ดู Console … | No ghost slots found — check Console … | Nenhum slot fantasma encontrado — veja o Console … | `toast.ghost_none` |
+| Login ไม่สำเร็จ: {msg} | Login failed: {msg} | Login falhou: {msg} | `toast.login_fail` |
+| ID หรือรหัสผ่านไม่ถูกต้อง | ID or password incorrect | ID ou senha incorretos | `toast.login_wrong_pw` |
+| ไม่พบบัญชีนี้ — แจ้ง admin สร้างบัญชีให้ | Account not found — ask admin to create one | Conta não encontrada — peça ao admin para criar | `toast.login_no_account` |
+| พยายามมากเกินไป รอสักครู่แล้วลองใหม่ | Too many attempts — wait a moment | Muitas tentativas — aguarde um momento | `toast.login_too_many` |
+| เชื่อมต่อ Firebase ไม่ได้ — เช็คเน็ต | Cannot connect to Firebase — check network | Sem conexão com Firebase — verifique a internet | `toast.login_no_network` |
+| รูปแบบอีเมลไม่ถูกต้อง | Invalid email format | Formato de e-mail inválido | `toast.email_invalid` |
+| อีเมลห้ามมีตัวอักษร # $ [ ] / | Email must not contain # $ [ ] / | E-mail não pode conter # $ [ ] / | `toast.email_bad_chars` |
+| ✅ เพิ่ม admin: {email} | ✅ Admin added: {email} | ✅ Admin adicionado: {email} | `toast.admin_added` |
+| เพิ่ม admin ไม่สำเร็จ: {msg} | Failed to add admin: {msg} | Falha ao adicionar admin: {msg} | `toast.admin_add_fail` |
+| ลบตัวเองออกจาก admin ไม่ได้ | Cannot remove yourself from admin | Não é possível remover a si mesmo do admin | `toast.admin_del_self` |
+| ลบ admin "{key}"? (confirm) | Remove admin "{key}"? | Remover admin "{key}"? | `confirm.admin_del` |
+| ✅ ลบ admin แล้ว | ✅ Admin removed | ✅ Admin removido | `toast.admin_deleted` |
+| ลบ admin ไม่สำเร็จ: {msg} | Failed to remove admin: {msg} | Falha ao remover admin: {msg} | `toast.admin_del_fail` |
+| Migrate localStorage → Firebase? … (confirm) | Migrate localStorage state → Firebase? … | Migrar estado do localStorage → Firebase? … | `confirm.migrate` |
+| ✅ Migrated {n} คน + parties + auction | ✅ Migrated {n} members + parties + auction | ✅ Migrados {n} membros + parties + auction | `toast.migrated` |
+| Firebase ยังไม่ตั้งค่า | Firebase not configured | Firebase não configurado | `toast.fb_not_set` |
+| Job (ปล่อยว่างได้ … เลือกจาก dropdown หลังเพิ่ม) (prompt) | Job (leave blank — select from dropdown after adding): | Job (pode deixar vazio … selecione no dropdown depois de adicionar): | `prompt.add_job` |
+| Discord username (เช่น @johnny) (prompt) | Discord username (e.g. @johnny): | Discord username (ex.: @johnny): | `prompt.add_discord` |
+| แก้ได้เฉพาะแถวของตัวเอง — กด "เลือกชื่อตัวเอง" ก่อน | Can only edit your own row — select your name first | Só é possível editar sua própria linha — selecione seu nome primeiro | `toast.roster_edit_own` |
+| CP เกินเพดาน — ปรับเป็น {max} | CP over limit — adjusted to {max} | CP acima do limite — ajustado para {max} | `toast.cp_capped` |
+| ยาวเกินไป (จำกัด {max} ตัวอักษร) | Too long (limit {max} chars) | Muito longo (limite {max} caracteres) | `toast.too_long` |
+| ชื่อห้ามว่าง | Name cannot be empty | Nome não pode ser vazio | `toast.name_required` |
+| {field} ยาวเกิน {max} ตัวอักษร | {field} exceeds {max} chars | {field} excede {max} caracteres | `toast.field_too_long` |
+| ✅ เซฟแล้ว | ✅ Saved | ✅ Salvo | `toast.saved_ok` |
+| ลบ {name} ({job})? (confirm) | Delete {name} ({job})? | Excluir {name} ({job})? | `confirm.delete_member_named` |
+| ไม่มี Sheet URL | No Sheet URL | Sem URL da Sheet | `toast.no_sheet_url` |
+| ⏳ กำลังโหลดจาก Sheet… | ⏳ Loading from Sheet… | ⏳ Carregando da Sheet… | `toast.loading_sheet` |
+| Import จาก Google Sheet เข้า Roster? … (confirm) | Import from Google Sheet into Roster? … | Importar do Google Sheet para o Roster? … | `confirm.import_sheet` |
+| ยกเลิก import — ไม่ได้บันทึก | Import cancelled — not saved | Import cancelado — não foi salvo | `toast.import_cancelled` |
+| ✅ Import เสร็จ: เพิ่ม {added} · อัพเดต {updated} — กำลัง dedupe… | ✅ Import done: added {added} · updated {updated} — deduplicating… | ✅ Import concluído: adicionados {added} · atualizados {updated} — deduplicando… | `toast.import_done` |
+| Import ไม่สำเร็จ: {msg} | Import failed: {msg} | Falha no import: {msg} | `toast.import_fail` |
+| ล้างของซ้ำ? ระบบจะ merge … (confirm) | Clean duplicates? System will merge … | Limpar duplicados? O sistema vai mesclar … | `confirm.dedupe` |
+| ✅ Dedupe เสร็จ: merge {merged} กลุ่ม · ลบซ้ำ {removed} entries | ✅ Dedupe done: merged {merged} groups · removed {removed} duplicate entries | ✅ Dedupe concluído: mesclados {merged} grupos · removidas {removed} entradas duplicadas | `toast.dedupe_done` |
+| ล้างรายชื่อทั้งคอลัมน์นี้? (confirm) | Clear all names from this column? | Limpar todos os nomes desta coluna? | `confirm.clear_column` |
+| ต้องเป็น admin ถึงจะแก้จำนวนต่อคนได้ | Must be admin to edit per-person count | Precisa ser admin para editar a quantidade por pessoa | `toast.rate_admin_only` |
+| ต้องเป็น admin ถึงจะแก้ % การแบ่งสนามได้ | Must be admin to edit field split % | Precisa ser admin para editar o % de divisão do campo | `toast.split_admin_only` |
+| ✅ บันทึกแล้ว — เปิดมาเรียกอัตโนมัติ | ✅ Saved — auto-loaded on next open | ✅ Salvo — carregado automaticamente na próxima vez | `toast.team_saved` |
+| รีเซ็ตข้อมูลทั้งหมด? (confirm) | Reset all data? | Resetar todos os dados? | `confirm.reset_all` |
