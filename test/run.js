@@ -28,7 +28,7 @@ function ok(cond, msg) { if (!cond) throw new Error(msg || "expected truthy"); }
 function isErr(v, msg) { if (typeof v !== "string" || !v.length) throw new Error((msg || "") + " — expected an error string, got " + JSON.stringify(v)); }
 function isNull(v, msg) { if (v !== null) throw new Error((msg || "") + " — expected null (allowed), got " + JSON.stringify(v)); }
 
-// ---- Chain badge parser: pull a member's "หน้า N · ชิ้น a-b" badges from view HTML.
+// ---- Chain badge parser: pull a member's "Pág. N · un. a-b" badges from view HTML.
 function badgesFor(html, name) {
   const rows = html.split('class="auction-assigned-row"');
   for (const r of rows) {
@@ -192,8 +192,8 @@ t("GL chain: page rolls over within a bucket (5 ppl, rate 1)", () => {
   reset(app, mkMembers(["c1", "c2", "c3", "c4", "c5"]));
   app.state.auctionGL.assignments.main.cards = ["c1", "c2", "c3", "c4", "c5"];
   const html = app.call("buildAuctionView", "gl");
-  eq(badgesFor(html, "c4"), ["หน้า 1 · ชิ้น 4"], "4th on page 1");
-  eq(badgesFor(html, "c5"), ["หน้า 2 · ชิ้น 1"], "5th rolls to page 2");
+  eq(badgesFor(html, "c4"), ["Pág. 1 · un. 4"], "4th on page 1");
+  eq(badgesFor(html, "c5"), ["Pág. 2 · un. 1"], "5th rolls to page 2");
 });
 t("GL chain: white packs continuously right after cards (same page)", () => {
   reset(app, mkMembers(["c1", "c2", "w1"]));
@@ -203,9 +203,9 @@ t("GL chain: white packs continuously right after cards (same page)", () => {
   app.state.auctionGL.assignments.main.cards = ["c1", "c2"];
   app.state.auctionGL.assignments.main.white = ["w1"];
   const html = app.call("buildAuctionView", "gl");
-  eq(badgesFor(html, "c2"), ["หน้า 1 · ชิ้น 2"], "card chain");
+  eq(badgesFor(html, "c2"), ["Pág. 1 · un. 2"], "card chain");
   eq(badgesFor(html, "w1"),
-     ["หน้า 1 · ชิ้น 3-4", "หน้า 2 · ชิ้น 1-4", "หน้า 3 · ชิ้น 1"],
+     ["Pág. 1 · un. 3-4", "Pág. 2 · un. 1-4", "Pág. 3 · un. 1"],
      "white rate7 starts page 1 slot 3 (continuous after cards), spans pages 1-3");
 });
 t("GL chain: editing the rate CHANGES the chain (regression guard)", () => {
@@ -213,10 +213,10 @@ t("GL chain: editing the rate CHANGES the chain (regression guard)", () => {
   app.state.auctionGL.assignments.main.white = ["w1"];
   app.state.auctionGL.rates.white = 3;
   const a = badgesFor(app.call("buildAuctionView", "gl"), "w1");
-  eq(a, ["หน้า 1 · ชิ้น 1-3"], "rate 3");
+  eq(a, ["Pág. 1 · un. 1-3"], "rate 3");
   app.state.auctionGL.rates.white = 7;
   const b = badgesFor(app.call("buildAuctionView", "gl"), "w1");
-  eq(b, ["หน้า 1 · ชิ้น 1-4", "หน้า 2 · ชิ้น 1-3"], "rate 7 differs");
+  eq(b, ["Pág. 1 · un. 1-4", "Pág. 2 · un. 1-3"], "rate 7 differs");
 });
 t("Overrun chain: independent per column with custom rate (4)", () => {
   reset(app, mkMembers(["x1", "x2", "oc1"]));
@@ -224,9 +224,9 @@ t("Overrun chain: independent per column with custom rate (4)", () => {
   app.state.auctionOverrun.assignments.main.white = ["x1", "x2"];
   app.state.auctionOverrun.assignments.main.cards = ["oc1"];
   const html = app.call("buildAuctionView", "overrun");
-  eq(badgesFor(html, "x1"), ["หน้า 1 · ชิ้น 1-4"], "white#1 fills page 1");
-  eq(badgesFor(html, "x2"), ["หน้า 2 · ชิ้น 1-4"], "white#2 -> page 2");
-  eq(badgesFor(html, "oc1"), ["หน้า 1 · ชิ้น 1"], "cards column resets to page 1");
+  eq(badgesFor(html, "x1"), ["Pág. 1 · un. 1-4"], "white#1 fills page 1");
+  eq(badgesFor(html, "x2"), ["Pág. 2 · un. 1-4"], "white#2 -> page 2");
+  eq(badgesFor(html, "oc1"), ["Pág. 1 · un. 1"], "cards column resets to page 1");
 });
 t("chain invariant: slots are 1..4 and total == count*rate", () => {
   reset(app, mkMembers(["a", "b", "c"]));
@@ -238,7 +238,7 @@ t("chain invariant: slots are 1..4 and total == count*rate", () => {
     const badges = badgesFor(html, n);
     ok(badges && badges.length, n + " has badges");
     for (const bdg of badges) {
-      const mm = bdg.match(/ชิ้น (\d+)(?:-(\d+))?/);
+      const mm = bdg.match(/un\. (\d+)(?:-(\d+))?/);
       ok(mm, "badge parses: " + bdg);
       const lo = +mm[1], hi = mm[2] ? +mm[2] : lo;
       ok(lo >= 1 && hi <= 4 && lo <= hi, "slots in 1..4: " + bdg);
@@ -269,7 +269,7 @@ t("end-to-end GL flow stays consistent", () => {
   eq(w.main.diff, 0, "exact allocation");
   // 5) chain page numbering for hero with the edited rate
   const badges = badgesFor(app.call("buildAuctionView", "gl"), "hero");
-  eq(badges, ["หน้า 1 · ชิ้น 1-4", "หน้า 2 · ชิ้น 1-3"], "rate-7 chain across 2 pages");
+  eq(badges, ["Pág. 1 · un. 1-4", "Pág. 2 · un. 1-3"], "rate-7 chain across 2 pages");
 });
 
 console.log("\n[auction page-map — supply-based real auction pages]");
@@ -359,7 +359,7 @@ t("badge re-anchor: white person shows real page with cards column empty of peop
   const html = app.call("buildAuctionView", "gl");
   // cards 5 (main 4 + sub 1) consume cursor 1-5 → white main starts page 2 slot 2,
   // anchored to the real pool position even though the cards column has no people.
-  eq(badgesFor(html, "w1"), ["หน้า 2 · ชิ้น 2-4"], "white anchored to real pool page (p2 s2) regardless of card people");
+  eq(badgesFor(html, "w1"), ["Pág. 2 · un. 2-4"], "white anchored to real pool page (p2 s2) regardless of card people");
 });
 
 console.log("\n[auction column coverage — fill progress vs pool pages]");
@@ -369,22 +369,22 @@ t("under-filled column shows pages covered + items/pages remaining", () => {
   Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   app.state.auctionGL.assignments.main.white = ["w1"]; // rate 3 → need 3 of pool 7
   const cov = coveragesOf(app.call("buildAuctionView", "gl"));
-  eq(cov[0], "👥 ลากถึงหน้า 1 · ขาดอีก 4 ชิ้น (1 หน้า)", "white main under-filled");
-  eq(cov[1], "ยังไม่ลากใคร — ต้องครอบ 3 ชิ้น", "white sub untouched");
+  eq(cov[0], "👥 Coberto até a pág. 1 · faltam 4 un. (1 págs)", "white main under-filled");
+  eq(cov[1], "Ninguém arrastado ainda — precisa cobrir 3 un.", "white sub untouched");
 });
 t("exactly-filled column shows ครบ", () => {
   reset(app, mkMembers(["w1"]));
   Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   app.state.auctionGL.rates.white = 7;                 // need 7 == pool 7
   app.state.auctionGL.assignments.main.white = ["w1"];
-  eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ ลากครบทุกหน้าแล้ว", "exact");
+  eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ Todas as páginas cobertas", "exact");
 });
 t("over-filled column shows เกิน", () => {
   reset(app, mkMembers(["w1", "w2"]));
   Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 10, black: 0 });
   app.state.auctionGL.rates.white = 7;                 // 2 ppl × 7 = 14 > pool 7
   app.state.auctionGL.assignments.main.white = ["w1", "w2"];
-  eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ ครบแล้ว · เกินมา 7 ชิ้น", "over by 7");
+  eq(coveragesOf(app.call("buildAuctionView", "gl"))[0], "✅ Completo · sobra 7 un.", "over by 7");
 });
 
 console.log("\n[auction main/sub split % — editable GL split]");
@@ -459,8 +459,8 @@ t("GL view renders the editable split control + dynamic field labels", () => {
   app.state.auctionGL.splitMainPercent = 60;
   const html = app.call("buildAuctionView", "gl");
   ok(html.includes('data-auction-split-kind="gl"'), "split input present for admin");
-  ok(html.includes("สนามหลัก (60%)"), "main header shows 60%");
-  ok(html.includes("สนามรอง (40%)"), "sub header shows 40%");
+  ok(html.includes("Campo principal (60%)"), "main header shows 60%");
+  ok(html.includes("Campo secundário (40%)"), "sub header shows 40%");
   const or = app.call("buildAuctionView", "overrun");
   ok(!or.includes('data-auction-split-kind'), "Overrun has no split control");
 });
@@ -637,7 +637,7 @@ t("partial page shows slot range, not the whole page", function () {
   (function () { var A = app.state.auctionOverrun.assignments; if (A && A.main && A.main.illusion) A.main.illusion = ["m1", "m2"]; else if (A && A.illusion) A.illusion = ["m1", "m2"]; })();
   const html = app.call("buildAuctionView", "overrun");
   const chips = [...html.matchAll(/ac-pagemap[^>]*>([^<]+)</g)].map(function (m) { return m[1]; });
-  ok(chips.some(function (cc) { return cc.indexOf("หน้า 6") >= 0 && cc.indexOf("ชิ้น 1-2") >= 0; }),
+  ok(chips.some(function (cc) { return cc.indexOf("Pág. 6") >= 0 && cc.indexOf("un. 1-2") >= 0; }),
      "illusion=2 on page 6 must show page 6 slots 1-2; got: " + JSON.stringify(chips));
 });
 t("single-item column shows a single slot", function () {
@@ -646,7 +646,7 @@ t("single-item column shows a single slot", function () {
   (function () { var A = app.state.auctionGL.assignments; if (A && A.main && A.main.white) A.main.white = ["w1"]; })();
   const html = app.call("buildAuctionView", "gl");
   const chips = [...html.matchAll(/ac-pagemap[^>]*>([^<]+)</g)].map(function (m) { return m[1]; });
-  ok(chips.some(function (cc) { return cc.indexOf("หน้า 1 · ชิ้น 1 ") >= 0; }), "got: " + JSON.stringify(chips));
+  ok(chips.some(function (cc) { return cc.indexOf("Pág. 1") >= 0 && cc.indexOf("un. 1") >= 0; }), "got: " + JSON.stringify(chips));
 });
 
 console.log("\n[range circles — GL main map]");
@@ -1549,6 +1549,17 @@ t("i18n: Roster keys resolve in both locales", () => {
   app.call("setLocale", "en");
   eq(app.call("t", "roster.btn_dedupe"), "🧹 Clean duplicates");
   eq(app.call("t", "status.short", { n: 2 }), "Short 2");
+  app.call("setLocale", "pt-BR");
+});
+
+t("i18n: Auction keys resolve + interpolate in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "auction.field_main"), "Campo principal");
+  eq(app.call("t", "auction.page_badge", { page: 2, items: "un. 1-3" }), "Pág. 2 · un. 1-3");
+  eq(app.call("t", "auction.cov_short", { page: 6, n: 4, pages: " (1 págs)" }), "👥 Coberto até a pág. 6 · faltam 4 un. (1 págs)");
+  app.call("setLocale", "en");
+  eq(app.call("t", "auction.field_main"), "Main field");
+  eq(app.call("t", "auction.no_items"), "📄 No items");
   app.call("setLocale", "pt-BR");
 });
 

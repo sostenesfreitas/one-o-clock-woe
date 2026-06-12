@@ -78,3 +78,55 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | 🧹 ล้างของซ้ำ | 🧹 Clean duplicates | 🧹 Limpar duplicados | `roster.btn_dedupe` |
 | 🟢 Admin · กรอกได้ทุกช่อง · บันทึก Realtime | 🟢 Admin · fill all fields · saves in realtime | 🟢 Admin · preenche todos os campos · salva em tempo real | `roster.status_admin` |
 | 🔵 Member · เลือกชื่อตัวเอง → แก้ข้อมูลแถวตัวเอง → กด 💾 เซฟ | 🔵 Member · select your name → edit your row → press 💾 Save | 🔵 Membro · selecione seu nome → edite sua linha → clique 💾 Salvar | `roster.status_member` |
+| สถานะ | Status | Status | `common.status` |
+| ชิ้น/คน (auction) | pcs/person | un./pessoa | `auction.per_person_unit` |
+| หลัก (short) | Main | Principal | `auction.field_main_short` |
+| รอง (short) | Sub | Secundário | `auction.field_sub_short` |
+| สนามหลัก | Main field | Campo principal | `auction.field_main` |
+| สนามรอง | Sub field | Campo secundário | `auction.field_sub` |
+| ยังไม่ลาก | Not assigned yet | Ainda não arrastado | `auction.not_dragged` |
+| ของไม่พอ | Not enough items | Itens insuficientes | `auction.not_enough` |
+| รวม | Total | Total | `auction.total_short` |
+| ⚖️ การแบ่งสนาม (หลัก/รอง) | ⚖️ Field split (Main/Sub) | ⚖️ Divisão de campo (Principal/Secundário) | `auction.split_title` |
+| ของแต่ละชนิดเข้า สนามหลัก | Each item type goes to the Main field | Cada tipo de item vai para o Campo principal | `auction.split_to_main` |
+| % · ที่เหลือเข้า สนามรอง | % · the rest goes to the Sub field | % · o restante vai para o Campo secundário | `auction.split_rest_sub` |
+| เศษที่หารไม่ลงตัวจะเข้า "สนามหลัก" · เช่น 5 ชิ้น {pct}% = หลัก {a} / รอง {b} | Remainder on an uneven split goes to the "Main field" · e.g. 5 pcs {pct}% = Main {a} / Sub {b} | A sobra de divisão desigual vai para o "Campo principal" · ex.: 5 un. {pct}% = Principal {a} / Secundário {b} | `auction.split_note` |
+| หน้า {page} · {items} | Page {page} · {items} | Pág. {page} · {items} | `auction.page_badge` |
+| ชิ้น {a} | item {a} | un. {a} | `auction.item_n` |
+| ชิ้น {a}-{b} | items {a}-{b} | un. {a}-{b} | `auction.item_range` |
+| ลบออก | Remove | Remover | `auction.remove` |
+| 📄 ไม่มีของ | 📄 No items | 📄 Sem itens | `auction.no_items` |
+| 📄 หน้า {page} · {slots} · รวม {items} ชิ้น | 📄 Page {page} · {slots} · total {items} pcs | 📄 Pág. {page} · {slots} · total {items} un. | `auction.pagechip_single` |
+| 📄 หน้า {sp} (ช่อง {ss})–{ep} (ช่อง {es}) · รวม {items} ชิ้น | 📄 Page {sp} (slot {ss})–{ep} (slot {es}) · total {items} pcs | 📄 Pág. {sp} (slot {ss})–{ep} (slot {es}) · total {items} un. | `auction.pagechip_multi` |
+| ยังไม่ลากใคร — ต้องครอบ {n} ชิ้น | No one assigned yet — must cover {n} pcs | Ninguém arrastado ainda — precisa cobrir {n} un. | `auction.cov_none` |
+| ✅ ครบแล้ว · เกินมา {n} ชิ้น | ✅ Done · {n} pcs over | ✅ Completo · sobra {n} un. | `auction.cov_over` |
+| ✅ ลากครบทุกหน้าแล้ว | ✅ All pages covered | ✅ Todas as páginas cobertas | `auction.cov_done` |
+| 👥 ลากถึงหน้า {page} · ขาดอีก {n} ชิ้น{pages} | 👥 Covered to page {page} · {n} pcs left{pages} | 👥 Coberto até a pág. {page} · faltam {n} un.{pages} | `auction.cov_short` |
+| ({n} หน้า) | ({n} pages) | ({n} págs) | `auction.cov_short_pages` |
+| คน (label) | People | Pessoas | `auction.stat_people` |
+| ใช้/{pool} | Used/{pool} | Usado/{pool} | `auction.stat_used` |
+| ไม่มี "{q}" ในคอลัมน์นี้ | No "{q}" in this column | Sem "{q}" nesta coluna | `auction.col_no_match` |
+| ลากชื่อจาก sidebar มาวางที่นี่ | Drag names from the sidebar and drop here | Arraste nomes da sidebar e solte aqui | `auction.drop_here` |
+| ✨ ใส่ทุกคน | ✨ Fill everyone | ✨ Adicionar todos | `auction.fill_all` |
+| 🗑 ล้าง | 🗑 Clear | 🗑 Limpar | `auction.clear` |
+| ยังไม่มีสมาชิก — กด "🔄 Refresh จาก Sheet" | No members yet — press "🔄 Refresh from Sheet" | Ainda não há membros — clique em "🔄 Refresh da Sheet" | `auction.no_members` |
+| 👥 สนามหลัก ({pct}%) — ลากชื่อจาก sidebar มาวางในคอลัมน์ | 👥 Main field ({pct}%) — drag names from the sidebar into the columns | 👥 Campo principal ({pct}%) — arraste nomes da sidebar para as colunas | `auction.main_header_gl` |
+| 👥 รายชื่อรับของ — ลากชื่อจาก sidebar มาวางในคอลัมน์ | 👥 Recipient list — drag names from the sidebar into the columns | 👥 Lista de recebedores — arraste nomes da sidebar para as colunas | `auction.main_header_ov` |
+| 🔎 ค้นหาชื่อตัวเอง — แสดงเฉพาะแถวที่มีชื่อนี้ (ใส่ทีละ 1 ชื่อ) | 🔎 Search your name — shows only rows with that name (1 at a time) | 🔎 Buscar seu nome — mostra só as linhas com esse nome (1 por vez) | `auction.search_ph` |
+| ล้างค้นหา | Clear search | Limpar busca | `auction.clear_search` |
+| 🛡️ สนามรอง ({pct}%) — ลากชื่อจาก sidebar มาวางในคอลัมน์ | 🛡️ Sub field ({pct}%) — drag names from the sidebar into the columns | 🛡️ Campo secundário ({pct}%) — arraste nomes da sidebar para as colunas | `auction.sub_header` |
+| หน้า {n} | Page {n} | Pág. {n} | `auction.page_n` |
+| หน้า {a}–{b} | Pages {a}–{b} | Pág. {a}–{b} | `auction.page_range` |
+| 📄 ยังไม่ได้กรอกจำนวนของ — … | 📄 No quantities entered — enter quantities above and the system will compute the auction pages | 📄 Quantidades não preenchidas — informe as quantidades acima e o sistema calcula as páginas do leilão | `auction.pm_empty` |
+| วันนี้รวม | Today total | Hoje no total | `auction.pm_today_total` |
+| ชิ้น | pcs | un. | `auction.unit_pcs` |
+| หน้า | pages | páginas | `auction.unit_pages` |
+| 4 ชิ้น/หน้า · เรียงตามคอลัมน์ | 4 pcs/page · ordered by column | 4 un./página · ordenado por coluna | `auction.pm_note_gl` |
+| แต่ละชนิดเริ่มหน้า 1 · 4 ชิ้น/หน้า | each type starts on page 1 · 4 pcs/page | cada tipo começa na página 1 · 4 un./página | `auction.pm_note_ov` |
+| คน: | People: | Pessoas: | `auction.meta_people` |
+| อัตรา: | Rate: | Taxa: | `auction.meta_rate` |
+| 📦 จำนวนของ (กรอกยอดจริงที่จะแจก) | 📦 Item quantities (enter the actual amount to distribute) | 📦 Quantidade de itens (informe o total real a distribuir) | `auction.qty_title` |
+| 📊 สรุปการแจก | 📊 Distribution summary | 📊 Resumo da distribuição | `auction.summary_title` |
+| รายการ | Item | Item | `auction.col_item` |
+| ใช้/ | Used/ | Usado/ | `auction.used_slash` |
+| ใช้/มี | Used/Have | Usado/Tem | `auction.used_have` |
