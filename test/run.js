@@ -1496,6 +1496,12 @@ t("i18n: applyStaticI18n fills data-i18n textContent + parses data-i18n-attr pai
   eq(attrEl._set.title, "Fila #{n}");               // second pair (raw template, no params)
   ok(!("bogus_no_colon" in attrEl._set), "pair without ':' is skipped");
 });
+t("i18n: getLocale reflects setLocale", () => {
+  app.call("setLocale", "en");
+  eq(app.getLocale(), "en");
+  app.call("setLocale", "pt-BR");
+  eq(app.getLocale(), "pt-BR");
+});
 
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
 if (fail) { console.log("FAILURES:\n  - " + failures.join("\n  - ") + "\n"); process.exit(1); }

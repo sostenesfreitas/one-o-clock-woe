@@ -99,6 +99,7 @@ function loadApp() {
   globalThis.__T_setMembersRef  = function(r){ _fbMembersRef = r; };
   globalThis.__T_ROSTER_LIMITS  = { fields: ROSTER_FIELD_MAX, cp: ROSTER_CP_MAX };
   globalThis.__T_wheelUI = function(){ return (typeof wheelUI !== "undefined") ? wheelUI : null; };
+  globalThis.__T_getLocale = function(){ return (typeof currentLocale !== "undefined") ? currentLocale : null; };
 })();
 `;
   const marker = "\nload();";
@@ -188,6 +189,7 @@ function loadApp() {
     setMembersRef: context.__T_setMembersRef,
     rosterLimits: context.__T_ROSTER_LIMITS,
     wheelUI: () => context.__T_wheelUI(),
+    getLocale: () => context.__T_getLocale(),
     // app functions (resolved live so isAdmin/today overrides take effect)
     call: (name, ...args) => need(name)(...args),
     fn: (name) => need(name),
