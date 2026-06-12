@@ -3171,6 +3171,29 @@ const LOCALES = {
     "ar.no_pending": "Nenhum pedido aguardando",
     "ar.approved_title": "✅ Aprovados ({n})",
     "ar.rejected_title": "❌ Rejeitados hoje ({n})",
+    "common.cancel": "Cancelar",
+    "ar.routing_label": "Será alocado em:",
+    "ar.modal_title": "🙋 Pedir leilão — {mode} em {date}",
+    "ar.modal_pick_one": "Escolha 1 item (1 tipo por pessoa por evento)",
+    "ar.modal_note_label": "Observação (opcional):",
+    "ar.modal_note_ph": "ex.: só uma carta basta",
+    "ar.modal_submit": "📤 Enviar pedido",
+    "toast.ar_select_name_first": "Selecione seu nome primeiro",
+    "toast.ar_member_not_found": "Membro não encontrado",
+    "toast.ar_member_reselect": "Membro não encontrado — selecione de novo",
+    "toast.ar_pick_one": "Escolha 1 item",
+    "toast.ar_only_one": "Só 1 item por evento — escolha um",
+    "toast.ar_already": "Você já pediu \"{item}\" — retire o antigo antes de pedir de novo",
+    "toast.ar_sent": "✅ Pedido enviado — aguarde aprovação do admin",
+    "toast.ar_send_fail": "Falha ao enviar: {msg} — verifique as Firebase Rules",
+    "toast.ar_no_auction_state": "Auction state não configurado",
+    "toast.ar_write_fail": "Falha ao gravar auction state: {msg}",
+    "toast.ar_approve_fail": "Falha ao aprovar: {msg}",
+    "toast.ar_reject_fail": "Falha ao rejeitar: {msg}",
+    "toast.ar_withdraw_others": "Não dá para retirar o pedido de outra pessoa",
+    "toast.ar_withdraw_approved": "Admin já aprovou — não dá para retirar sozinho",
+    "toast.ar_bulk_confirm": "Aprovar todos os pedidos de {date} ({mode})?",
+    "toast.ar_clear_confirm": "Limpar todos os pedidos de {date}?",
   },
   "en": {
     "common.save": "Save",
@@ -3449,6 +3472,29 @@ const LOCALES = {
     "ar.no_pending": "No pending requests",
     "ar.approved_title": "✅ Approved ({n})",
     "ar.rejected_title": "❌ Rejected today ({n})",
+    "common.cancel": "Cancel",
+    "ar.routing_label": "Will be placed in:",
+    "ar.modal_title": "🙋 Auction request — {mode} on {date}",
+    "ar.modal_pick_one": "Pick 1 item (1 type per person per event)",
+    "ar.modal_note_label": "Note (optional):",
+    "ar.modal_note_ph": "e.g. just one card is enough",
+    "ar.modal_submit": "📤 Send request",
+    "toast.ar_select_name_first": "Select your name first",
+    "toast.ar_member_not_found": "Member not found",
+    "toast.ar_member_reselect": "Member not found — select again",
+    "toast.ar_pick_one": "Pick 1 item",
+    "toast.ar_only_one": "Only 1 item per event — pick one",
+    "toast.ar_already": "You already requested \"{item}\" — withdraw the old one first",
+    "toast.ar_sent": "✅ Request sent — awaiting admin approval",
+    "toast.ar_send_fail": "Send failed: {msg} — check Firebase Rules",
+    "toast.ar_no_auction_state": "Auction state not configured",
+    "toast.ar_write_fail": "Failed to write auction state: {msg}",
+    "toast.ar_approve_fail": "Approve failed: {msg}",
+    "toast.ar_reject_fail": "Reject failed: {msg}",
+    "toast.ar_withdraw_others": "Can't withdraw someone else's request",
+    "toast.ar_withdraw_approved": "Admin already approved — can't withdraw yourself",
+    "toast.ar_bulk_confirm": "Approve all requests for {date} ({mode})?",
+    "toast.ar_clear_confirm": "Clear all requests for {date}?",
   },
 };
 let currentLocale = (function () {
@@ -8567,10 +8613,10 @@ function buildAuctionOverrunHtml() { return buildAuctionView("overrun"); }
  */
 const AR_CLAIMED_KEY    = "roo_party_claimed_member";
 const AR_ITEM_META = {
-  cards:    { label: "🎴 การ์ด",         rateKey: "card",     unit: "ใบ"   },
-  illusion: { label: "🔮 Illusion Frag.", rateKey: "illusion", unit: "ชิ้น" },
-  white:    { label: "🪶 ขนขาว",         rateKey: "white",    unit: "ขน"   },
-  black:    { label: "🪶 ขนดำ",          rateKey: "black",    unit: "ขน"   }
+  cards:    { label: "🎴 Card",           rateKey: "card",     unit: "pcs"  },
+  illusion: { label: "🔮 Illusion Frag.", rateKey: "illusion", unit: "pcs"  },
+  white:    { label: "🪶 White",          rateKey: "white",    unit: "pcs"  },
+  black:    { label: "🪶 Black",          rateKey: "black",    unit: "pcs"  }
 };
 
 // View state for the request page (not persisted; rebuilt on render)
@@ -8680,18 +8726,18 @@ function arActiveRequestFor(memberId, date, mode) {
  *  doesn't lose their selections). The async write itself may still fail
  *  later — that's surfaced via toast in .catch. */
 function arCreateRequest({ date, mode, items, note }) {
-  if (!_fbDB) { toast("Firebase ยังไม่พร้อม", "error"); return false; }
+  if (!_fbDB) { toast(t("toast.fb_not_ready"), "error"); return false; }
   const memberId = arGetClaimedMemberId();
-  if (!memberId) { toast("กรุณาเลือกชื่อตัวเองก่อน", "error"); return false; }
+  if (!memberId) { toast(t("toast.ar_select_name_first"), "error"); return false; }
   const m = findMember(memberId);
-  if (!m) { toast("ไม่พบสมาชิก", "error"); return false; }
+  if (!m) { toast(t("toast.ar_member_not_found"), "error"); return false; }
   // Event-day + mode + leave gate (current day only, GL/Overrun must match
   // today's event — see arRequestBlockReason).
   const block = arRequestBlockReason(memberId, date, mode);
   if (block) { toast(block, "error"); return false; }
-  if (!Array.isArray(items) || items.length === 0) { toast("เลือกของ 1 อย่าง", "error"); return false; }
+  if (!Array.isArray(items) || items.length === 0) { toast(t("toast.ar_pick_one"), "error"); return false; }
   // One item TYPE per person per event (the modal is single-select; guard here too).
-  if (items.length > 1) { toast("ขอได้แค่ 1 อย่างต่อกิจ — เลือกอย่างเดียว", "error"); return false; }
+  if (items.length > 1) { toast(t("toast.ar_only_one"), "error"); return false; }
 
   // One ACTIVE request per person per event: if they already have a pending or
   // approved request for this date+mode, they must withdraw the old one before
@@ -8699,7 +8745,7 @@ function arCreateRequest({ date, mode, items, note }) {
   const active = arActiveRequestFor(memberId, date, mode);
   if (active) {
     const cur = (active.items || []).map(k => (AR_ITEM_META[k] ? AR_ITEM_META[k].label : k)).join(", ");
-    toast(`คุณขอ "${cur}" ไว้แล้ว — ถอนของเก่าก่อนถึงจะขอใหม่ได้ (ดูในคำขอของฉัน)`, "error");
+    toast(t("toast.ar_already", { item: cur }), "error");
     return false;
   }
 
@@ -8723,16 +8769,16 @@ function arCreateRequest({ date, mode, items, note }) {
     rejectReason: null
   };
   _fbDB.ref(`auction_requests/${date}/${mode}/${id}`).set(req)
-    .then(() => toast("✅ ส่งคำขอแล้ว — รอ admin อนุมัติ", "success"))
+    .then(() => toast(t("toast.ar_sent"), "success"))
     .catch(e => {
-      toast(`ส่งไม่สำเร็จ: ${e.message}. ตรวจ Firebase Rules ที่ /auction_requests`, "error");
+      toast(t("toast.ar_send_fail", { msg: e.message }), "error");
       console.error("[auction-request] create failed", e);
     });
   return true;   // all synchronous checks passed — let arSubmitModal close the modal
 }
 
 async function arApproveRequest(date, mode, requestId) {
-  if (!isAdmin()) { toast("ต้องเป็น admin", "error"); return; }
+  if (!isAdmin()) { toast(t("toast.users_need_admin"), "error"); return; }
   const r = ((state.auctionRequests || {})[date] || {})[mode] || {};
   const req = r[requestId];
   if (!req) return;
@@ -8747,7 +8793,7 @@ async function arApproveRequest(date, mode, requestId) {
   if (mode === "overrun") field = "main";
   const auctionKey = mode === "gl" ? "auctionGL" : "auctionOverrun";
   const obj = state[auctionKey];
-  if (!obj) { toast("ยังไม่ได้ตั้งค่า auction state", "error"); return; }
+  if (!obj) { toast(t("toast.ar_no_auction_state"), "error"); return; }
   if (!obj.assignments) obj.assignments = { main: {}, sub: {} };
   ["main","sub"].forEach(f => {
     if (!obj.assignments[f]) obj.assignments[f] = { cards: [], illusion: [], white: [], black: [] };
@@ -8764,7 +8810,7 @@ async function arApproveRequest(date, mode, requestId) {
   try {
     if (_fbDB) await _fbDB.ref(mode === "gl" ? "auction_gl" : "auction_overrun").set(obj);
   } catch (e) {
-    toast(`เขียน auction state ไม่สำเร็จ: ${e.message}`, "error");
+    toast(t("toast.ar_write_fail", { msg: e.message }), "error");
     console.error("[auction-request] write auction state failed", e);
     return;
   }
@@ -8775,13 +8821,13 @@ async function arApproveRequest(date, mode, requestId) {
     decidedBy: (_fbUser && _fbUser.email) || "admin",
     computedField: field
   }).catch(e => {
-    toast(`อนุมัติไม่สำเร็จ: ${e.message}`, "error");
+    toast(t("toast.ar_approve_fail", { msg: e.message }), "error");
     console.error("[auction-request] approve failed", e);
   });
 }
 
 function arRejectRequest(date, mode, requestId, reason) {
-  if (!isAdmin()) { toast("ต้องเป็น admin", "error"); return; }
+  if (!isAdmin()) { toast(t("toast.users_need_admin"), "error"); return; }
   // If was previously approved, also remove from auction columns
   const r = ((state.auctionRequests || {})[date] || {})[mode] || {};
   const req = r[requestId];
@@ -8806,7 +8852,7 @@ function arRejectRequest(date, mode, requestId, reason) {
     decidedBy: (_fbUser && _fbUser.email) || "admin",
     rejectReason: reason || ""
   }).catch(e => {
-    toast(`ปฏิเสธไม่สำเร็จ: ${e.message}`, "error");
+    toast(t("toast.ar_reject_fail", { msg: e.message }), "error");
     console.error("[auction-request] reject failed", e);
   });
 }
@@ -8816,8 +8862,8 @@ function arWithdrawRequest(date, mode, requestId) {
   const req = r[requestId];
   if (!req) return;
   const me = arGetClaimedMemberId();
-  if (req.memberId !== me && !isAdmin()) { toast("ถอนคำขอของคนอื่นไม่ได้", "error"); return; }
-  if (req.status === "approved") { toast("Admin อนุมัติแล้ว ถอนเองไม่ได้", "error"); return; }
+  if (req.memberId !== me && !isAdmin()) { toast(t("toast.ar_withdraw_others"), "error"); return; }
+  if (req.status === "approved") { toast(t("toast.ar_withdraw_approved"), "error"); return; }
   _fbDB.ref(`auction_requests/${date}/${mode}/${requestId}`).remove();
 }
 
@@ -8827,8 +8873,8 @@ function arWithdrawRequest(date, mode, requestId) {
  *  manually on the Auction GL / Auction Overrun pages.
  */
 async function arBulkApprove(date, mode) {
-  if (!isAdmin()) { toast("ต้องเป็น admin", "error"); return; }
-  if (!confirm(`อนุมัติทุก request ของ ${date} (${mode === "gl" ? "GL" : "Overrun"})?`)) return;
+  if (!isAdmin()) { toast(t("toast.users_need_admin"), "error"); return; }
+  if (!confirm(t("toast.ar_bulk_confirm", { date, mode: mode === "gl" ? "GL" : "Overrun" }))) return;
   const pending = arGetRequests(date, mode)
     .filter(r => r.status === "pending")
     .sort((a, b) => {
@@ -8847,8 +8893,8 @@ async function arBulkApprove(date, mode) {
 }
 
 function arClearDay(date) {
-  if (!isAdmin()) { toast("ต้องเป็น admin", "error"); return; }
-  if (!confirm(`ล้างคำขอทั้งหมดของ ${date}?`)) return;
+  if (!isAdmin()) { toast(t("toast.users_need_admin"), "error"); return; }
+  if (!confirm(t("toast.ar_clear_confirm", { date }))) return;
   _fbDB.ref(`auction_requests/${date}`).remove()
     .catch(e => { toast(`ล้างไม่สำเร็จ: ${e.message}`, "error"); console.error(e); });
 }
@@ -8870,7 +8916,7 @@ function arAutoClearPast() {
  *  admin button in case something needs to be wiped early.
  */
 function arResetAuctionPages() {
-  if (!isAdmin() || !_fbDB) { toast("ต้องเป็น admin", "error"); return; }
+  if (!isAdmin() || !_fbDB) { toast(t("toast.users_need_admin"), "error"); return; }
   // Kill any queued debounced fbPushAll so a stale snapshot (from a drag
   // or CP edit in the last 300ms) can't echo back AFTER we've reset and
   // re-clobber yesterday's data into auction_gl/overrun.
@@ -8912,8 +8958,8 @@ function arRequestBlockReason(memberId, date, mode) {
 
 function arOpenRequestModal(date, mode) {
   const memberId = arGetClaimedMemberId();
-  if (!memberId) { toast("กรุณาเลือกชื่อตัวเองก่อน", "error"); return; }
-  if (!findMember(memberId)) { toast("ไม่พบสมาชิก — เลือกใหม่", "error"); return; }
+  if (!memberId) { toast(t("toast.ar_select_name_first"), "error"); return; }
+  if (!findMember(memberId)) { toast(t("toast.ar_member_reselect"), "error"); return; }
   const block = arRequestBlockReason(memberId, date, mode);
   if (block) { toast(block, "error"); return; }
   _arModalState = { date, mode, items: new Set(), note: "" };
@@ -9221,7 +9267,7 @@ function arBuildModal() {
   const { date, mode, items, note } = _arModalState;
   const memberId = arGetClaimedMemberId();
   const field = arDetectField(memberId, mode);
-  const fieldTxt = field === "main" ? "<b>สนามหลัก</b>" : field === "sub" ? '<b class="sub">สนามรอง</b>' : `<span style="color:var(--danger)">ยังไม่อยู่ในตี้</span>`;
+  const fieldTxt = field === "main" ? `<b>${t('auction.field_main_short')}</b>` : field === "sub" ? `<b class="sub">${t('auction.field_sub_short')}</b>` : `<span style="color:var(--danger)">${t('ar.not_in_party')}</span>`;
 
   const itemRows = ["cards","illusion","white","black"].map(k => {
     const meta = AR_ITEM_META[k];
@@ -9229,20 +9275,20 @@ function arBuildModal() {
     return `<div class="ar-item-row ${sel ? "selected" : ""}" onclick="arToggleModalItem('${k}')">
       <span style="font-size:18px">${sel ? "◉" : "○"}</span>
       <span>${meta.label}</span>
-      <span class="ar-routing ${field === "sub" ? "sub" : ""}">ระบบจะใส่: ${fieldTxt}</span>
+      <span class="ar-routing ${field === "sub" ? "sub" : ""}">${t('ar.routing_label')} ${fieldTxt}</span>
     </div>`;
   }).join("");
 
   return `<div class="ar-modal-backdrop" onclick="if(event.target===this)arCloseModal()">
     <div class="ar-modal">
-      <h3>🙋 ขอประมูล — ${mode === "gl" ? "GL" : "Overrun"} วันที่ ${date}</h3>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">เลือกของ 1 อย่าง (ขอได้คนละ 1 ชนิดต่อกิจ)</div>
+      <h3>${t('ar.modal_title', {mode: mode === "gl" ? "GL" : "Overrun", date})}</h3>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${t('ar.modal_pick_one')}</div>
       ${itemRows}
-      <div style="font-size:12px;color:var(--muted);margin:10px 0 4px">หมายเหตุ (ไม่บังคับ):</div>
-      <textarea rows="2" maxlength="200" oninput="arSetModalNote(this.value)" placeholder="เช่น ขอใบเดียวพอ">${escapeHtml(note || "")}</textarea>
+      <div style="font-size:12px;color:var(--muted);margin:10px 0 4px">${t('ar.modal_note_label')}</div>
+      <textarea rows="2" maxlength="200" oninput="arSetModalNote(this.value)" placeholder="${t('ar.modal_note_ph')}">${escapeHtml(note || "")}</textarea>
       <div class="ar-modal-actions">
-        <button onclick="arCloseModal()">ยกเลิก</button>
-        <button class="primary" onclick="arSubmitModal()">📤 ส่งคำขอ</button>
+        <button onclick="arCloseModal()">${t('common.cancel')}</button>
+        <button class="primary" onclick="arSubmitModal()">${t('ar.modal_submit')}</button>
       </div>
     </div>
   </div>`;

@@ -1630,6 +1630,15 @@ t("i18n: Auction-Request render keys", () => {
   app.call("setLocale", "pt-BR");
 });
 
+t("i18n: AR modal + toast keys", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "ar.modal_title", { mode: "GL", date: "2026-06-12" }), "🙋 Pedir leilão — GL em 2026-06-12");
+  eq(app.call("t", "toast.ar_already", { item: "🎴 Card" }), "Você já pediu \"🎴 Card\" — retire o antigo antes de pedir de novo");
+  app.call("setLocale", "en");
+  eq(app.call("t", "ar.modal_submit"), "📤 Send request");
+  app.call("setLocale", "pt-BR");
+});
+
 console.log("\n[plural]");
 t("i18n: plural picks singular at n=1", () => {
   app.call("setLocale", "pt-BR");

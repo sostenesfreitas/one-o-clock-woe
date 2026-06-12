@@ -278,3 +278,29 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ไม่มีคำขอรออนุมัติ | No pending requests | Nenhum pedido aguardando | `ar.no_pending` |
 | ✅ อนุมัติแล้ว ({n}) | ✅ Approved ({n}) | ✅ Aprovados ({n}) | `ar.approved_title` |
 | ❌ ปฏิเสธวันนี้ ({n}) | ❌ Rejected today ({n}) | ❌ Rejeitados hoje ({n}) | `ar.rejected_title` |
+| ยกเลิก (modal button) | Cancel | Cancelar | `common.cancel` |
+| ระบบจะใส่: (routing label) | Will be placed in: | Será alocado em: | `ar.routing_label` |
+| 🙋 ขอประมูล — {mode} วันที่ {date} | 🙋 Auction request — {mode} on {date} | 🙋 Pedir leilão — {mode} em {date} | `ar.modal_title` |
+| เลือกของ 1 อย่าง (ขอได้คนละ 1 ชนิดต่อกิจ) | Pick 1 item (1 type per person per event) | Escolha 1 item (1 tipo por pessoa por evento) | `ar.modal_pick_one` |
+| หมายเหตุ (ไม่บังคับ): | Note (optional): | Observação (opcional): | `ar.modal_note_label` |
+| เช่น ขอใบเดียวพอ (placeholder) | e.g. just one card is enough | ex.: só uma carta basta | `ar.modal_note_ph` |
+| 📤 ส่งคำขอ (submit button) | 📤 Send request | 📤 Enviar pedido | `ar.modal_submit` |
+| กรุณาเลือกชื่อตัวเองก่อน | Select your name first | Selecione seu nome primeiro | `toast.ar_select_name_first` |
+| ไม่พบสมาชิก | Member not found | Membro não encontrado | `toast.ar_member_not_found` |
+| ไม่พบสมาชิก — เลือกใหม่ | Member not found — select again | Membro não encontrado — selecione de novo | `toast.ar_member_reselect` |
+| เลือกของ 1 อย่าง (toast) | Pick 1 item | Escolha 1 item | `toast.ar_pick_one` |
+| ขอได้แค่ 1 อย่างต่อกิจ — เลือกอย่างเดียว | Only 1 item per event — pick one | Só 1 item por evento — escolha um | `toast.ar_only_one` |
+| คุณขอ "{item}" ไว้แล้ว — ถอนของเก่าก่อน | You already requested "{item}" — withdraw the old one first | Você já pediu "{item}" — retire o antigo antes de pedir de novo | `toast.ar_already` |
+| ✅ ส่งคำขอแล้ว — รอ admin อนุมัติ | ✅ Request sent — awaiting admin approval | ✅ Pedido enviado — aguarde aprovação do admin | `toast.ar_sent` |
+| ส่งไม่สำเร็จ: {msg} — ตรวจ Firebase Rules | Send failed: {msg} — check Firebase Rules | Falha ao enviar: {msg} — verifique as Firebase Rules | `toast.ar_send_fail` |
+| ยังไม่ได้ตั้งค่า auction state | Auction state not configured | Auction state não configurado | `toast.ar_no_auction_state` |
+| เขียน auction state ไม่สำเร็จ: {msg} | Failed to write auction state: {msg} | Falha ao gravar auction state: {msg} | `toast.ar_write_fail` |
+| อนุมัติไม่สำเร็จ: {msg} | Approve failed: {msg} | Falha ao aprovar: {msg} | `toast.ar_approve_fail` |
+| ปฏิเสธไม่สำเร็จ: {msg} | Reject failed: {msg} | Falha ao rejeitar: {msg} | `toast.ar_reject_fail` |
+| ถอนคำขอของคนอื่นไม่ได้ | Can't withdraw someone else's request | Não dá para retirar o pedido de outra pessoa | `toast.ar_withdraw_others` |
+| Admin อนุมัติแล้ว ถอนเองไม่ได้ | Admin already approved — can't withdraw yourself | Admin já aprovou — não dá para retirar sozinho | `toast.ar_withdraw_approved` |
+| อนุมัติทุก request ของ {date} ({mode})? (confirm) | Approve all requests for {date} ({mode})? | Aprovar todos os pedidos de {date} ({mode})? | `toast.ar_bulk_confirm` |
+| ล้างคำขอทั้งหมดของ {date}? (confirm) | Clear all requests for {date}? | Limpar todos os pedidos de {date}? | `toast.ar_clear_confirm` |
+| 🎴 การ์ด → literal English (AR item) | 🎴 Card | 🎴 Card | AR_ITEM_META.cards.label |
+| 🪶 ขนขาว → literal English (AR item) | 🪶 White | 🪶 White | AR_ITEM_META.white.label |
+| 🪶 ขนดำ → literal English (AR item) | 🪶 Black | 🪶 Black | AR_ITEM_META.black.label |
