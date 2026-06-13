@@ -140,8 +140,10 @@ always read back through `fbToFixedArray(v, len, fill)`.
 
 ## Timezone
 
-All "today" logic uses Asia/Bangkok (UTC+7) via `todayBkkISO()` / `bkkNow()`.
-Never use `new Date()` directly for date math (off-by-one outside Bangkok).
+All "today" logic uses **Horário de Brasília (UTC−3)** via `todayBkkISO()` /
+`bkkNow()` (the `bkk*` names are legacy — they now return Brasília time; the
+fixed −3h offset is correct since Brazil has no DST). Never use `new Date()`
+directly for date math (off-by-one outside Brasília).
 
 ## Conventions
 
