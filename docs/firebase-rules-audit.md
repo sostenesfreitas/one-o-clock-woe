@@ -16,12 +16,12 @@ RTDB rules have no functions, so this is inlined at every admin-gated node. It m
 
 ```
 auth != null && auth.token.email != null && (
-  auth.token.email.toLowerCase() == 'blankkardor@gmail.com'
+  auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com'
   || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true
 )
 ```
 
-- **Bootstrap admin** (`blankkardor@gmail.com`) is always admin — so it can seed `/admins`
+- **Bootstrap admin** (`sostenesfreitas@gmail.com`) is always admin — so it can seed `/admins`
   even when that node is empty (matches `ADMIN_EMAILS`).
 - Otherwise admin = `/admins/{email-with-dots-as-underscores}: true`.
 - RTDB `String.replace('.', '_')` replaces **all** occurrences — same as the app's
@@ -71,7 +71,7 @@ result in brackets. Use a real admin email for "authenticated (Google)" and togg
 
 1. **Read** `/parties/league`, location auth = Anonymous → **Allow**.
 2. **Write** `/parties/league`, Anonymous → **Deny**.
-3. **Write** `/parties/league`, Google = `blankkardor@gmail.com` → **Allow**.
+3. **Write** `/parties/league`, Google = `sostenesfreitas@gmail.com` → **Allow**.
 4. **Write** `/members/<existingId>/cp` = `9999`, Anonymous → **Allow** (guest CP edit).
 5. **Write** `/members/<newId>` = `{name:"x"}`, Anonymous → **Deny** (create = admin).
 6. **Write** `/leaves/<id>/2026-06-02` = `true`, Anonymous → **Allow**.

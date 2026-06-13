@@ -132,7 +132,7 @@ always read back through `fbToFixedArray(v, len, fill)`.
 
 - Anonymous sign-in for viewers; email/password (or Google bootstrap) for
   admins. `isAdmin()` gates every write.
-- Admin bootstrap: `blankkardor@gmail.com` (Google OAuth). Additional admins
+- Admin bootstrap: `sostenesfreitas@gmail.com` (Google OAuth). Additional admins
   via `/admins/{email_with_dots_as_underscores}`. ID/password accounts created
   in the Users page live at `/users/{username}` (synthetic email
   `username@woe.local`).

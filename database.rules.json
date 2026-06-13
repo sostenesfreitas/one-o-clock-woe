@@ -5,7 +5,7 @@
 
     "members": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
       "$mid": {
         ".write": "auth != null && data.exists() && newData.exists()",
         "name":           { ".validate": "newData.isString() && newData.val().length <= 64", "$x": { ".validate": false } },
@@ -23,12 +23,12 @@
 
     "parties": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "auction_gl": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
       "rates": {
         "card": { ".validate": "newData.isNumber() && newData.val() >= 1" },
         "illusion": { ".validate": "newData.isNumber() && newData.val() >= 1" },
@@ -39,7 +39,7 @@
 
     "auction_overrun": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
       "rates": {
         "card": { ".validate": "newData.isNumber() && newData.val() >= 1" },
         "illusion": { ".validate": "newData.isNumber() && newData.val() >= 1" },
@@ -50,7 +50,7 @@
 
     "auction_requests": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
       "$date": {
         "$mode": {
           "$reqId": {
@@ -63,7 +63,7 @@
 
     "leaves": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
       "$mid": {
         "$date": {
           ".write": "auth != null",
@@ -74,47 +74,47 @@
 
     "job_targets": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "markers": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "markers_bottom": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "overrun_markers": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "range_circles": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "system": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "admins": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "users": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)"
     },
 
     "wheel_history": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
       "$wid": {
         ".validate": "!newData.exists() || newData.hasChildren(['at', 'by', 'winnerId', 'winnerName', 'prize'])",
         "at":         { ".validate": "newData.isNumber()" },
@@ -128,7 +128,7 @@
 
     "map_images": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'blankkardor@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
+      ".write": "auth != null && auth.token.email != null && (auth.token.email.toLowerCase() == 'sostenesfreitas@gmail.com' || root.child('admins').child(auth.token.email.toLowerCase().replace('.', '_')).val() == true)",
       "$mapNum": {
         ".validate": "$mapNum.matches(/^[1-5]$/) && newData.isString() && newData.val().length < 900000 && newData.val().beginsWith('data:image/')"
       }
