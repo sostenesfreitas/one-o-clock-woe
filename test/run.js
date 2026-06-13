@@ -1663,6 +1663,38 @@ t("i18n: dialogs + header status", () => {
   app.call("setLocale", "pt-BR");
 });
 
+t("i18n: GL battle-analysis keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "gl.col_score"), "Pontos");
+  eq(app.call("t", "gl.no_underperform"), "Nenhum jogador under-perform — time sólido");
+  eq(app.call("t", "gl.stat_defeats"), "⚔️ Derrotas (Defeats)");
+  eq(app.call("t", "gl.stat_forts"), "🏰 Fortes (Forts)");
+  eq(app.call("t", "gl.insight_win"), "Vitória");
+  eq(app.call("t", "gl.insight_lose"), "Derrota");
+  eq(app.call("t", "gl.insight_by_score"), "pelo guild score");
+  eq(app.call("t", "gl.all_players", { team: "1oClock", n: 40 }), "📋 Todos — 1oClock (40)");
+  eq(app.call("t", "gl.under_title"), "⚠️ Under Performance");
+  app.call("setLocale", "en");
+  eq(app.call("t", "gl.col_score"), "Score");
+  eq(app.call("t", "gl.no_underperform"), "No under-performing players — solid team");
+  eq(app.call("t", "gl.stat_defeats"), "⚔️ Defeats");
+  eq(app.call("t", "gl.insight_win"), "Won");
+  eq(app.call("t", "gl.all_players", { team: "Rivals", n: 37 }), "📋 All — Rivals (37)");
+  app.call("setLocale", "pt-BR"); // reset
+});
+
+t("i18n: GL reason strings interpolate correctly in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "gl.reason_score", { total: 500, cutoff: 600 }), "pontos 500 < mediana × 0.5 (=600)");
+  eq(app.call("t", "gl.reason_defeat", { d: 10, ka: 5 }), "derrotas 10 > kill+assist 5");
+  eq(app.call("t", "gl.reason_no_ka"), "nenhum kill/assist");
+  app.call("setLocale", "en");
+  eq(app.call("t", "gl.reason_score", { total: 500, cutoff: 600 }), "score 500 < median × 0.5 (=600)");
+  eq(app.call("t", "gl.reason_defeat", { d: 10, ka: 5 }), "defeats 10 > kill+assist 5");
+  eq(app.call("t", "gl.reason_no_ka"), "no kill/assist at all");
+  app.call("setLocale", "pt-BR"); // reset
+});
+
 console.log("\n[plural]");
 t("i18n: plural picks singular at n=1", () => {
   app.call("setLocale", "pt-BR");

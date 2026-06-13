@@ -384,3 +384,28 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ต้องเป็น admin ถึงจะแก้ % การแบ่งสนามได้ | Must be admin to edit field split % | Precisa ser admin para editar o % de divisão do campo | `toast.split_admin_only` |
 | ✅ บันทึกแล้ว — เปิดมาเรียกอัตโนมัติ | ✅ Saved — auto-loaded on next open | ✅ Salvo — carregado automaticamente na próxima vez | `toast.team_saved` |
 | รีเซ็ตข้อมูลทั้งหมด? (confirm) | Reset all data? | Resetar todos os dados? | `confirm.reset_all` |
+
+## GL Battle-analysis page (Phase 2)
+
+| Thai | English | pt-BR | key |
+|---|---|---|---|
+| คะแนน (table header) | Score | Pontos | `gl.col_score` |
+| คะแนน (inline "score" label) | score | pontos | `gl.score` |
+| คะแนน {total} < median × 0.5 (={cutoff}) (reason) | score {total} < median × 0.5 (={cutoff}) | pontos {total} < mediana × 0.5 (={cutoff}) | `gl.reason_score` |
+| พ่ายแพ้ {d} > kill+assist {ka} (reason) | defeats {d} > kill+assist {ka} | derrotas {d} > kill+assist {ka} | `gl.reason_defeat` |
+| ไม่ได้ kill/assist เลย (reason) | no kill/assist at all | nenhum kill/assist | `gl.reason_no_ka` |
+| ไม่มีผู้เล่นที่ under-perform — ทีมแน่นดี | No under-performing players — solid team | Nenhum jogador under-perform — time sólido | `gl.no_underperform` |
+| เปรียบเทียบสถิติ · Main Battlefield · N ผู้เล่นรวม | Stats comparison · Main Battlefield · {n} players total | Comparação de estatísticas · Main Battlefield · {n} jogadores no total | `gl.sub_title` |
+| ⚔️ เอาชนะ (Defeats) | ⚔️ Defeats | ⚔️ Derrotas (Defeats) | `gl.stat_defeats` |
+| 🏰 ฐานที่มั่น (Forts) | 🏰 Forts | 🏰 Fortes (Forts) | `gl.stat_forts` |
+| เกณฑ์: คะแนน < median × 0.5 · หรือ พ่ายแพ้ > kill+assist · หรือไม่ได้ kill/assist เลย | Criteria: score < median × 0.5 · or defeats > kill+assist · or no kill/assist | Critérios: pontos < mediana × 0.5 · ou derrotas > kill+assist · ou nenhum kill/assist | `gl.under_criteria` |
+| ⚠️ Under Performance (section title) | ⚠️ Under Performance | ⚠️ Under Performance | `gl.under_title` |
+| ชนะ (insight) | Won | Vitória | `gl.insight_win` |
+| แพ้ (insight) | Lost | Derrota | `gl.insight_lose` |
+| โดย guild score | by guild score | pelo guild score | `gl.insight_by_score` |
+| เอาชนะ: (insight label) | Defeats: | Derrotas: | `gl.insight_defeats` |
+| ฐานที่มั่น: (insight label) | Forts: | Fortes: | `gl.insight_forts` |
+| คะแนนเฉลี่ย/คน: | Avg score/player: | Pontos médios/jogador: | `gl.insight_avg` |
+| 📋 ทั้งหมด — {team} ({n}) | 📋 All — {team} ({n}) | 📋 Todos — {team} ({n}) | `gl.all_players` |
+| 🥇 Top 10 | 🥇 Top 10 | 🥇 Top 10 | `gl.top10` |
+| 💡 AI Insights (section title) | 💡 AI Insights | 💡 AI Insights | `gl.insights_title` |

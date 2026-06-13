@@ -3274,6 +3274,26 @@ const LOCALES = {
     "toast.team_saved": "✅ Salvo — carregado automaticamente na próxima vez",
     "confirm.reset_all": "Resetar todos os dados?",
     "confirm.import_sheet": "Importar do Google Sheet para o Roster?\n\nCampos que serão importados:\n  • Name (col C)\n  • Job (col E)\n  • Discord username (col F)\n  • CP (col L)\n  • Discord ID (col N)\n\nTotal de linhas: {rows}\n\nExemplo das 3 primeiras linhas (veja tudo no DevTools Console):\n{sample}\n\nClique OK se o mapeamento estiver correto — caso contrário clique em Cancelar\n(O sistema vai deduplicar automaticamente após o import)",
+    "gl.col_score": "Pontos",
+    "gl.reason_score": "pontos {total} < mediana × 0.5 (={cutoff})",
+    "gl.reason_defeat": "derrotas {d} > kill+assist {ka}",
+    "gl.reason_no_ka": "nenhum kill/assist",
+    "gl.no_underperform": "Nenhum jogador under-perform — time sólido",
+    "gl.sub_title": "Comparação de estatísticas · Main Battlefield · {n} jogadores no total",
+    "gl.stat_defeats": "⚔️ Derrotas (Defeats)",
+    "gl.stat_forts": "🏰 Fortes (Forts)",
+    "gl.under_criteria": "Critérios: pontos < mediana × 0.5 · ou derrotas > kill+assist · ou nenhum kill/assist",
+    "gl.under_title": "⚠️ Under Performance",
+    "gl.insight_win": "Vitória",
+    "gl.insight_lose": "Derrota",
+    "gl.insight_by_score": "pelo guild score",
+    "gl.insight_defeats": "Derrotas:",
+    "gl.insight_forts": "Fortes:",
+    "gl.insight_avg": "Pontos médios/jogador:",
+    "gl.all_players": "📋 Todos — {team} ({n})",
+    "gl.score": "pontos",
+    "gl.top10": "🥇 Top 10",
+    "gl.insights_title": "💡 AI Insights",
   },
   "en": {
     "common.save": "Save",
@@ -3655,6 +3675,26 @@ const LOCALES = {
     "toast.team_saved": "✅ Saved — auto-loaded on next open",
     "confirm.reset_all": "Reset all data?",
     "confirm.import_sheet": "Import from Google Sheet into Roster?\n\nFields to import:\n  • Name (col C)\n  • Job (col E)\n  • Discord username (col F)\n  • CP (col L)\n  • Discord ID (col N)\n\nTotal rows: {rows}\n\nSample of first 3 rows (see all in DevTools Console):\n{sample}\n\nPress OK if the mapping looks correct — otherwise press Cancel\n(The system will dedupe automatically after import)",
+    "gl.col_score": "Score",
+    "gl.reason_score": "score {total} < median × 0.5 (={cutoff})",
+    "gl.reason_defeat": "defeats {d} > kill+assist {ka}",
+    "gl.reason_no_ka": "no kill/assist at all",
+    "gl.no_underperform": "No under-performing players — solid team",
+    "gl.sub_title": "Stats comparison · Main Battlefield · {n} players total",
+    "gl.stat_defeats": "⚔️ Defeats",
+    "gl.stat_forts": "🏰 Forts",
+    "gl.under_criteria": "Criteria: score < median × 0.5 · or defeats > kill+assist · or no kill/assist",
+    "gl.under_title": "⚠️ Under Performance",
+    "gl.insight_win": "Won",
+    "gl.insight_lose": "Lost",
+    "gl.insight_by_score": "by guild score",
+    "gl.insight_defeats": "Defeats:",
+    "gl.insight_forts": "Forts:",
+    "gl.insight_avg": "Avg score/player:",
+    "gl.all_players": "📋 All — {team} ({n})",
+    "gl.score": "score",
+    "gl.top10": "🥇 Top 10",
+    "gl.insights_title": "💡 AI Insights",
   },
 };
 let currentLocale = (function () {
@@ -9854,9 +9894,9 @@ function findUnderperformers(players, threshold) {
   }).map(p => {
     const [rank, name, fort, mi, k, a, d, total] = p;
     const reasons = [];
-    if (total < cutoff) reasons.push(`คะแนน ${total} < median × 0.5 (=${Math.round(cutoff)})`);
-    if (d > (k + a)) reasons.push(`พ่ายแพ้ ${d} > kill+assist ${k+a}`);
-    if (k + a === 0) reasons.push("ไม่ได้ kill/assist เลย");
+    if (total < cutoff) reasons.push(t('gl.reason_score', { total, cutoff: Math.round(cutoff) }));
+    if (d > (k + a)) reasons.push(t('gl.reason_defeat', { d, ka: k + a }));
+    if (k + a === 0) reasons.push(t('gl.reason_no_ka'));
     return { rank, name, total, k, a, d, reasons };
   });
 }
@@ -9884,7 +9924,7 @@ function buildGlPlayerTable(players, side, underSet) {
     </tr>`;
   }).join("");
   return `<table class="gl-ptable ${side}">
-    <thead><tr><th class="rk">#</th><th>ชื่อ</th><th>F/M</th><th>K/A/D</th><th style="text-align:right">คะแนน</th></tr></thead>
+    <thead><tr><th class="rk">#</th><th>${t('roster.col_name')}</th><th>F/M</th><th>K/A/D</th><th style="text-align:right">${t('gl.col_score')}</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
@@ -9912,17 +9952,17 @@ function buildGlSummaryHtml() {
 
   const renderUnder = (list) => list.length
     ? `<ul class="gl-under-list">${list.map(u=>`<li>
-        <div><span class="uname">#${u.rank} ${escapeHtml(u.name)}</span> · คะแนน <b>${u.total}</b> · K/A/D ${u.k}/${u.a}/${u.d}</div>
+        <div><span class="uname">#${u.rank} ${escapeHtml(u.name)}</span> · ${t('gl.score')} <b>${u.total}</b> · K/A/D ${u.k}/${u.a}/${u.d}</div>
         <div class="reason">${u.reasons.map(escapeHtml).join(" · ")}</div>
       </li>`).join("")}</ul>`
-    : `<div style="color:var(--muted);font-style:italic;padding:8px">ไม่มีผู้เล่นที่ under-perform — ทีมแน่นดี</div>`;
+    : `<div style="color:var(--muted);font-style:italic;padding:8px">${t('gl.no_underperform')}</div>`;
 
   return `
     <div class="gl-dashboard">
       <div class="gl-hero">
         <span class="gl-result-badge ${resultBadge}">${resultText}</span>
         <h1 style="margin:0;font-size:22px">Guild League Battle Report</h1>
-        <div class="gl-sub">เปรียบเทียบสถิติ · Main Battlefield · ${B.usPlayers.length + B.themPlayers.length} ผู้เล่นรวม</div>
+        <div class="gl-sub">${t('gl.sub_title', { n: B.usPlayers.length + B.themPlayers.length })}</div>
         <div class="gl-score-board">
           <div class="gl-team us">
             <div class="gl-team-name">⚔️ ${B.us.name}</div>
@@ -9942,7 +9982,7 @@ function buildGlSummaryHtml() {
         <h3>📊 Key Stats</h3>
         <div class="gl-stat-grid">
           <div class="gl-stat-card">
-            <div class="gl-stat-label">⚔️ เอาชนะ (Defeats)</div>
+            <div class="gl-stat-label">${t('gl.stat_defeats')}</div>
             <div class="gl-stat-row"><span class="name">1oClock</span><span class="us-v">${B.us.defeats}</span></div>
             <div class="gl-stat-row"><span class="name">${B.them.name}</span><span class="them-v">${B.them.defeats}</span></div>
             <div class="gl-stat-bar">
@@ -9951,7 +9991,7 @@ function buildGlSummaryHtml() {
             </div>
           </div>
           <div class="gl-stat-card">
-            <div class="gl-stat-label">🏰 ฐานที่มั่น (Forts)</div>
+            <div class="gl-stat-label">${t('gl.stat_forts')}</div>
             <div class="gl-stat-row"><span class="name">1oClock</span><span class="us-v">${B.us.fort}</span></div>
             <div class="gl-stat-row"><span class="name">${B.them.name}</span><span class="them-v">${B.them.fort}</span></div>
             <div class="gl-stat-bar">
@@ -9982,51 +10022,51 @@ function buildGlSummaryHtml() {
 
       <div class="gl-grid-2">
         <div class="gl-section">
-          <h3>🥇 Top 10 — 1oClock</h3>
+          <h3>${t('gl.top10')} — 1oClock</h3>
           ${B.usPlayers.slice(0,10).map(p=>buildGlBarRow("us", escapeHtml(p[1]), p[7], B.usPlayers[0][7])).join("")}
         </div>
         <div class="gl-section">
-          <h3>🥇 Top 10 — ${escapeHtml(B.them.name)}</h3>
+          <h3>${t('gl.top10')} — ${escapeHtml(B.them.name)}</h3>
           ${B.themPlayers.slice(0,10).map(p=>buildGlBarRow("them", escapeHtml(p[1]), p[7], B.themPlayers[0][7])).join("")}
         </div>
       </div>
 
       <div class="gl-underperf">
-        <h3>⚠️ Under Performance</h3>
+        <h3>${t('gl.under_title')}</h3>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">
-          เกณฑ์: คะแนน &lt; median × 0.5 · หรือ พ่ายแพ้ &gt; kill+assist · หรือไม่ได้ kill/assist เลย
+          ${t('gl.under_criteria')}
         </div>
         <div class="gl-under-block">
           <div class="gl-under-side us">
-            <h4>1oClock — ${usUnder.length} คน</h4>
+            <h4>1oClock — ${plural(usUnder.length, 'unit.people')}</h4>
             ${renderUnder(usUnder)}
           </div>
           <div class="gl-under-side them">
-            <h4>${escapeHtml(B.them.name)} — ${themUnder.length} คน</h4>
+            <h4>${escapeHtml(B.them.name)} — ${plural(themUnder.length, 'unit.people')}</h4>
             ${renderUnder(themUnder)}
           </div>
         </div>
       </div>
 
       <div class="gl-section">
-        <h3>💡 AI Insights</h3>
+        <h3>${t('gl.insights_title')}</h3>
         <ul style="font-size:13px;padding-left:24px;line-height:1.8">
-          <li>${B.result === "WIN" ? "ชนะ" : "แพ้"}ด้วย ratio <b style="color:${B.result === "WIN" ? "var(--success)" : "var(--danger)"}">${(B.us.score/Math.max(themSumScore,1)).toFixed(1)}×</b> โดย guild score</li>
-          <li>เอาชนะ: <b style="color:#58a6ff">${B.us.defeats}</b> vs <b style="color:#f85149">${B.them.defeats}</b> = <b>${(B.us.defeats/Math.max(B.them.defeats,1)).toFixed(1)}×</b></li>
-          <li>ฐานที่มั่น: <b style="color:#58a6ff">${B.us.fort}</b> vs <b style="color:#f85149">${B.them.fort}</b> = <b>${(B.us.fort/Math.max(B.them.fort,1)).toFixed(1)}×</b></li>
+          <li>${B.result === "WIN" ? t('gl.insight_win') : t('gl.insight_lose')} ratio <b style="color:${B.result === "WIN" ? "var(--success)" : "var(--danger)"}">${(B.us.score/Math.max(themSumScore,1)).toFixed(1)}×</b> ${t('gl.insight_by_score')}</li>
+          <li>${t('gl.insight_defeats')} <b style="color:#58a6ff">${B.us.defeats}</b> vs <b style="color:#f85149">${B.them.defeats}</b> = <b>${(B.us.defeats/Math.max(B.them.defeats,1)).toFixed(1)}×</b></li>
+          <li>${t('gl.insight_forts')} <b style="color:#58a6ff">${B.us.fort}</b> vs <b style="color:#f85149">${B.them.fort}</b> = <b>${(B.us.fort/Math.max(B.them.fort,1)).toFixed(1)}×</b></li>
           <li>Top scorer: <b>${escapeHtml(B.usPlayers[0][1])}</b> (${B.usPlayers[0][7]})</li>
-          <li>คะแนนเฉลี่ย/คน: <b style="color:#58a6ff">${Math.round(usAvg)}</b> vs <b style="color:#f85149">${Math.round(themAvg)}</b> (×${ratio.toFixed(1)})</li>
+          <li>${t('gl.insight_avg')} <b style="color:#58a6ff">${Math.round(usAvg)}</b> vs <b style="color:#f85149">${Math.round(themAvg)}</b> (×${ratio.toFixed(1)})</li>
           <li>1oClock under-perform: <b style="color:var(--danger)">${plural(usUnder.length, 'unit.people')}</b> · ${escapeHtml(B.them.name)} under-perform: <b style="color:var(--danger)">${plural(themUnder.length, 'unit.people')}</b></li>
         </ul>
       </div>
 
       <div class="gl-grid-2">
         <div class="gl-section">
-          <h3>📋 ทั้งหมด — 1oClock (${B.usPlayers.length})</h3>
+          <h3>${t('gl.all_players', { team: '1oClock', n: B.usPlayers.length })}</h3>
           ${buildGlPlayerTable(B.usPlayers, "us", usUnderSet)}
         </div>
         <div class="gl-section">
-          <h3>📋 ทั้งหมด — ${escapeHtml(B.them.name)} (${B.themPlayers.length})</h3>
+          <h3>${t('gl.all_players', { team: escapeHtml(B.them.name), n: B.themPlayers.length })}</h3>
           ${buildGlPlayerTable(B.themPlayers, "them", themUnderSet)}
         </div>
       </div>
