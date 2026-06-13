@@ -166,7 +166,7 @@
         <div class="day" data-dow="5"><div class="dn">Sex</div><div class="ev off">—</div></div>
         <div class="day" data-dow="6"><div class="dn">Sáb</div><div class="ev off">—</div></div>
       </div>
-      <p class="sched-note" data-i18n="sched_note">Terça / Quinta = GL · Domingo = Overrun · horários conforme a guild (fuso da Tailândia).</p>
+      <p class="sched-note" data-i18n="sched_note">Terça / Quinta = GL · Domingo = Overrun · horários conforme a guild (horário de Brasília).</p>
     </section>
   </main>
 
@@ -179,7 +179,7 @@
   </footer>
 
   <script>
-  /* Standalone BKK weekday (UTC+7) — landing is independent of the app.
+  /* Standalone Brasília weekday (UTC−3) — landing is independent of the app.
      0=Sun … 6=Sat, matching the data-dow attributes above. */
   (function () {
     var LANDING_I18N = {
@@ -202,7 +202,7 @@
         "f_leave_h": "Folga (Leave)",
         "f_leave_p": "Marque folga com antecedência; o sistema marca na party naquele dia e reseta automático toda semana.",
         "sched_h": "Agenda",
-        "sched_note": "Terça / Quinta = GL · Domingo = Overrun · horários conforme a guild (fuso da Tailândia).",
+        "sched_note": "Terça / Quinta = GL · Domingo = Overrun · horários conforme a guild (horário de Brasília).",
         "footer_tool": "Ferramenta interna da guild —",
         "footer_open": "Abrir ferramenta"
       },
@@ -225,7 +225,7 @@
         "f_leave_h": "Leave",
         "f_leave_p": "Register leave in advance; the system marks it in the party that day and auto-resets every week.",
         "sched_h": "Schedule",
-        "sched_note": "Tue / Thu = GL · Sun = Overrun · times per the guild (Thailand timezone).",
+        "sched_note": "Tue / Thu = GL · Sun = Overrun · times per the guild (Brasília time).",
         "footer_tool": "Internal guild tool —",
         "footer_open": "Open tool"
       }
@@ -253,8 +253,8 @@
     // Expose setLandingLocale for the inline onclick handlers
     window.setLandingLocale = setLandingLocale;
 
-    // Today cell highlight (BKK UTC+7)
-    var bkk = new Date(Date.now() + 7 * 60 * 60 * 1000);
+    // Today cell highlight (Brasília UTC−3)
+    var bkk = new Date(Date.now() - 3 * 60 * 60 * 1000);
     var dow = bkk.getUTCDay();
     var cell = document.querySelector('.day[data-dow="' + dow + '"]');
     if (cell) cell.classList.add("today");

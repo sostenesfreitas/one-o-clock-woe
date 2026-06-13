@@ -1293,7 +1293,7 @@ console.log("\n[auction-request queue]");
     ok(!approvedAndBeyond.includes("ar-queue-no"), "no queue numbers on history rows");
   });
 
-  t("queue: arFormatTime formats BKK time and dashes invalid input", () => {
+  t("queue: arFormatTime formats Brasília time and dashes invalid input", () => {
     ok(/^\d{1,2}:\d{2}:\d{2}$/.test(app.call("arFormatTime", 1718160000000).trim()), "ms → HH:MM:SS");
     eq(app.call("arFormatTime", 0), "—", "0 → dash");
     eq(app.call("arFormatTime", undefined), "—", "undefined → dash");
@@ -1821,14 +1821,14 @@ t("i18n: help.* + nav.help keys resolve in both locales", () => {
   eq(app.call("t", "nav.help"), "❓ Ajuda");
   eq(app.call("t", "help.rules_gl_days"), "Terça e Quinta");
   eq(app.call("t", "help.rules_overrun_days"), "Domingo");
-  eq(app.call("t", "help.rules_auction_time"), "21:00–22:00 (BKK) no dia do evento");
+  eq(app.call("t", "help.rules_auction_time"), "21:00–22:00 (Brasília) no dia do evento");
   eq(app.call("t", "help.faq_q1"), "Não consigo pedir leilão");
   eq(app.call("t", "help.admin_badge"), "🔒 Admin");
   app.call("setLocale", "en");
   eq(app.call("t", "nav.help"), "❓ Help");
   eq(app.call("t", "help.rules_gl_days"), "Tuesday and Thursday");
   eq(app.call("t", "help.rules_overrun_days"), "Sunday");
-  eq(app.call("t", "help.rules_auction_time"), "21:00–22:00 (BKK) on event day");
+  eq(app.call("t", "help.rules_auction_time"), "21:00–22:00 (Brasília) on event day");
   eq(app.call("t", "help.faq_q1"), "I can't request auction");
   eq(app.call("t", "help.admin_badge"), "🔒 Admin");
   app.call("setLocale", "pt-BR"); // reset
@@ -1878,6 +1878,20 @@ t("date: helpers guard bad input", () => {
   eq(app.call("fmtDate", "bad"), "bad");
   eq(app.call("fmtDate", "2026-13-12"), "2026-13-12");
   app.call("setLocale", "pt-BR");
+});
+
+console.log("\n[timezone]");
+t("tz: bkkNow is UTC-3 (Brasília), not UTC+7", () => {
+  const now = Date.now();
+  const b = app.call("bkkNow").getTime();
+  // bkkNow returns Date(now - 3h); allow a few seconds of slack for exec time
+  ok(Math.abs((now - 3 * 60 * 60 * 1000) - b) < 5000, "bkkNow ≈ now - 3h (was now + 7h)");
+});
+t("tz: todayBkkISO matches America/Sao_Paulo date", () => {
+  // Reset the override left by earlier setToday calls so we read the real impl.
+  app.resetToday();
+  const expected = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  eq(app.call("todayBkkISO"), expected);
 });
 
 console.log("\n=== " + pass + " passed, " + fail + " failed ===\n");
