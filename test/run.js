@@ -1559,6 +1559,27 @@ t("i18n: Roster keys resolve in both locales", () => {
   app.call("setLocale", "pt-BR");
 });
 
+t("i18n: sidebar/members + map-upload + roster leftover keys (Phase 2 Task M)", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "members.leave_badge"), "Folga");
+  eq(app.call("t", "members.in_columns", { n: 3 }), "em 3 colunas");        // interpolated
+  eq(app.call("t", "members.count_leave", { n: 2 }), "🟠 Folga 2");
+  eq(app.call("t", "map.upload_btn"), "🖼 Trocar imagem");
+  eq(app.call("t", "map.reset_img_btn"), "↺ Imagem original");
+  eq(app.call("t", "roster.save_dirty"), "💾 Salvar (alterado)");
+  eq(app.call("t", "roster.guest_cp_only"), "Modo convidado — só dá para preencher CP");
+  eq(app.call("plural", 1, "unit.people"), "1 pessoa");                      // plural singular
+  eq(app.call("plural", 4, "unit.people"), "4 pessoas");                     // plural
+  app.call("setLocale", "en");
+  eq(app.call("t", "members.leave_badge"), "Leave");
+  eq(app.call("t", "members.in_columns", { n: 3 }), "in 3 columns");
+  eq(app.call("t", "map.upload_btn"), "🖼 Change image");
+  eq(app.call("t", "roster.save_dirty"), "💾 Save (edited)");
+  eq(app.call("t", "roster.guest_cp_only"), "Guest mode — can only fill CP");
+  eq(app.call("plural", 1, "unit.people"), "1 person");
+  app.call("setLocale", "pt-BR");
+});
+
 t("i18n: Auction keys resolve + interpolate in both locales", () => {
   app.call("setLocale", "pt-BR");
   eq(app.call("t", "auction.field_main"), "Campo principal");

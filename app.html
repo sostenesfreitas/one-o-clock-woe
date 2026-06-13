@@ -2906,6 +2906,15 @@ const LOCALES = {
     "sidebar.search_ph": "🔎 Buscar nome...",
     "sidebar.hide_assigned": "Ocultar quem já está em grupo",
     "sidebar.hide_leave": "Ocultar quem está de folga",
+    "members.leave_badge": "Folga",
+    "members.leave_title": "Folga (marcada no grupo)",
+    "members.dblclick_delete": "(clique duplo = excluir)",
+    "members.in_columns": "em {n} colunas",
+    "members.empty_title": "Nenhum membro",
+    "members.empty_hint": "Toque em {refresh} ou {add}",
+    "members.empty_refresh": "Refresh da Sheet",
+    "members.empty_add": "+ Adicionar",
+    "members.count_leave": "🟠 Folga {n}",
     "party.label": "Grupo {n}",
     "unit.people": "{n} pessoas",
     "unit.people_one": "{n} pessoa",
@@ -2935,6 +2944,10 @@ const LOCALES = {
     "map.expand_tip": "Tela cheia",
     "map.show_all_groups": "Mostrar todos os grupos",
     "map.tick_multi_groups": "Pode marcar vários grupos ao mesmo tempo",
+    "map.upload_tip": "Enviar uma nova imagem de mapa (todos veem igual)",
+    "map.upload_btn": "🖼 Trocar imagem",
+    "map.reset_img_tip": "Apagar a imagem enviada e voltar para a padrão",
+    "map.reset_img_btn": "↺ Imagem original",
     "overrun.map_title": "Overrun Map · {n} grupos",
     "common.delete": "Excluir",
     "common.confirm": "Confirmar",
@@ -2953,6 +2966,8 @@ const LOCALES = {
     "roster.updated_by": "Última edição por {by}",
     "roster.save_btn": "💾 Salvar",
     "roster.save_mine_tip": "Salvar meus dados",
+    "roster.save_dirty": "💾 Salvar (alterado)",
+    "roster.guest_cp_only": "Modo convidado — só dá para preencher CP",
     "roster.job_count": "{n} classes",
     "roster.job_count_one": "{n} classe",
     "roster.editing_as": "Editando como:",
@@ -3325,6 +3340,15 @@ const LOCALES = {
     "sidebar.search_ph": "🔎 Search name...",
     "sidebar.hide_assigned": "Hide already-assigned",
     "sidebar.hide_leave": "Hide on leave",
+    "members.leave_badge": "Leave",
+    "members.leave_title": "Leave (marked in group)",
+    "members.dblclick_delete": "(dblclick = delete)",
+    "members.in_columns": "in {n} columns",
+    "members.empty_title": "No members",
+    "members.empty_hint": "Tap {refresh} or {add}",
+    "members.empty_refresh": "Refresh from Sheet",
+    "members.empty_add": "+ Add",
+    "members.count_leave": "🟠 Leave {n}",
     "party.label": "Party {n}",
     "unit.people": "{n} people",
     "unit.people_one": "{n} person",
@@ -3354,6 +3378,10 @@ const LOCALES = {
     "map.expand_tip": "Fullscreen",
     "map.show_all_groups": "Show all groups",
     "map.tick_multi_groups": "Select multiple groups at once",
+    "map.upload_tip": "Upload a new map image (everyone sees the same)",
+    "map.upload_btn": "🖼 Change image",
+    "map.reset_img_tip": "Delete the uploaded image and revert to default",
+    "map.reset_img_btn": "↺ Original image",
     "overrun.map_title": "Overrun Map · {n} groups",
     "common.delete": "Delete",
     "common.confirm": "Confirm",
@@ -3372,6 +3400,8 @@ const LOCALES = {
     "roster.updated_by": "Last edited by {by}",
     "roster.save_btn": "💾 Save",
     "roster.save_mine_tip": "Save my data",
+    "roster.save_dirty": "💾 Save (edited)",
+    "roster.guest_cp_only": "Guest mode — can only fill CP",
     "roster.job_count": "{n} jobs",
     "roster.job_count_one": "{n} job",
     "roster.editing_as": "Editing as:",
@@ -5429,9 +5459,9 @@ function resetMapImage(mapNum) {
 function buildMapUploadBtns(mapNum) {
   if (typeof isAdmin !== "function" || !isAdmin()) return "";
   const hasCustom = !!_customMapImages[mapNum];
-  return `<button onclick="document.getElementById('mapUpload${mapNum}').click()" title="อัปโหลดรูปแผนที่ใหม่ (ทุกเครื่องเห็นเหมือนกัน)">🖼 เปลี่ยนรูป</button>` +
+  return `<button onclick="document.getElementById('mapUpload${mapNum}').click()" title="${t('map.upload_tip')}">${t('map.upload_btn')}</button>` +
     `<input type="file" id="mapUpload${mapNum}" accept="image/*" style="display:none" onchange="uploadMapImage(${mapNum}, this)">` +
-    (hasCustom ? `<button onclick="resetMapImage(${mapNum})" title="ลบรูปที่อัปโหลด กลับไปใช้รูปมาตรฐาน">↺ รูปเดิม</button>` : "");
+    (hasCustom ? `<button onclick="resetMapImage(${mapNum})" title="${t('map.reset_img_tip')}">${t('map.reset_img_btn')}</button>` : "");
 }
 
 /* =====================================================================
@@ -5557,18 +5587,18 @@ function renderMembers() {
     if (assigned && !isAuctionMode)   rowCls.push("assigned");
     if (isAuctionMode && bucketCount) rowCls.push("in-auction");
     if (onLeave)                       rowCls.push("on-leave");
-    const auctionBadge = bucketCount ? `<span class="auction-count" title="อยู่ใน ${bucketCount} คอลัมน์">×${bucketCount}</span>` : "";
+    const auctionBadge = bucketCount ? `<span class="auction-count" title="${t('members.in_columns', { n: bucketCount })}">×${bucketCount}</span>` : "";
     return `
       <div class="member-row ${rowCls.join(" ")}" draggable="true"
            ondragstart="dragMemberStart(event, '${m.id}')"
            ondragend="dragMemberEnd(event)"
            ondblclick="${m.source === 'manual' ? `deleteMember('${m.id}')` : ''}"
-           title="${escapeHtml(m.name)} · ${escapeHtml(m.job)}${onLeave?' · ลา (มาร์คในตี้)':''}${m.source==='manual'?' (dblclick=ลบ)':''}">
+           title="${escapeHtml(m.name)} · ${escapeHtml(m.job)}${onLeave?' · '+t('members.leave_title'):''}${m.source==='manual'?' '+t('members.dblclick_delete'):''}">
         <div class="mjob">${escapeHtml(m.job)}</div>
-        <div class="mname">${escapeHtml(m.name)}${onLeave ? '<span class="leave-badge">ลา</span>' : ''}${auctionBadge}</div>
+        <div class="mname">${escapeHtml(m.name)}${onLeave ? `<span class="leave-badge">${t('members.leave_badge')}</span>` : ''}${auctionBadge}</div>
       </div>`;
   }).join("") || `<div style="padding:20px;color:var(--muted);font-size:12px;text-align:center">
-      ไม่มีรายชื่อ<br><br>กด <b>Refresh จาก Sheet</b> หรือ <b>+ เพิ่ม</b>
+      ${t('members.empty_title')}<br><br>${t('members.empty_hint', { refresh: `<b>${t('members.empty_refresh')}</b>`, add: `<b>${t('members.empty_add')}</b>` })}
     </div>`;
   // Re-render done — restore the pool's scroll so it stays where the user was
   // (reassigning innerHTML above reset .member-list scrollTop to 0; that was the
@@ -5578,7 +5608,7 @@ function renderMembers() {
   if (leaveOn) {
     const lf = leaveField();
     const nLeave = state.members.filter(m => m[lf]).length;
-    if (nLeave) cnt += ` · 🟠 ลา ${nLeave}`;
+    if (nLeave) cnt += ` · ${t('members.count_leave', { n: nLeave })}`;
   }
   document.getElementById("memberCount").textContent = cnt;
 }
@@ -5921,7 +5951,7 @@ function buildPieSvg(jobs, counts, total) {
     const y2 = cy + r * Math.sin(end * rad);
     const largeArc = sweep > 180 ? 1 : 0;
     const d = `M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${largeArc} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
-    paths += `<path d="${d}" fill="${jobColorByIndex(i)}" stroke="#1c2128" stroke-width="1.5"><title>${escapeHtml(job)} ${c} คน (${(c/total*100).toFixed(1)}%)</title></path>`;
+    paths += `<path d="${d}" fill="${jobColorByIndex(i)}" stroke="#1c2128" stroke-width="1.5"><title>${escapeHtml(job)} ${plural(c, 'unit.people')} (${(c/total*100).toFixed(1)}%)</title></path>`;
   });
   return `<svg viewBox="0 0 200 200" class="pie">${paths}</svg>`;
 }
@@ -7500,7 +7530,7 @@ function updateAuthUI() {
     } else {
       el.className = "status sync-indicator viewer";
       el.textContent = _fbUser.email ? `👤 ${_fbUser.email}` : "👁 Guest";
-      el.title = "Guest mode — กรอกได้แค่ CP";
+      el.title = t('roster.guest_cp_only');
     }
   }
   const loginBtn = document.getElementById("btnSyncSettings");
@@ -7587,7 +7617,12 @@ function rosterCanEdit(id) {
 }
 
 const ROSTER_FIELD_MAX   = { name: 64, job: 64, discord: 64, discordId: 32 };
-const ROSTER_FIELD_LABEL = { name: "ชื่อ", job: "Job", discord: "Discord", discordId: "Discord ID" };
+// Field labels for the field_too_long toast. `name` is locale-reactive (reuses
+// roster.col_name); the rest are JARGON kept literal. Built as a getter so the
+// active locale is read at toast time, not at module load.
+function rosterFieldLabel(f) {
+  return f === "name" ? t('roster.col_name') : ({ job: "Job", discord: "Discord", discordId: "Discord ID" }[f] || f);
+}
 const ROSTER_CP_MAX      = 100000000;  // 100M — sanity cap, mirrors rules .validate
 
 /** Actor for updatedBy stamps: admin → email, guest → "👤 " + claimed name.
@@ -7666,7 +7701,7 @@ let _rosterMineDirty = false;
 function rosterMarkMineDirty() {
   _rosterMineDirty = true;
   const btn = document.getElementById("rosterSaveBtn");
-  if (btn) { btn.classList.add("dirty"); btn.textContent = "💾 เซฟ (มีแก้)"; }
+  if (btn) { btn.classList.add("dirty"); btn.textContent = t('roster.save_dirty'); }
 }
 function rosterMineDraft() {
   const row = document.querySelector(".roster-table tr.r-mine");
@@ -7696,7 +7731,7 @@ function rosterSaveMine(id) {
   if (!name) { toast(t('toast.name_required'), "error"); return; }  // keep the draft so it can be fixed
   for (const f of ["name", "job", "discord", "discordId"]) {
     if (String(d[f]).trim().length > ROSTER_FIELD_MAX[f]) {
-      toast(t('toast.field_too_long', { field: ROSTER_FIELD_LABEL[f], max: ROSTER_FIELD_MAX[f] }), "error");
+      toast(t('toast.field_too_long', { field: rosterFieldLabel(f), max: ROSTER_FIELD_MAX[f] }), "error");
       return;
     }
   }

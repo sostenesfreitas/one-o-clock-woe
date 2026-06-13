@@ -432,3 +432,25 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | ⓘ บัญชีต้องสร้างใน Firebase Console ก่อน เพิ่มที่นี่จะให้สิทธิ์ admin ทันที | ⓘ The account must be created in Firebase Console first — adding here grants admin permission immediately. | ⓘ A conta deve ser criada no Firebase Console primeiro — adicionar aqui concede permissão de admin imediatamente. | `admin.add_hint` |
 | — ยังไม่มีบันทึก (จะเริ่มบันทึกเมื่อมีการแก้ทีมครั้งถัดไป) — | — no records yet (will start recording on the next team edit) — | — nenhum registro ainda (será gravado a partir da próxima edição do time) — | `audit.empty` |
 | แสดง {shown} รายการล่าสุด (เก็บสูงสุด {max}) | Showing {shown} most recent records (max {max}) | Mostrando {shown} registros mais recentes (máx. {max}) | `audit.footer` |
+
+## Sidebar/members + map upload + roster leftovers (Phase 2 Task M)
+
+| Thai | English | pt-BR | key |
+|---|---|---|---|
+| ลา (member-card badge) | Leave | Folga | `members.leave_badge` |
+| ลา (มาร์คในตี้) (member-card title) | Leave (marked in group) | Folga (marcada no grupo) | `members.leave_title` |
+| (dblclick=ลบ) (member-card title) | (dblclick = delete) | (clique duplo = excluir) | `members.dblclick_delete` |
+| อยู่ใน {n} คอลัมน์ (auction badge title) | in {n} columns | em {n} colunas | `members.in_columns` |
+| ไม่มีรายชื่อ (sidebar empty state) | No members | Nenhum membro | `members.empty_title` |
+| กด {refresh} หรือ {add} (sidebar empty hint) | Tap {refresh} or {add} | Toque em {refresh} ou {add} | `members.empty_hint` |
+| Refresh จาก Sheet (empty-hint bold) | Refresh from Sheet | Refresh da Sheet | `members.empty_refresh` |
+| + เพิ่ม (empty-hint bold) | + Add | + Adicionar | `members.empty_add` |
+| 🟠 ลา {n} (member count suffix) | 🟠 Leave {n} | 🟠 Folga {n} | `members.count_leave` |
+| อัปโหลดรูปแผนที่ใหม่ (ทุกเครื่องเห็นเหมือนกัน) (map upload title) | Upload a new map image (everyone sees the same) | Enviar uma nova imagem de mapa (todos veem igual) | `map.upload_tip` |
+| 🖼 เปลี่ยนรูป (map upload button) | 🖼 Change image | 🖼 Trocar imagem | `map.upload_btn` |
+| ลบรูปที่อัปโหลด กลับไปใช้รูปมาตรฐาน (map reset title) | Delete the uploaded image and revert to default | Apagar a imagem enviada e voltar para a padrão | `map.reset_img_tip` |
+| ↺ รูปเดิม (map reset button) | ↺ Original image | ↺ Imagem original | `map.reset_img_btn` |
+| 💾 เซฟ (มีแก้) (roster dirty save button) | 💾 Save (edited) | 💾 Salvar (alterado) | `roster.save_dirty` |
+| Guest mode — กรอกได้แค่ CP (guest status title) | Guest mode — can only fill CP | Modo convidado — só dá para preencher CP | `roster.guest_cp_only` |
+| ชื่อ (ROSTER_FIELD_LABEL.name, field_too_long toast) | reuses `roster.col_name` (Name) | reuses `roster.col_name` (Nome) | `roster.col_name` |
+| {c} คน ({pct}%) (pie-slice SVG <title>) | uses `plural(c,'unit.people')` (N people) | uses `plural(c,'unit.people')` (N pessoas) | `unit.people` |
