@@ -1436,7 +1436,7 @@ console.log("\n[wheel]");
     ok(appHtml.includes('<option value="wheel" class="user-option-admin"'), "mobile dropdown option (admin-gated)");
     ok(appHtml.includes('body[data-mode="wheel"]'), "css hides sidebar on wheel page");
     ok(appHtml.includes('t.classList.toggle("wheel-active", state.mode === "wheel")'), "indicator class wired");
-    ok(/state\.mode === "users" \|\| state\.mode === "wheel"\) \{\s*\n\s*state\.parties = state\.partiesLeague/.test(appHtml),
+    ok(/state\.mode === "wheel"[^)]*\) \{\s*\n\s*state\.parties = state\.partiesLeague/.test(appHtml),
        "boot guard maps wheel → partiesLeague");
     ok(/state\.mode === "wheel"\) \{[\s\S]{0,400}?if \(!wheelUI\.spinning\)/.test(appHtml),
        "renderBattlefields wheel branch is spin-guarded (the single choke point)");
@@ -1461,6 +1461,41 @@ console.log("\n[wheel]");
     const wid = node["$wid"];
     ok(wid && wid["$other"] && wid["$other"][".validate"] === false, "$other locked");
     for (const f of ["at", "by", "winnerId", "winnerName", "prize"]) ok(wid[f], "field rule: " + f);
+  });
+})();
+
+(function () {
+  console.log("\n[help]");
+
+  t("help: mode plumbing complete (tab, dropdown, css, boot guard, dispatch)", () => {
+    const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+    ok(appHtml.includes('data-mode="help"'), "header tab present");
+    ok(appHtml.includes('<option value="help"'), "mobile dropdown option present");
+    ok(!/<option value="help"[^>]*class="user-option-admin"/.test(appHtml), "help tab is NOT admin-gated");
+    ok(appHtml.includes('body[data-mode="help"]'), "css hides sidebar on help page");
+    ok(appHtml.includes('t.classList.toggle("help-active", state.mode === "help")'), "indicator class wired");
+    ok(/state\.mode === "wheel"[^)]*state\.mode === "help"[^)]*\) \{\s*\n\s*state\.parties = state\.partiesLeague/.test(appHtml),
+       "boot guard maps help → partiesLeague");
+    ok(appHtml.includes('} else if (state.mode === "help") {') || appHtml.includes("state.mode === \"help\""),
+       "renderBattlefields has a help branch");
+    ok(appHtml.includes("buildHelpHtml()"), "buildHelpHtml is referenced in dispatch");
+  });
+
+  t("help: buildHelpHtml returns non-empty string with expected marker in pt-BR", () => {
+    app.call("setLocale", "pt-BR");
+    const html = app.call("buildHelpHtml");
+    ok(typeof html === "string" && html.length > 100, "returns a non-empty string");
+    ok(html.includes("help-view"), "contains help-view marker class");
+    ok(!/{[a-z_.]+}/.test(html), "no raw {placeholder} leakage in pt-BR output");
+  });
+
+  t("help: buildHelpHtml returns non-empty string with expected marker in en", () => {
+    app.call("setLocale", "en");
+    const html = app.call("buildHelpHtml");
+    ok(typeof html === "string" && html.length > 100, "returns a non-empty string in EN");
+    ok(html.includes("help-view"), "contains help-view marker class in EN");
+    ok(!/{[a-z_.]+}/.test(html), "no raw {placeholder} leakage in en output");
+    app.call("setLocale", "pt-BR"); // reset
   });
 })();
 
@@ -1778,6 +1813,24 @@ t("i18n: map-loading label + thrown Error messages resolve in both locales", () 
   eq(app.call("t", "error.sheet_no_id"), "URL has no Sheet ID");
   eq(app.call("t", "error.img_not_image"), "The file is not an image");
   eq(app.call("t", "error.img_too_large"), "Image too large after compression — try a smaller image");
+  app.call("setLocale", "pt-BR"); // reset
+});
+
+t("i18n: help.* + nav.help keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "nav.help"), "❓ Ajuda");
+  eq(app.call("t", "help.rules_gl_days"), "Terça e Quinta");
+  eq(app.call("t", "help.rules_overrun_days"), "Domingo");
+  eq(app.call("t", "help.rules_auction_time"), "21:00–22:00 (BKK) no dia do evento");
+  eq(app.call("t", "help.faq_q1"), "Não consigo pedir leilão");
+  eq(app.call("t", "help.admin_badge"), "🔒 Admin");
+  app.call("setLocale", "en");
+  eq(app.call("t", "nav.help"), "❓ Help");
+  eq(app.call("t", "help.rules_gl_days"), "Tuesday and Thursday");
+  eq(app.call("t", "help.rules_overrun_days"), "Sunday");
+  eq(app.call("t", "help.rules_auction_time"), "21:00–22:00 (BKK) on event day");
+  eq(app.call("t", "help.faq_q1"), "I can't request auction");
+  eq(app.call("t", "help.admin_badge"), "🔒 Admin");
   app.call("setLocale", "pt-BR"); // reset
 });
 

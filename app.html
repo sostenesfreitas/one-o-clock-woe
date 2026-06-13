@@ -2729,6 +2729,68 @@
     .pie { max-width: 160px; }
     .pie-legend { grid-template-columns: 1fr; }
   }
+
+  /* ===== Help page ===== */
+  body[data-mode="help"] .sidebar          { display: none; }
+  body[data-mode="help"] .layout           { grid-template-columns: 1fr !important; }
+  body[data-mode="help"] .hamburger-btn    { display: none; }
+  body[data-mode="help"] .sidebar-backdrop { display: none !important; }
+
+  .help-view { display: flex; flex-direction: column; gap: 18px; max-width: 900px; margin: 0 auto; padding-bottom: 32px; }
+  .help-hero {
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    border: 1px solid var(--border);
+    border-left: 4px solid #38bdf8;
+    border-radius: 10px;
+    padding: 18px 22px;
+  }
+  .help-hero h2 { margin: 0 0 6px 0; color: #7dd3fc; font-size: 20px; }
+  .help-hero p  { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+  .help-section-title {
+    font-size: 15px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 4px 0 0 0;
+  }
+  .help-rules-box {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .help-rules-box h3 { margin: 0 0 8px 0; font-size: 14px; color: var(--text); }
+  .help-rule-row { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: var(--text); }
+  .help-rule-label { color: var(--muted); min-width: 140px; font-size: 12px; }
+
+  .help-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .help-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .help-card-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 700; color: var(--text); margin: 0;
+  }
+  .help-admin-badge {
+    font-size: 10px; font-weight: 700; color: #fbbf24;
+    background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.35);
+    border-radius: 4px; padding: 1px 6px; white-space: nowrap;
+  }
+  .help-card-desc { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .help-card-steps { margin: 0; padding: 0 0 0 16px; display: flex; flex-direction: column; gap: 4px; }
+  .help-card-steps li { font-size: 12px; color: var(--text); line-height: 1.5; }
+
+  .help-faq { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+  .help-faq h3 { margin: 0 0 12px 0; font-size: 14px; color: var(--text); }
+  .help-faq-item { margin-bottom: 14px; }
+  .help-faq-item:last-child { margin-bottom: 0; }
+  .help-faq-q { font-size: 13px; font-weight: 700; color: #38bdf8; margin: 0 0 4px 0; }
+  .help-faq-a { font-size: 12px; color: var(--text); margin: 0; line-height: 1.55; }
+
+  @media (max-width: 700px) {
+    .help-cards { grid-template-columns: 1fr; }
+    .help-rule-label { min-width: 110px; }
+    .help-hero { padding: 12px 14px; }
+    .help-hero h2 { font-size: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -2752,6 +2814,7 @@
     <button class="seg" data-mode="leave" onclick="switchMode('leave')" data-i18n="nav.leave">🌴 Folga</button>
     <button class="seg seg-admin" data-mode="wheel" onclick="switchMode('wheel')" data-i18n="nav.wheel">🎡 Sorteio</button>
     <button class="seg seg-admin" data-mode="users" onclick="switchMode('users')">👥 Users</button>
+    <button class="seg" data-mode="help" onclick="switchMode('help')" data-i18n="nav.help">❓ Ajuda</button>
     <span class="seg-indicator"></span>
   </div>
   <select class="mode-select" id="modeSelect" onchange="switchMode(this.value)">
@@ -2764,6 +2827,7 @@
     <option value="leave" data-i18n="nav.leave">🌴 Folga</option>
     <option value="wheel" class="user-option-admin" data-i18n="nav.wheel">🎡 Sorteio</option>
     <option value="users" class="user-option-admin">👥 Users</option>
+    <option value="help" data-i18n="nav.help">❓ Ajuda</option>
   </select>
   <div class="locale-switch" id="localeSwitch">
     <button type="button" data-loc="pt-BR" onclick="setLocale('pt-BR')">PT</button>
@@ -2900,6 +2964,7 @@ const LOCALES = {
     "nav.auction_request": "🙋 Pedir leilão",
     "nav.leave": "🌴 Folga",
     "nav.wheel": "🎡 Sorteio",
+    "nav.help": "❓ Ajuda",
     "nav.members_menu": "Abrir menu de membros",
     "nav.members_title": "Lista de membros",
     "sidebar.add_member": "+ Adicionar",
@@ -3342,6 +3407,102 @@ const LOCALES = {
     "misc.close_esc": "Fechar (ESC)",
     "misc.empty_slot": "(vazio)",
     "auction.effective": "(real)",
+    "help.page_title": "❓ Como usar o WOE Party Organizer",
+    "help.intro_1": "Ferramenta de planejamento para War of Emperium (WoE) — organiza grupos, leilão de drops e folgas em tempo real via Firebase.",
+    "help.intro_2": "Não precisa de conta para visualizar. Para editar, faça login como admin.",
+    "help.rules_title": "📅 Regras do evento",
+    "help.rules_gl_label": "League (GL):",
+    "help.rules_gl_days": "Terça e Quinta",
+    "help.rules_overrun_label": "Overrun:",
+    "help.rules_overrun_days": "Domingo",
+    "help.rules_auction_label": "Horário do leilão:",
+    "help.rules_auction_time": "21:00–22:00 (BKK) no dia do evento",
+    "help.rules_leave_label": "Limpeza de folgas:",
+    "help.rules_leave_clear": "Segunda-feira 00:00 (BKK) — automático",
+    "help.rules_tz_label": "Fuso horário:",
+    "help.rules_tz_val": "Asia/Bangkok (UTC+7) — toda a lógica de \"hoje\" usa BKK",
+    "help.features_title": "📖 Funcionalidades",
+    "help.league_title": "⚔️ League",
+    "help.league_desc": "Monte os 16 grupos para o GL. Arraste membros da sidebar para os slots. Use filtros de mapa e marcadores de posição.",
+    "help.league_step1": "Vá para a aba League.",
+    "help.league_step2": "Arraste um membro da sidebar para um slot de grupo.",
+    "help.league_step3": "Renomeie o grupo clicando no nome dele.",
+    "help.league_step4": "Use os filtros de mapa para visualizar grupos por spawn.",
+    "help.overrun_title": "🏆 Overrun",
+    "help.overrun_desc": "5 grupos de cor (Red/Yellow/Green/Blue/Purple) sobre os 16 grupos, no mapa Overrun.",
+    "help.overrun_step1": "Vá para a aba Overrun.",
+    "help.overrun_step2": "Arraste membros para os slots — a cor do grupo é visual para coordenar no Overrun Map.",
+    "help.overrun_step3": "Veja as posições no mapa Overrun à direita.",
+    "help.roster_title": "📋 Roster",
+    "help.roster_desc": "Registro de membros: Nome, Job, CP, Discord. Convidados editam só sua própria linha de CP após reivindicar o nome.",
+    "help.roster_step1": "Como convidado: selecione seu nome no topo da página → edite seu CP → clique 💾 Salvar.",
+    "help.roster_step2": "Como admin: edite qualquer linha diretamente; salva em tempo real.",
+    "help.roster_step3": "Admin: importe do Google Sheet com 📥 Importar da Sheet.",
+    "help.roster_step4": "Admin: limpe duplicados com 🧹 Limpar duplicados.",
+    "help.summary_title": "📊 Resumo / Job Breakdown",
+    "help.summary_desc": "Contagem de classes vs. metas editáveis (admin), status excesso/falta/equilibrado, gráfico de pizza e sugestões de movimentação.",
+    "help.summary_step1": "Acesse a aba Roster (o resumo fica na mesma página).",
+    "help.summary_step2": "Admin: edite a meta de cada classe no campo Meta.",
+    "help.summary_step3": "O sistema mostra excesso/falta e sugere quem mover.",
+    "help.auction_gl_title": "🎴 Leilão GL",
+    "help.auction_gl_desc": "Admin informa as quantidades finais de itens; a divisão 70/30 principal/secundário (editável) é calculada automaticamente; arraste nomes para as colunas de itens.",
+    "help.auction_gl_step1": "Admin: preencha as quantidades de cada item (Card, Illusion, White, Black).",
+    "help.auction_gl_step2": "Ajuste o % de divisão principal/secundário se necessário.",
+    "help.auction_gl_step3": "Arraste nomes da sidebar para as colunas de cada item.",
+    "help.auction_gl_step4": "O sistema calcula as páginas reais do leilão (4 itens/página).",
+    "help.auction_ov_title": "🎴 Leilão Overrun",
+    "help.auction_ov_desc": "Igual ao GL, mas sem divisão principal/secundário — pool único.",
+    "help.auction_ov_step1": "Admin: preencha as quantidades de cada item.",
+    "help.auction_ov_step2": "Arraste nomes para as colunas. O sistema calcula as páginas.",
+    "help.auction_req_title": "🙋 Pedir leilão",
+    "help.auction_req_desc": "Peça um item no dia do evento correspondente — apenas se não estiver de folga. O admin aprova na ordem de chegada.",
+    "help.auction_req_step1": "Só funciona no dia do evento: Ter/Qui = GL, Dom = Overrun.",
+    "help.auction_req_step2": "Selecione seu nome, escolha 1 item e clique em Pedir leilão.",
+    "help.auction_req_step3": "O admin aprova ou rejeita — o pedido vai automaticamente para campo principal ou secundário pelo seu grupo.",
+    "help.leave_title": "🌴 Folgas",
+    "help.leave_desc": "Registre folga com antecedência. A visualização de grupos marca quem está de folga no dia. Limpa automaticamente toda segunda 00:00 BKK.",
+    "help.leave_step1": "Selecione seu nome e a data da folga, clique em ➕ Adicionar folga.",
+    "help.leave_step2": "Sua linha no grupo ficará marcada com 🟠 no dia da folga.",
+    "help.leave_step3": "Quem está de folga não pode pedir leilão naquele dia.",
+    "help.wheel_title": "🎡 Roleta",
+    "help.wheel_desc": "Admin sorteia um vencedor do Roster — todos concorrem toda rodada; o nome não sai após ganhar. Histórico salvo.",
+    "help.wheel_step1": "Admin: acesse Roleta, defina o prêmio desta rodada.",
+    "help.wheel_step2": "Clique em Girar! para sortear.",
+    "help.wheel_step3": "Salve o resultado para registrar no histórico.",
+    "help.users_title": "👥 Users",
+    "help.users_desc": "Admin cria contas ID + Password para outros membros logarem como admin — sem precisar do Firebase Console.",
+    "help.users_step1": "Admin: acesse Users, preencha ID e senha, clique em ➕ Criar.",
+    "help.users_step2": "Envie as credenciais ao membro; ele usa na tela de login com 🔐 Entrar com ID.",
+    "help.gl_analysis_title": "📊 Análise GL",
+    "help.gl_analysis_desc": "Comparação de estatísticas do battlefield + detecção de under-performers + insights de IA (dados de demonstração).",
+    "help.gl_analysis_step1": "Acesse Login → Análise de batalha GL.",
+    "help.gl_analysis_step2": "Os dados são de demonstração — compare pontos, derrotas e forts.",
+    "help.maps_title": "🗺️ Mapas e marcadores",
+    "help.maps_desc": "Admin faz upload de imagens de mapa e coloca pins/setas. Convidados só visualizam e filtram.",
+    "help.maps_step1": "Admin: clique em 🖼 Trocar imagem para enviar um mapa personalizado.",
+    "help.maps_step2": "Admin: clique no mapa para adicionar marcadores ou setas de movimento.",
+    "help.maps_step3": "Convidados: use os filtros de grupo para visualizar posições.",
+    "help.login_title": "🔗 Login e Admin",
+    "help.login_desc": "Anônimo = visualizador. Login com Google ou ID/Password = admin (controlado pela lista de admins + regras do Firebase).",
+    "help.login_step1": "Clique em 🔗 Login no cabeçalho.",
+    "help.login_step2": "Faça login com Google (bootstrap) ou ID + Password (criado pelo admin).",
+    "help.login_step3": "Para adicionar outro admin: Login → Gerenciar Admin → insira o e-mail.",
+    "help.locale_title": "🌐 Idioma PT | EN",
+    "help.locale_desc": "O botão PT | EN no cabeçalho alterna o idioma em tempo real. A escolha é salva por dispositivo.",
+    "help.locale_step1": "Clique em PT ou EN no cabeçalho.",
+    "help.locale_step2": "Toda a interface muda de idioma imediatamente.",
+    "help.faq_title": "❓ Perguntas frequentes",
+    "help.faq_q1": "Não consigo pedir leilão",
+    "help.faq_a1": "O pedido só é permitido no dia do evento correspondente (Ter/Qui = GL, Dom = Overrun), e apenas se você não estiver de folga. Verifique a aba 🌴 Folga.",
+    "help.faq_q2": "Minha edição não salva / aparece \"permission denied\"",
+    "help.faq_a2": "A maioria das edições exige conta admin. Convidados só podem preencher o próprio CP no Roster. Faça login como admin ou peça ao admin para editar.",
+    "help.faq_q3": "Como viro admin?",
+    "help.faq_a3": "Peça ao admin atual para adicionar seu e-mail em Login → Gerenciar Admin. Ou, se você é o bootstrap, faça login com Google (blankkardor@gmail.com).",
+    "help.faq_q4": "Como troco o idioma?",
+    "help.faq_a4": "Clique no botão PT | EN no cabeçalho. A escolha é salva no seu dispositivo.",
+    "help.faq_q5": "Sumiu minha folga / meu pedido de leilão",
+    "help.faq_a5": "Folgas são limpas toda segunda-feira 00:00 BKK automaticamente. Pedidos de leilão são limpos diariamente à meia-noite BKK.",
+    "help.admin_badge": "🔒 Admin",
   },
   "en": {
     "common.save": "Save",
@@ -3349,6 +3510,7 @@ const LOCALES = {
     "nav.auction_request": "🙋 Auction request",
     "nav.leave": "🌴 Leave",
     "nav.wheel": "🎡 Raffle",
+    "nav.help": "❓ Help",
     "nav.members_menu": "Open members menu",
     "nav.members_title": "Members",
     "sidebar.add_member": "+ Add",
@@ -3791,6 +3953,102 @@ const LOCALES = {
     "misc.close_esc": "Close (ESC)",
     "misc.empty_slot": "(empty)",
     "auction.effective": "(actual)",
+    "help.page_title": "❓ How to use WOE Party Organizer",
+    "help.intro_1": "A planning tool for War of Emperium (WoE) — organizes parties, drop auctions, and leaves in real time via Firebase.",
+    "help.intro_2": "No account needed to view. To edit, sign in as admin.",
+    "help.rules_title": "📅 Event rules",
+    "help.rules_gl_label": "League (GL):",
+    "help.rules_gl_days": "Tuesday and Thursday",
+    "help.rules_overrun_label": "Overrun:",
+    "help.rules_overrun_days": "Sunday",
+    "help.rules_auction_label": "Auction window:",
+    "help.rules_auction_time": "21:00–22:00 (BKK) on event day",
+    "help.rules_leave_label": "Leave reset:",
+    "help.rules_leave_clear": "Monday 00:00 (BKK) — automatic",
+    "help.rules_tz_label": "Time zone:",
+    "help.rules_tz_val": "Asia/Bangkok (UTC+7) — all \"today\" logic uses BKK",
+    "help.features_title": "📖 Features",
+    "help.league_title": "⚔️ League",
+    "help.league_desc": "Set up the 16 parties for GL. Drag members from the sidebar into slots. Use map filters and position markers.",
+    "help.league_step1": "Go to the League tab.",
+    "help.league_step2": "Drag a member from the sidebar into a party slot.",
+    "help.league_step3": "Rename a party by clicking its name.",
+    "help.league_step4": "Use map filters to view parties by spawn point.",
+    "help.overrun_title": "🏆 Overrun",
+    "help.overrun_desc": "5 color groups (Red/Yellow/Green/Blue/Purple) across the 16 parties, on the Overrun map.",
+    "help.overrun_step1": "Go to the Overrun tab.",
+    "help.overrun_step2": "Drag members into slots — the group color is visual to coordinate on the Overrun Map.",
+    "help.overrun_step3": "View positions on the Overrun Map on the right.",
+    "help.roster_title": "📋 Roster",
+    "help.roster_desc": "Member registry: Name, Job, CP, Discord. Guests can only edit their own CP row after claiming their name.",
+    "help.roster_step1": "As a guest: select your name at the top → edit your CP → click 💾 Save.",
+    "help.roster_step2": "As admin: edit any row directly; saves in real time.",
+    "help.roster_step3": "Admin: import from Google Sheet with 📥 Import from Sheet.",
+    "help.roster_step4": "Admin: remove duplicates with 🧹 Clean duplicates.",
+    "help.summary_title": "📊 Summary / Job Breakdown",
+    "help.summary_desc": "Job counts vs. editable targets (admin), over/short/balanced status, pie chart, and move suggestions.",
+    "help.summary_step1": "Go to the Roster tab (the summary is on the same page).",
+    "help.summary_step2": "Admin: edit the target for each job in the Target field.",
+    "help.summary_step3": "The system shows over/short counts and suggests who to move.",
+    "help.auction_gl_title": "🎴 Auction GL",
+    "help.auction_gl_desc": "Admin enters final item quantities; the 70/30 main/sub split (editable) is computed automatically; drag names into item columns.",
+    "help.auction_gl_step1": "Admin: fill in quantities for each item (Card, Illusion, White, Black).",
+    "help.auction_gl_step2": "Adjust the main/sub split % if needed.",
+    "help.auction_gl_step3": "Drag names from the sidebar into each item column.",
+    "help.auction_gl_step4": "The system computes the real auction pages (4 items/page).",
+    "help.auction_ov_title": "🎴 Auction Overrun",
+    "help.auction_ov_desc": "Same as GL, but no main/sub split — single pool.",
+    "help.auction_ov_step1": "Admin: fill in quantities for each item.",
+    "help.auction_ov_step2": "Drag names into the columns. The system computes the pages.",
+    "help.auction_req_title": "🙋 Auction request",
+    "help.auction_req_desc": "Request an item on the matching event day — only if you are not on leave. Admin approves in a first-come queue.",
+    "help.auction_req_step1": "Only works on event day: Tue/Thu = GL, Sun = Overrun.",
+    "help.auction_req_step2": "Select your name, pick 1 item, and click Request auction.",
+    "help.auction_req_step3": "Admin approves or rejects — the request is auto-routed to main or sub field based on your party.",
+    "help.leave_title": "🌴 Leave",
+    "help.leave_desc": "Register leave in advance. The party view marks who is on leave that day. Auto-clears every Monday 00:00 BKK.",
+    "help.leave_step1": "Select your name and leave date, click ➕ Add leave.",
+    "help.leave_step2": "Your slot in the party will show 🟠 on the leave day.",
+    "help.leave_step3": "Members on leave cannot request auction that day.",
+    "help.wheel_title": "🎡 Raffle",
+    "help.wheel_desc": "Admin raffles a winner from the Roster — everyone is eligible every round; names are not removed after winning. History is saved.",
+    "help.wheel_step1": "Admin: go to Raffle, set the prize for this round.",
+    "help.wheel_step2": "Click Spin! to draw.",
+    "help.wheel_step3": "Save the result to record it in the history.",
+    "help.users_title": "👥 Users",
+    "help.users_desc": "Admin creates ID + Password accounts for members to log in as admin — no Firebase Console needed.",
+    "help.users_step1": "Admin: go to Users, fill in the ID and password, click ➕ Create.",
+    "help.users_step2": "Send the credentials to the member; they use 🔐 Sign in with ID on the login screen.",
+    "help.gl_analysis_title": "📊 GL Battle Analysis",
+    "help.gl_analysis_desc": "Stats comparison for the main battlefield + under-performer detection + AI insights (demo data).",
+    "help.gl_analysis_step1": "Go to Login → GL Battle Analysis.",
+    "help.gl_analysis_step2": "Data is demo data — compare scores, defeats, and forts.",
+    "help.maps_title": "🗺️ Maps & markers",
+    "help.maps_desc": "Admin uploads map images and places pins/arrows. Guests can only view and filter.",
+    "help.maps_step1": "Admin: click 🖼 Change image to upload a custom map.",
+    "help.maps_step2": "Admin: click on the map to add markers or movement arrows.",
+    "help.maps_step3": "Guests: use the group filters to view positions.",
+    "help.login_title": "🔗 Login & Admin",
+    "help.login_desc": "Anonymous = viewer. Google or ID/Password login = admin (controlled by the admin allowlist + Firebase rules).",
+    "help.login_step1": "Click 🔗 Login in the header.",
+    "help.login_step2": "Sign in with Google (bootstrap) or ID + Password (created by admin).",
+    "help.login_step3": "To add another admin: Login → Manage Admin → enter their email.",
+    "help.locale_title": "🌐 Language PT | EN",
+    "help.locale_desc": "The PT | EN button in the header switches language live. The choice is saved per device.",
+    "help.locale_step1": "Click PT or EN in the header.",
+    "help.locale_step2": "The entire interface switches language immediately.",
+    "help.faq_title": "❓ FAQ",
+    "help.faq_q1": "I can't request auction",
+    "help.faq_a1": "Requests are only allowed on the matching event day (Tue/Thu = GL, Sun = Overrun), and only if you are not on leave. Check the 🌴 Leave tab.",
+    "help.faq_q2": "My edit doesn't save / shows \"permission denied\"",
+    "help.faq_a2": "Most edits require an admin account. Guests can only fill in their own CP in the Roster. Log in as admin or ask an admin to edit.",
+    "help.faq_q3": "How do I become admin?",
+    "help.faq_a3": "Ask an existing admin to add your email under Login → Manage Admin. If you are the bootstrap admin, sign in with Google (blankkardor@gmail.com).",
+    "help.faq_q4": "How do I change the language?",
+    "help.faq_a4": "Click the PT | EN button in the header. The choice is saved on your device.",
+    "help.faq_q5": "My leave / auction request disappeared",
+    "help.faq_a5": "Leaves are cleared every Monday 00:00 BKK automatically. Auction requests are cleared daily at midnight BKK.",
+    "help.admin_badge": "🔒 Admin",
   },
 };
 let currentLocale = (function () {
@@ -4056,6 +4314,7 @@ function updateModeToggleUI() {
   t.classList.toggle("leave-active", state.mode === "leave");
   t.classList.toggle("users-active", state.mode === "users");
   t.classList.toggle("wheel-active", state.mode === "wheel");
+  t.classList.toggle("help-active", state.mode === "help");
   // Admin-only chrome (e.g., Users tab) is gated by CSS using
   // body[data-admin="true"] — applyViewerMode() flips that attribute
   // whenever auth changes, so this UI updates without us having to
@@ -9638,6 +9897,76 @@ function dismissLastCredential() {
   render();
 }
 
+/* ===== Help page ===== */
+function buildHelpHtml() {
+  // Feature cards definition: [titleKey, descKey, steps[], adminOnly]
+  const adminBadge = `<span class="help-admin-badge">${t('help.admin_badge')}</span>`;
+  function card(titleKey, descKey, stepKeys, isAdminOnly) {
+    const steps = stepKeys.map(k => `<li>${t(k)}</li>`).join("");
+    return `
+      <div class="help-card">
+        <h3 class="help-card-title">${t(titleKey)}${isAdminOnly ? " " + adminBadge : ""}</h3>
+        <p class="help-card-desc">${t(descKey)}</p>
+        <ol class="help-card-steps">${steps}</ol>
+      </div>`;
+  }
+
+  const cards = [
+    card("help.league_title",       "help.league_desc",       ["help.league_step1","help.league_step2","help.league_step3","help.league_step4"], true),
+    card("help.overrun_title",      "help.overrun_desc",      ["help.overrun_step1","help.overrun_step2","help.overrun_step3"],                   true),
+    card("help.roster_title",       "help.roster_desc",       ["help.roster_step1","help.roster_step2","help.roster_step3","help.roster_step4"],  true),
+    card("help.summary_title",      "help.summary_desc",      ["help.summary_step1","help.summary_step2","help.summary_step3"],                   true),
+    card("help.auction_gl_title",   "help.auction_gl_desc",   ["help.auction_gl_step1","help.auction_gl_step2","help.auction_gl_step3","help.auction_gl_step4"], true),
+    card("help.auction_ov_title",   "help.auction_ov_desc",   ["help.auction_ov_step1","help.auction_ov_step2"],                                 true),
+    card("help.auction_req_title",  "help.auction_req_desc",  ["help.auction_req_step1","help.auction_req_step2","help.auction_req_step3"],       false),
+    card("help.leave_title",        "help.leave_desc",        ["help.leave_step1","help.leave_step2","help.leave_step3"],                         false),
+    card("help.wheel_title",        "help.wheel_desc",        ["help.wheel_step1","help.wheel_step2","help.wheel_step3"],                         true),
+    card("help.users_title",        "help.users_desc",        ["help.users_step1","help.users_step2"],                                           true),
+    card("help.gl_analysis_title",  "help.gl_analysis_desc",  ["help.gl_analysis_step1","help.gl_analysis_step2"],                               false),
+    card("help.maps_title",         "help.maps_desc",         ["help.maps_step1","help.maps_step2","help.maps_step3"],                           true),
+    card("help.login_title",        "help.login_desc",        ["help.login_step1","help.login_step2","help.login_step3"],                         false),
+    card("help.locale_title",       "help.locale_desc",       ["help.locale_step1","help.locale_step2"],                                         false),
+  ].join("");
+
+  const faqItems = [
+    { q: "help.faq_q1", a: "help.faq_a1" },
+    { q: "help.faq_q2", a: "help.faq_a2" },
+    { q: "help.faq_q3", a: "help.faq_a3" },
+    { q: "help.faq_q4", a: "help.faq_a4" },
+    { q: "help.faq_q5", a: "help.faq_a5" },
+  ].map(f => `
+    <div class="help-faq-item">
+      <p class="help-faq-q">${t(f.q)}</p>
+      <p class="help-faq-a">${t(f.a)}</p>
+    </div>`).join("");
+
+  return `
+    <div class="help-view">
+      <div class="help-hero">
+        <h2>${t('help.page_title')}</h2>
+        <p>${t('help.intro_1')}</p>
+        <p>${t('help.intro_2')}</p>
+      </div>
+
+      <p class="help-section-title">${t('help.rules_title')}</p>
+      <div class="help-rules-box">
+        <div class="help-rule-row"><span class="help-rule-label">${t('help.rules_gl_label')}</span><span>${t('help.rules_gl_days')}</span></div>
+        <div class="help-rule-row"><span class="help-rule-label">${t('help.rules_overrun_label')}</span><span>${t('help.rules_overrun_days')}</span></div>
+        <div class="help-rule-row"><span class="help-rule-label">${t('help.rules_auction_label')}</span><span>${t('help.rules_auction_time')}</span></div>
+        <div class="help-rule-row"><span class="help-rule-label">${t('help.rules_leave_label')}</span><span>${t('help.rules_leave_clear')}</span></div>
+        <div class="help-rule-row"><span class="help-rule-label">${t('help.rules_tz_label')}</span><span>${t('help.rules_tz_val')}</span></div>
+      </div>
+
+      <p class="help-section-title">${t('help.features_title')}</p>
+      <div class="help-cards">${cards}</div>
+
+      <div class="help-faq">
+        <h3>${t('help.faq_title')}</h3>
+        ${faqItems}
+      </div>
+    </div>`;
+}
+
 function buildUsersHtml() {
   if (!isAdmin()) {
     return `<div class="users-view">
@@ -10645,6 +10974,8 @@ function renderBattlefields() {
     center.innerHTML = buildAuctionRequestHtml();
   } else if (state.mode === "users") {
     center.innerHTML = buildUsersHtml();
+  } else if (state.mode === "help") {
+    center.innerHTML = buildHelpHtml();
   } else if (state.mode === "wheel") {
     // Mid-spin renders are skipped so a Firebase snapshot can't tear down
     // the canvas while it's animating; the post-spin render() repaints.
@@ -10795,7 +11126,7 @@ delete state.partiesDimension;
 delete state.dimensionNames;
 // Legacy modes redirect to league
 if (state.mode === "dimension" || state.mode === "glsummary") state.mode = "league";
-if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun" || state.mode === "roster" || state.mode === "auction-request" || state.mode === "users" || state.mode === "wheel") {
+if (state.mode === "summary" || state.mode === "auction-gl" || state.mode === "auction-overrun" || state.mode === "roster" || state.mode === "auction-request" || state.mode === "users" || state.mode === "wheel" || state.mode === "help") {
   state.parties = state.partiesLeague;
 } else {
   state.parties = state.mode === "overrun" ? state.partiesOverrun : state.partiesLeague;
