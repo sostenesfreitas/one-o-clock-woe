@@ -10,6 +10,13 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.13.2]
+### Added
+- **Nova aba ❓ Ajuda / Help (in-app, bilíngue pt-BR/EN).** Guia "como usar" com regras de
+  evento (GL Ter/Qui · Overrun Dom · leilão 21:00–22:00 · folga reseta seg 00:00), passo a
+  passo de cada funcionalidade (selo 🔒 Admin em Roleta/Users/Mapas) e FAQ. Modo `help`
+  visível a todos; conteúdo via `t()` (segue o seletor PT|EN).
+
 ## [2026.06.13.1]
 ### Changed
 - **Backend movido para o projeto Firebase próprio `miojo-rooc`** (era `woe-party`/Cybodies).
