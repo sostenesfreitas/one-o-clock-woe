@@ -3336,6 +3336,12 @@ const LOCALES = {
     "admin.add_hint": "ⓘ A conta deve ser criada no Firebase Console primeiro — adicionar aqui concede permissão de admin imediatamente.",
     "audit.empty": "— nenhum registro ainda (será gravado a partir da próxima edição do time) —",
     "audit.footer": "Mostrando {shown} registros mais recentes (máx. {max})",
+    "audit.edit_team": "Editou time {board}",
+    "audit.board_external": "(fora da página de time)",
+    "sheet.refresh_btn": "🔄 Atualizar da Sheet",
+    "misc.close_esc": "Fechar (ESC)",
+    "misc.empty_slot": "(vazio)",
+    "auction.effective": "(real)",
   },
   "en": {
     "common.save": "Save",
@@ -3779,6 +3785,12 @@ const LOCALES = {
     "admin.add_hint": "ⓘ The account must be created in Firebase Console first — adding here grants admin permission immediately.",
     "audit.empty": "— no records yet (will start recording on the next team edit) —",
     "audit.footer": "Showing {shown} most recent records (max {max})",
+    "audit.edit_team": "Edited team {board}",
+    "audit.board_external": "(outside team page)",
+    "sheet.refresh_btn": "🔄 Refresh from Sheet",
+    "misc.close_esc": "Close (ESC)",
+    "misc.empty_slot": "(empty)",
+    "auction.effective": "(actual)",
   },
 };
 let currentLocale = (function () {
@@ -4512,7 +4524,7 @@ async function refreshFromSheet() {
     console.error(e);
     toast(t('toast.sheet_load_fail', { msg: e.message }), "error");
   } finally {
-    btn.disabled = false; btn.textContent = "🔄 Refresh จาก Sheet";
+    btn.disabled = false; btn.textContent = t('sheet.refresh_btn');
   }
 }
 
@@ -5047,9 +5059,9 @@ function renderOverrunMarkers() {
         const m = findMember(memId);
         return m ? `${m.job} · ${m.name}` : null;
       }).filter(Boolean);
-      if (subMembers.length) memLines.push(`[ตี้ ${id}] ${subMembers.join(", ")}`);
+      if (subMembers.length) memLines.push(`[${t('party.label', { n: id })}] ${subMembers.join(", ")}`);
     }
-    div.setAttribute("data-tip", `${g.name} Party · ${total} คน` + (memLines.length ? "\n" + memLines.join("\n") : "\n(ยังว่าง)"));
+    div.setAttribute("data-tip", `${g.name} Party · ${plural(total, 'unit.people')}` + (memLines.length ? "\n" + memLines.join("\n") : "\n" + t('misc.empty_slot')));
     attachMarkerDragOverrun(div, wrap, i);
     wrap.appendChild(div);
   }
@@ -5366,7 +5378,7 @@ function toggleMapFullscreen(mapNum) {
     document.body.style.overflow = "hidden";
     _fullscreenMap = mapNum;
     const btn = card.querySelector(`.btn-expand-${mapNum}`);
-    if (btn) { btn.innerHTML = "✕ Close"; btn.title = "ปิด (ESC)"; }
+    if (btn) { btn.innerHTML = "✕ Close"; btn.title = t('misc.close_esc'); }
   }
 }
 
@@ -6275,7 +6287,7 @@ function commitPartiesNow() {
   // board. Drag/sort/rename run on a battlefield (state.mode = league|overrun);
   // a member-delete can reach here from a non-board page → auditBoardLabel
   // labels that generically instead of mislabelling it as a specific board.
-  logAudit("แก้ทีม " + auditBoardLabel(state.mode));
+  logAudit(t('audit.edit_team', { board: auditBoardLabel(state.mode) }));
   const writes = [];
   if (state.partiesLeague)  writes.push(_fbDB.ref("parties/league").set(state.partiesLeague));
   if (state.partiesOverrun) writes.push(_fbDB.ref("parties/overrun").set(state.partiesOverrun));
@@ -7259,7 +7271,7 @@ function coalesceAuditLog(log, entry, max, coalesceMs) {
 // Battlefield modes name the board; anything else (e.g. a member-delete fired
 // from the auction/roster page) is labelled generically, not mislabelled.
 function auditBoardLabel(mode) {
-  return mode === "league" ? "League" : mode === "overrun" ? "Overrun" : "(จากนอกหน้าทีม)";
+  return mode === "league" ? "League" : mode === "overrun" ? "Overrun" : t('audit.board_external');
 }
 
 // Write an audit entry to /system/auditLog (admin-only; reuses the admin-write
@@ -8508,7 +8520,7 @@ function buildAuctionInputCard(opts) {
   const { icon, label, value, rate, perPersonLabel, effective, status, statusCls,
           kind, field, rateItemKey, rateEditable } = opts;
   const effectiveLine = effective != null
-    ? `<div class="ai-effective">= ${effective} (ใช้จริง)</div>` : "";
+    ? `<div class="ai-effective">= ${effective} ${t('auction.effective')}</div>` : "";
   const statusLine = status
     ? `<div class="ai-status ${statusCls || ""}">${status}</div>` : "";
   // Per-person rate: editable input for admins (synced), read-only text for

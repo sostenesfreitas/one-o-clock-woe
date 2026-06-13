@@ -801,10 +801,11 @@ t("coalesceAuditLog tolerates a non-array starting log", () => {
   eq(log[0].n, 1);
 });
 t("auditBoardLabel maps mode → board; non-board modes are explicit, not mislabelled", () => {
+  app.call("setLocale", "pt-BR");
   eq(app.call("auditBoardLabel", "league"), "League");
   eq(app.call("auditBoardLabel", "overrun"), "Overrun");
-  eq(app.call("auditBoardLabel", "auction-gl"), "(จากนอกหน้าทีม)", "member-delete from auction page");
-  eq(app.call("auditBoardLabel", "roster"), "(จากนอกหน้าทีม)");
+  eq(app.call("auditBoardLabel", "auction-gl"), "(fora da página de time)", "member-delete from auction page");
+  eq(app.call("auditBoardLabel", "roster"), "(fora da página de time)");
 });
 
 console.log("\n[version stamp]");
@@ -1546,6 +1547,22 @@ t("i18n: Overrun keys resolve in both locales", () => {
   app.call("setLocale", "en");
   eq(app.call("t", "overrun.map_title", { n: 5 }), "Overrun Map · 5 groups");
   app.call("setLocale", "pt-BR");
+});
+
+t("i18n: final leftover keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "sheet.refresh_btn"), "🔄 Atualizar da Sheet");
+  eq(app.call("t", "misc.close_esc"), "Fechar (ESC)");
+  eq(app.call("t", "auction.effective"), "(real)");
+  eq(app.call("t", "audit.edit_team", { board: "League" }), "Editou time League");
+  eq(app.call("t", "audit.board_external"), "(fora da página de time)");
+  app.call("setLocale", "en");
+  eq(app.call("t", "sheet.refresh_btn"), "🔄 Refresh from Sheet");
+  eq(app.call("t", "misc.close_esc"), "Close (ESC)");
+  eq(app.call("t", "auction.effective"), "(actual)");
+  eq(app.call("t", "audit.edit_team", { board: "Overrun" }), "Edited team Overrun");
+  eq(app.call("t", "audit.board_external"), "(outside team page)");
+  app.call("setLocale", "pt-BR"); // reset for later groups
 });
 
 t("i18n: Roster keys resolve in both locales", () => {

@@ -477,3 +477,14 @@ user through `toast(e.message, …)`.
 | เบราว์เซอร์บล็อก canvas (ปิด canvas blocker แล้วลองใหม่) (compressMapImage) | Browser blocked canvas (disable the canvas blocker and try again) | O navegador bloqueou o canvas (desative o canvas blocker e tente de novo) | `error.img_canvas_blocked` |
 | รูปใหญ่เกินไปหลังบีบอัด — ลองรูปที่เล็กลง (compressMapImage) | Image too large after compression — try a smaller image | Imagem grande demais após a compressão — tente uma imagem menor | `error.img_too_large` |
 | อ่านไฟล์รูปไม่สำเร็จ (compressMapImage) | Failed to read the image file | Falha ao ler o arquivo de imagem | `error.img_read_failed` |
+
+## Final rendered leftovers (Phase 2 cleanup)
+
+| Thai | English | pt-BR | key |
+|---|---|---|---|
+| 🔄 Refresh จาก Sheet (auction refresh button) | 🔄 Refresh from Sheet | 🔄 Atualizar da Sheet | `sheet.refresh_btn` |
+| ปิด (ESC) (fullscreen-map close title) | Close (ESC) | Fechar (ESC) | `misc.close_esc` |
+| (ยังว่าง) (overrun marker data-tip empty) | (empty) | (vazio) | `misc.empty_slot` |
+| (ใช้จริง) (auction effective-amount label) | (actual) | (real) | `auction.effective` |
+| แก้ทีม {board} (audit log entry) | Edited team {board} | Editou time {board} | `audit.edit_team` |
+| (จากนอกหน้าทีม) (audit board fallback) | (outside team page) | (fora da página de time) | `audit.board_external` |
