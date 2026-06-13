@@ -454,3 +454,26 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | Guest mode — กรอกได้แค่ CP (guest status title) | Guest mode — can only fill CP | Modo convidado — só dá para preencher CP | `roster.guest_cp_only` |
 | ชื่อ (ROSTER_FIELD_LABEL.name, field_too_long toast) | reuses `roster.col_name` (Name) | reuses `roster.col_name` (Nome) | `roster.col_name` |
 | {c} คน ({pct}%) (pie-slice SVG <title>) | uses `plural(c,'unit.people')` (N people) | uses `plural(c,'unit.people')` (N pessoas) | `unit.people` |
+
+## CSS map-loading label + thrown Error() messages (Phase 2 Task N)
+
+The map-loading label lives in CSS (`.map-wrap.no-image::after`). CSS can't call
+`t()`, so the content uses `var(--map-loading-label, "🗺️ …")`; `applyStaticI18n`
+sets that custom property from `t('maps.loading')` (via `JSON.stringify`) at boot
+and on every `setLocale`, so it tracks the locale live.
+
+The `error.*` strings are thrown via `new Error(...)` in `parseSheetUrl`,
+`fetchSheetJSON`, the sheet refresh, and `compressMapImage`; they surface to the
+user through `toast(e.message, …)`.
+
+| Thai | English | pt-BR | key |
+|---|---|---|---|
+| 🗺️ กำลังโหลดรูปแมพ… (CSS map-loading label) | 🗺️ Loading map… | 🗺️ Carregando mapa… | `maps.loading` |
+| URL ไม่มี Sheet ID (parseSheetUrl) | URL has no Sheet ID | URL não tem Sheet ID | `error.sheet_no_id` |
+| โหลด script ไม่สำเร็จ (Sheet ต้องตั้งเป็น Anyone with link) (fetchSheetJSON) | Failed to load script (the Sheet must be set to Anyone with link) | Falha ao carregar o script (a Sheet precisa estar como Anyone with link) | `error.sheet_load_failed` |
+| ไม่พบสมาชิกในชีท (sheet refresh) | No members found in the sheet | Nenhum membro encontrado na planilha | `error.sheet_no_members` |
+| ไฟล์ไม่ใช่รูปภาพ (compressMapImage) | The file is not an image | O arquivo não é uma imagem | `error.img_not_image` |
+| อ่านขนาดรูปไม่ได้ — ใช้ไฟล์ PNG/JPG (compressMapImage) | Could not read image dimensions — use a PNG/JPG file | Não foi possível ler as dimensões da imagem — use um arquivo PNG/JPG | `error.img_no_dimensions` |
+| เบราว์เซอร์บล็อก canvas (ปิด canvas blocker แล้วลองใหม่) (compressMapImage) | Browser blocked canvas (disable the canvas blocker and try again) | O navegador bloqueou o canvas (desative o canvas blocker e tente de novo) | `error.img_canvas_blocked` |
+| รูปใหญ่เกินไปหลังบีบอัด — ลองรูปที่เล็กลง (compressMapImage) | Image too large after compression — try a smaller image | Imagem grande demais após a compressão — tente uma imagem menor | `error.img_too_large` |
+| อ่านไฟล์รูปไม่สำเร็จ (compressMapImage) | Failed to read the image file | Falha ao ler o arquivo de imagem | `error.img_read_failed` |

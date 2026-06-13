@@ -2158,7 +2158,7 @@
   .map-wrap.sub-map .map-frame { border-color: var(--sub-bf); }
   .map-wrap.no-image .map-frame { border-color: var(--border); border-style: dashed; }
   .map-wrap.no-image::after {
-    content: "🗺️ กำลังโหลดรูปแมพ…";
+    content: var(--map-loading-label, "🗺️ …");
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     color: var(--muted); font-size: 11px; text-align: center; padding: 30px;
@@ -2948,6 +2948,15 @@ const LOCALES = {
     "map.upload_btn": "🖼 Trocar imagem",
     "map.reset_img_tip": "Apagar a imagem enviada e voltar para a padrão",
     "map.reset_img_btn": "↺ Imagem original",
+    "maps.loading": "🗺️ Carregando mapa…",
+    "error.sheet_no_id": "URL não tem Sheet ID",
+    "error.sheet_load_failed": "Falha ao carregar o script (a Sheet precisa estar como Anyone with link)",
+    "error.sheet_no_members": "Nenhum membro encontrado na planilha",
+    "error.img_not_image": "O arquivo não é uma imagem",
+    "error.img_no_dimensions": "Não foi possível ler as dimensões da imagem — use um arquivo PNG/JPG",
+    "error.img_canvas_blocked": "O navegador bloqueou o canvas (desative o canvas blocker e tente de novo)",
+    "error.img_too_large": "Imagem grande demais após a compressão — tente uma imagem menor",
+    "error.img_read_failed": "Falha ao ler o arquivo de imagem",
     "overrun.map_title": "Overrun Map · {n} grupos",
     "common.delete": "Excluir",
     "common.confirm": "Confirmar",
@@ -3382,6 +3391,15 @@ const LOCALES = {
     "map.upload_btn": "🖼 Change image",
     "map.reset_img_tip": "Delete the uploaded image and revert to default",
     "map.reset_img_btn": "↺ Original image",
+    "maps.loading": "🗺️ Loading map…",
+    "error.sheet_no_id": "URL has no Sheet ID",
+    "error.sheet_load_failed": "Failed to load script (the Sheet must be set to Anyone with link)",
+    "error.sheet_no_members": "No members found in the sheet",
+    "error.img_not_image": "The file is not an image",
+    "error.img_no_dimensions": "Could not read image dimensions — use a PNG/JPG file",
+    "error.img_canvas_blocked": "Browser blocked canvas (disable the canvas blocker and try again)",
+    "error.img_too_large": "Image too large after compression — try a smaller image",
+    "error.img_read_failed": "Failed to read the image file",
     "overrun.map_title": "Overrun Map · {n} groups",
     "common.delete": "Delete",
     "common.confirm": "Confirm",
@@ -3801,6 +3819,10 @@ function applyStaticI18n(root) {
       if (attr && key) el.setAttribute(attr, t(key));
     });
   });
+  // CSS can't call t(); expose the map-loading label as a custom property so
+  // the .map-wrap.no-image::after content tracks the locale. JSON.stringify
+  // wraps it in quotes as CSS `content` requires. Runs at boot + every setLocale.
+  try { document.documentElement.style.setProperty('--map-loading-label', JSON.stringify(t('maps.loading'))); } catch (e) {}
 }
 
 function setLocale(loc) {
@@ -4295,7 +4317,7 @@ function uniqueJobs() {
  * ===================================================================== */
 function parseSheetUrl(url) {
   const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (!idMatch) throw new Error("URL ไม่มี Sheet ID");
+  if (!idMatch) throw new Error(t("error.sheet_no_id"));
   const id = idMatch[1];
   const gidMatch = url.match(/[#&?]gid=(\d+)/);
   const gid = gidMatch ? gidMatch[1] : "0";
@@ -4328,7 +4350,7 @@ function fetchSheetJSON(id, gid) {
       if (resolved) return;
       resolved = true;
       window.google = prev;
-      reject(new Error("โหลด script ไม่สำเร็จ (Sheet ต้องตั้งเป็น Anyone with link)"));
+      reject(new Error(t("error.sheet_load_failed")));
     };
     document.head.appendChild(script);
     setTimeout(() => { script.remove(); }, 30000);
@@ -4397,7 +4419,7 @@ async function refreshFromSheet() {
     const resp = await fetchSheetJSON(id, gid);
     const rows = gvizToRows(resp);
     const fetched = extractMembersFromRows(rows);
-    if (!fetched.length) throw new Error("ไม่พบสมาชิกในชีท");
+    if (!fetched.length) throw new Error(t("error.sheet_no_members"));
 
     const manualOnly = state.members.filter(m => m.source !== "sheet");
     // Preserve on-leave flags (League + Overrun, independent) across refresh.
@@ -5396,7 +5418,7 @@ const MAP_IMAGE_MAX_CHARS = 880000; // ~660KB binary; DB rules cap at 900k
 
 function compressMapImage(file) {
   return new Promise((resolve, reject) => {
-    if (!file || !/^image\//.test(file.type)) { reject(new Error("ไฟล์ไม่ใช่รูปภาพ")); return; }
+    if (!file || !/^image\//.test(file.type)) { reject(new Error(t("error.img_not_image"))); return; }
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
@@ -5405,7 +5427,7 @@ function compressMapImage(file) {
         // A decodable file with no real dimensions (e.g. a unitless SVG)
         // would silently become a 1×1 smear — reject it instead.
         if (!img.naturalWidth || !img.naturalHeight) {
-          reject(new Error("อ่านขนาดรูปไม่ได้ — ใช้ไฟล์ PNG/JPG"));
+          reject(new Error(t("error.img_no_dimensions")));
           return;
         }
         const attempt = (maxDim, q) => {
@@ -5415,14 +5437,14 @@ function compressMapImage(file) {
           const cv = document.createElement("canvas");
           cv.width = w; cv.height = h;
           const ctx = cv.getContext("2d");
-          if (!ctx) throw new Error("เบราว์เซอร์บล็อก canvas (ปิด canvas blocker แล้วลองใหม่)");
+          if (!ctx) throw new Error(t("error.img_canvas_blocked"));
           ctx.fillStyle = "#0d1117"; ctx.fillRect(0, 0, w, h); // flatten PNG alpha
           ctx.drawImage(img, 0, 0, w, h);
           return cv.toDataURL("image/jpeg", q);
         };
         let out = attempt(1600, 0.72);
         if (out.length > MAP_IMAGE_MAX_CHARS) out = attempt(1280, 0.6);
-        if (out.length > MAP_IMAGE_MAX_CHARS) { reject(new Error("รูปใหญ่เกินไปหลังบีบอัด — ลองรูปที่เล็กลง")); return; }
+        if (out.length > MAP_IMAGE_MAX_CHARS) { reject(new Error(t("error.img_too_large"))); return; }
         resolve(out);
       } catch (e) {
         // Without this, a canvas failure would leave the promise un-settled
@@ -5430,7 +5452,7 @@ function compressMapImage(file) {
         reject(e);
       }
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("อ่านไฟล์รูปไม่สำเร็จ")); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(t("error.img_read_failed"))); };
     img.src = url;
   });
 }

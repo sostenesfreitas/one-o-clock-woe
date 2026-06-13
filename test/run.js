@@ -1750,6 +1750,20 @@ t("i18n: login/admin/audit keys resolve in both locales", () => {
   app.call("setLocale", "pt-BR"); // reset
 });
 
+t("i18n: map-loading label + thrown Error messages resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "maps.loading"), "🗺️ Carregando mapa…");
+  eq(app.call("t", "error.sheet_no_id"), "URL não tem Sheet ID");
+  eq(app.call("t", "error.img_not_image"), "O arquivo não é uma imagem");
+  eq(app.call("t", "error.img_too_large"), "Imagem grande demais após a compressão — tente uma imagem menor");
+  app.call("setLocale", "en");
+  eq(app.call("t", "maps.loading"), "🗺️ Loading map…");
+  eq(app.call("t", "error.sheet_no_id"), "URL has no Sheet ID");
+  eq(app.call("t", "error.img_not_image"), "The file is not an image");
+  eq(app.call("t", "error.img_too_large"), "Image too large after compression — try a smaller image");
+  app.call("setLocale", "pt-BR"); // reset
+});
+
 console.log("\n[plural]");
 t("i18n: plural picks singular at n=1", () => {
   app.call("setLocale", "pt-BR");
