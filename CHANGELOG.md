@@ -10,6 +10,18 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.12.9]
+### Added
+- **i18n Fase 2 — tradução completa das telas secundárias + landing (pt-BR / English).**
+  Traduzidas: Summary + AI Comment, Folgas, Roleta, Users, Pedidos de leilão (render +
+  modal + gate + ~70 toasts/confirms varridos globalmente), diálogos estáticos, status do
+  header, página de análise de batalha GL, painéis de login/admin/auditoria, sidebar/membros,
+  upload de mapa, sobras do Roster, e a **landing `index.html`** (mini-i18n próprio + seletor
+  PT|EN, compartilha `woe_locale`). Datas agora locale-aware (Gregoriano + meses pt/en via
+  `dowName`/`fmtDate`; helpers tailandês-budista removidos). **Meta: zero tailandês renderizado
+  ao vivo** (restam só comentários, defaults de dados `ตี้ N` localizados em display por
+  `partyLabel`, nomes mock do dataset GL, e código de tooltip desabilitado).
+
 ## [2026.06.12.8]
 ### Added
 - **i18n Fase 2 — plural() helper + strings concordam com n=1.** `plural(n, baseKey)` escolhe
