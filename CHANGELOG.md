@@ -10,6 +10,15 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.13.3]
+### Changed
+- **Fuso horário Bangkok → Brasília (UTC−3).** Toda a lógica de "hoje" / dia de evento /
+  reset de folga / gate de pedir leilão / timestamps agora usa horário de Brasília (offset
+  fixo −3; Brasil sem horário de verão). Exibição via `America/Sao_Paulo`. Schedule inalterado
+  (Ter/Qui GL · Dom Overrun · 21:00–22:00), só agora local; o dia vira à meia-noite do Brasil.
+  Helpers mantêm os nomes legados `bkkNow`/`todayBkkISO`/`bkkDow`. Cópia (Ajuda + landing) +
+  docs atualizados.
+
 ## [2026.06.13.2]
 ### Added
 - **Nova aba ❓ Ajuda / Help (in-app, bilíngue pt-BR/EN).** Guia "como usar" com regras de

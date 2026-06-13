@@ -317,7 +317,8 @@ load() ──▶ initFirebase() ──▶ onAuthStateChanged
 - **Calling `_fbDB.ref(...).set(...)` without `isAdmin()` guard** → silent
   rejection in production (DB rules block it), confusing UX.
 - **Using `new Date()` for date math** → off-by-one when player is outside
-  Asia/Bangkok. Use `todayBkkISO()` / `bkkNow()`.
+  Brasília (UTC−3). Use `todayBkkISO()` / `bkkNow()` (legacy `bkk*` names; they
+  now return Brasília time).
 - **Editing CSS in the wrong section** — there are duplicate-looking
   selectors per mode (`.league .slot` vs `.overrun .slot`). Check the
   `/* ===== ... ===== */` header before editing.
