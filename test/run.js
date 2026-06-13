@@ -1695,6 +1695,40 @@ t("i18n: GL reason strings interpolate correctly in both locales", () => {
   app.call("setLocale", "pt-BR"); // reset
 });
 
+t("i18n: login/admin/audit keys resolve in both locales", () => {
+  app.call("setLocale", "pt-BR");
+  eq(app.call("t", "login.admin_perm"), "Tem permissão para editar tudo, incluindo adicionar/remover membros do Roster.");
+  eq(app.call("t", "login.manage_admin_header"), "👥 Gerenciar Admin");
+  eq(app.call("t", "login.not_admin_desc"), "Esta conta não está na lista de admins — só é possível preencher CP no Roster.");
+  eq(app.call("t", "login.not_admin_hint"), "Peça ao admin para adicionar seu e-mail em \"Gerenciar Admin\".");
+  eq(app.call("t", "login.guest_can_view"), "Ver dados em todas as páginas");
+  eq(app.call("t", "login.guest_can_cp"), "Preencher seu próprio CP no 📋 Roster");
+  eq(app.call("t", "login.guest_can_request"), "Pedir leilão na aba 🙋 Pedir leilão");
+  eq(app.call("t", "login.or_use_id"), "ou use ID + Password criado pelo admin");
+  eq(app.call("t", "login.id_ph"), "ID (ex.: johnny)");
+  eq(app.call("t", "login.sign_in_id_btn"), "🔐 Entrar com ID");
+  eq(app.call("t", "admin.you_suffix"), "(você)");
+  eq(app.call("t", "admin.no_admins_yet"), "— ainda não há entradas em /admins (usando fallback ADMIN_EMAILS) —");
+  eq(app.call("t", "admin.new_email_ph"), "e-mail do novo admin");
+  eq(app.call("t", "admin.add_btn"), "+ Adicionar");
+  eq(app.call("t", "admin.add_hint"), "ⓘ A conta deve ser criada no Firebase Console primeiro — adicionar aqui concede permissão de admin imediatamente.");
+  eq(app.call("t", "audit.empty"), "— nenhum registro ainda (será gravado a partir da próxima edição do time) —");
+  eq(app.call("t", "audit.footer", { shown: 10, max: 50 }), "Mostrando 10 registros mais recentes (máx. 50)");
+  app.call("setLocale", "en");
+  eq(app.call("t", "login.admin_perm"), "Has permission to edit everything, including adding/removing members from the Roster.");
+  eq(app.call("t", "login.manage_admin_header"), "👥 Manage Admin");
+  eq(app.call("t", "login.not_admin_desc"), "This account is not in the admin list — can only fill in CP in the Roster.");
+  eq(app.call("t", "login.guest_can_view"), "View data on every page");
+  eq(app.call("t", "login.or_use_id"), "or use ID + Password created by the admin");
+  eq(app.call("t", "login.sign_in_id_btn"), "🔐 Sign in with ID");
+  eq(app.call("t", "admin.you_suffix"), "(you)");
+  eq(app.call("t", "admin.no_admins_yet"), "— no entries in /admins yet (using ADMIN_EMAILS fallback) —");
+  eq(app.call("t", "admin.add_btn"), "+ Add");
+  eq(app.call("t", "audit.empty"), "— no records yet (will start recording on the next team edit) —");
+  eq(app.call("t", "audit.footer", { shown: 5, max: 50 }), "Showing 5 most recent records (max 50)");
+  app.call("setLocale", "pt-BR"); // reset
+});
+
 console.log("\n[plural]");
 t("i18n: plural picks singular at n=1", () => {
   app.call("setLocale", "pt-BR");

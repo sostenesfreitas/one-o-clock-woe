@@ -409,3 +409,26 @@ Glossário de termos de UI traduzidos. Jargão de jogo (League/Overrun/Roster/Ca
 | 📋 ทั้งหมด — {team} ({n}) | 📋 All — {team} ({n}) | 📋 Todos — {team} ({n}) | `gl.all_players` |
 | 🥇 Top 10 | 🥇 Top 10 | 🥇 Top 10 | `gl.top10` |
 | 💡 AI Insights (section title) | 💡 AI Insights | 💡 AI Insights | `gl.insights_title` |
+
+## Login / Admin / Audit panels (Phase 2 Task L)
+
+| Thai | English | pt-BR | key |
+|---|---|---|---|
+| มีสิทธิ์แก้ไขทุกอย่าง รวมถึงเพิ่ม/ลบรายชื่อใน Roster. | Has permission to edit everything, including adding/removing members from the Roster. | Tem permissão para editar tudo, incluindo adicionar/remover membros do Roster. | `login.admin_perm` |
+| 👥 จัดการ Admin | 👥 Manage Admin | 👥 Gerenciar Admin | `login.manage_admin_header` |
+| 📜 ประวัติการแก้ทีม (ใครแก้ล่าสุด) | 📜 Team edit history (who edited last) | 📜 Histórico de edições do time (quem editou por último) | `login.audit_header` |
+| บัญชีนี้ไม่ได้อยู่ใน admin list — กรอกได้เฉพาะ CP ใน Roster. | This account is not in the admin list — can only fill in CP in the Roster. | Esta conta não está na lista de admins — só é possível preencher CP no Roster. | `login.not_admin_desc` |
+| ขอ admin คนเดิมเพิ่มอีเมลของคุณใน "จัดการ Admin" | Ask an existing admin to add your email under "Manage Admin". | Peça ao admin para adicionar seu e-mail em "Gerenciar Admin". | `login.not_admin_hint` |
+| ดูข้อมูลได้ทุกหน้า | View data on every page | Ver dados em todas as páginas | `login.guest_can_view` |
+| กรอก CP ของตัวเองได้ใน 📋 Roster | Fill in your own CP in 📋 Roster | Preencher seu próprio CP no 📋 Roster | `login.guest_can_cp` |
+| ขอประมูลได้ในแท็บ 🙋 ขอประมูล | Request auction in the 🙋 Auction request tab | Pedir leilão na aba 🙋 Pedir leilão | `login.guest_can_request` |
+| หรือ ใช้ ID + Password ที่ admin สร้างให้ | or use ID + Password created by the admin | ou use ID + Password criado pelo admin | `login.or_use_id` |
+| ID (เช่น johnny) (placeholder) | ID (e.g. johnny) | ID (ex.: johnny) | `login.id_ph` |
+| 🔐 เข้าสู่ระบบด้วย ID | 🔐 Sign in with ID | 🔐 Entrar com ID | `login.sign_in_id_btn` |
+| (คุณ) suffix on own admin row | (you) | (você) | `admin.you_suffix` |
+| — ยังไม่มีในตาราง /admins (ใช้ ADMIN_EMAILS fallback) — | — no entries in /admins yet (using ADMIN_EMAILS fallback) — | — ainda não há entradas em /admins (usando fallback ADMIN_EMAILS) — | `admin.no_admins_yet` |
+| email ของ admin คนใหม่ (placeholder) | new admin's email | e-mail do novo admin | `admin.new_email_ph` |
+| + เพิ่ม (add admin button) | + Add | + Adicionar | `admin.add_btn` |
+| ⓘ บัญชีต้องสร้างใน Firebase Console ก่อน เพิ่มที่นี่จะให้สิทธิ์ admin ทันที | ⓘ The account must be created in Firebase Console first — adding here grants admin permission immediately. | ⓘ A conta deve ser criada no Firebase Console primeiro — adicionar aqui concede permissão de admin imediatamente. | `admin.add_hint` |
+| — ยังไม่มีบันทึก (จะเริ่มบันทึกเมื่อมีการแก้ทีมครั้งถัดไป) — | — no records yet (will start recording on the next team edit) — | — nenhum registro ainda (será gravado a partir da próxima edição do time) — | `audit.empty` |
+| แสดง {shown} รายการล่าสุด (เก็บสูงสุด {max}) | Showing {shown} most recent records (max {max}) | Mostrando {shown} registros mais recentes (máx. {max}) | `audit.footer` |

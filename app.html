@@ -3294,6 +3294,24 @@ const LOCALES = {
     "gl.score": "pontos",
     "gl.top10": "🥇 Top 10",
     "gl.insights_title": "💡 AI Insights",
+    "login.admin_perm": "Tem permissão para editar tudo, incluindo adicionar/remover membros do Roster.",
+    "login.manage_admin_header": "👥 Gerenciar Admin",
+    "login.audit_header": "📜 Histórico de edições do time (quem editou por último)",
+    "login.not_admin_desc": "Esta conta não está na lista de admins — só é possível preencher CP no Roster.",
+    "login.not_admin_hint": "Peça ao admin para adicionar seu e-mail em \"Gerenciar Admin\".",
+    "login.guest_can_view": "Ver dados em todas as páginas",
+    "login.guest_can_cp": "Preencher seu próprio CP no 📋 Roster",
+    "login.guest_can_request": "Pedir leilão na aba 🙋 Pedir leilão",
+    "login.or_use_id": "ou use ID + Password criado pelo admin",
+    "login.id_ph": "ID (ex.: johnny)",
+    "login.sign_in_id_btn": "🔐 Entrar com ID",
+    "admin.you_suffix": "(você)",
+    "admin.no_admins_yet": "— ainda não há entradas em /admins (usando fallback ADMIN_EMAILS) —",
+    "admin.new_email_ph": "e-mail do novo admin",
+    "admin.add_btn": "+ Adicionar",
+    "admin.add_hint": "ⓘ A conta deve ser criada no Firebase Console primeiro — adicionar aqui concede permissão de admin imediatamente.",
+    "audit.empty": "— nenhum registro ainda (será gravado a partir da próxima edição do time) —",
+    "audit.footer": "Mostrando {shown} registros mais recentes (máx. {max})",
   },
   "en": {
     "common.save": "Save",
@@ -3695,6 +3713,24 @@ const LOCALES = {
     "gl.score": "score",
     "gl.top10": "🥇 Top 10",
     "gl.insights_title": "💡 AI Insights",
+    "login.admin_perm": "Has permission to edit everything, including adding/removing members from the Roster.",
+    "login.manage_admin_header": "👥 Manage Admin",
+    "login.audit_header": "📜 Team edit history (who edited last)",
+    "login.not_admin_desc": "This account is not in the admin list — can only fill in CP in the Roster.",
+    "login.not_admin_hint": "Ask an existing admin to add your email under \"Manage Admin\".",
+    "login.guest_can_view": "View data on every page",
+    "login.guest_can_cp": "Fill in your own CP in 📋 Roster",
+    "login.guest_can_request": "Request auction in the 🙋 Auction request tab",
+    "login.or_use_id": "or use ID + Password created by the admin",
+    "login.id_ph": "ID (e.g. johnny)",
+    "login.sign_in_id_btn": "🔐 Sign in with ID",
+    "admin.you_suffix": "(you)",
+    "admin.no_admins_yet": "— no entries in /admins yet (using ADMIN_EMAILS fallback) —",
+    "admin.new_email_ph": "new admin's email",
+    "admin.add_btn": "+ Add",
+    "admin.add_hint": "ⓘ The account must be created in Firebase Console first — adding here grants admin permission immediately.",
+    "audit.empty": "— no records yet (will start recording on the next team edit) —",
+    "audit.footer": "Showing {shown} most recent records (max {max})",
   },
 };
 let currentLocale = (function () {
@@ -6409,12 +6445,12 @@ function openSyncSettings() {
     body.innerHTML = `
       <div style="color:var(--success);font-weight:700;margin-bottom:6px">🔓 Logged in as Admin</div>
       <div><b>${escapeHtml(_fbUser.email)}</b></div>
-      <div style="color:var(--muted);font-size:12px;margin-top:8px">มีสิทธิ์แก้ไขทุกอย่าง รวมถึงเพิ่ม/ลบรายชื่อใน Roster.</div>
+      <div style="color:var(--muted);font-size:12px;margin-top:8px">${t('login.admin_perm')}</div>
       <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
-      <div style="font-weight:700;margin-bottom:6px">👥 จัดการ Admin</div>
+      <div style="font-weight:700;margin-bottom:6px">${t('login.manage_admin_header')}</div>
       ${buildAdminManagePanel()}
       <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
-      <div style="font-weight:700;margin-bottom:6px">📜 ประวัติการแก้ทีม (ใครแก้ล่าสุด)</div>
+      <div style="font-weight:700;margin-bottom:6px">${t('login.audit_header')}</div>
       ${buildAuditLogPanel()}
     `;
     btn.style.display = "";
@@ -6424,8 +6460,8 @@ function openSyncSettings() {
     body.innerHTML = `
       <div style="color:var(--accent-2);font-weight:700;margin-bottom:6px">👤 Logged in (Not Admin)</div>
       <div><b>${escapeHtml(_fbUser.email)}</b></div>
-      <div style="color:var(--muted);font-size:12px;margin-top:8px">บัญชีนี้ไม่ได้อยู่ใน admin list — กรอกได้เฉพาะ CP ใน Roster.</div>
-      <div style="color:var(--muted);font-size:11px;margin-top:6px">ขอ admin คนเดิมเพิ่มอีเมลของคุณใน "จัดการ Admin"</div>
+      <div style="color:var(--muted);font-size:12px;margin-top:8px">${t('login.not_admin_desc')}</div>
+      <div style="color:var(--muted);font-size:11px;margin-top:6px">${t('login.not_admin_hint')}</div>
     `;
     btn.style.display = "";
     btn.textContent = "🚪 Sign Out";
@@ -6434,24 +6470,24 @@ function openSyncSettings() {
     body.innerHTML = `
       <div style="color:var(--muted);font-weight:700;margin-bottom:6px">👁 Guest Mode</div>
       <div style="font-size:13px;line-height:1.7;margin-bottom:10px">
-        • ดูข้อมูลได้ทุกหน้า<br>
-        • กรอก CP ของตัวเองได้ใน <b>📋 Roster</b><br>
-        • ขอประมูลได้ในแท็บ <b>🙋 ขอประมูล</b>
+        • ${t('login.guest_can_view')}<br>
+        • ${t('login.guest_can_cp')}<br>
+        • ${t('login.guest_can_request')}
       </div>
 
       <button onclick="signInWithGoogle().then(ok=>{if(ok)document.getElementById('syncDialog').close()})"
         style="width:100%;background:#fff;color:#0d1117;border:1px solid var(--border-2);border-radius:6px;padding:10px 14px;cursor:pointer;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px">
-        <span style="font-size:14px">🔵</span> Sign in with Google (admin หลัก)
+        <span style="font-size:14px">🔵</span> Sign in with Google
       </button>
 
       <div style="display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:11px">
         <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span>หรือ ใช้ ID + Password ที่ admin สร้างให้</span>
+        <span>${t('login.or_use_id')}</span>
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:8px">
-        <input id="loginUsername" type="text" placeholder="ID (เช่น johnny)"
+        <input id="loginUsername" type="text" placeholder="${t('login.id_ph')}"
           autocapitalize="off" autocorrect="off" spellcheck="false"
           style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;font-family:monospace" />
         <input id="loginPassword" type="password" placeholder="password"
@@ -6459,7 +6495,7 @@ function openSyncSettings() {
           style="background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;font-family:monospace" />
         <button onclick="handleLoginSubmit()"
           style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:700">
-          🔐 เข้าสู่ระบบด้วย ID
+          ${t('login.sign_in_id_btn')}
         </button>
       </div>
     `;
@@ -6492,21 +6528,21 @@ function buildAdminManagePanel() {
     const display = k.replace(/_/g, ".");  // best-effort reverse: emails only have dots, so this is safe
     const isMe = k === myKey;
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:12px">
-      <span style="flex:1">${escapeHtml(display)}${isMe ? ' <span style="color:var(--success)">(คุณ)</span>' : ''}</span>
-      ${isMe ? '' : `<button data-key="${escapeHtml(k)}" onclick="removeAdminEmail(this.dataset.key)" style="background:#450a0a;border:1px solid #b91c1c;color:#fca5a5;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">ลบ</button>`}
+      <span style="flex:1">${escapeHtml(display)}${isMe ? ` <span style="color:var(--success)">${t('admin.you_suffix')}</span>` : ''}</span>
+      ${isMe ? '' : `<button data-key="${escapeHtml(k)}" onclick="removeAdminEmail(this.dataset.key)" style="background:#450a0a;border:1px solid #b91c1c;color:#fca5a5;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">${t('common.delete')}</button>`}
     </div>`;
-  }).join("") : `<div style="color:var(--muted);font-size:12px;font-style:italic;margin-bottom:8px">— ยังไม่มีในตาราง /admins (ใช้ ADMIN_EMAILS fallback) —</div>`;
+  }).join("") : `<div style="color:var(--muted);font-size:12px;font-style:italic;margin-bottom:8px">${t('admin.no_admins_yet')}</div>`;
   return `
     ${rows}
     <div style="display:flex;gap:6px;margin-top:8px">
-      <input id="newAdminEmail" type="email" placeholder="email ของ admin คนใหม่"
+      <input id="newAdminEmail" type="email" placeholder="${t('admin.new_email_ph')}"
         onkeydown="if(event.key==='Enter'){const el=this;addAdminEmail(el.value).then(ok=>{if(ok){el.value='';openSyncSettings();}})}"
         style="flex:1;background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px" />
       <button onclick="const el=document.getElementById('newAdminEmail');addAdminEmail(el.value).then(ok=>{if(ok){el.value='';openSyncSettings();}})"
-        style="background:#6d28d9;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700">+ เพิ่ม</button>
+        style="background:#6d28d9;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700">${t('admin.add_btn')}</button>
     </div>
     <div style="color:var(--muted);font-size:11px;margin-top:6px">
-      ⓘ บัญชีต้องสร้างใน Firebase Console ก่อน เพิ่มที่นี่จะให้สิทธิ์ admin ทันที
+      ${t('admin.add_hint')}
     </div>
   `;
 }
@@ -6516,7 +6552,7 @@ function buildAdminManagePanel() {
 function buildAuditLogPanel() {
   const log = (state.system && Array.isArray(state.system.auditLog)) ? state.system.auditLog : [];
   if (!log.length) {
-    return `<div style="color:var(--muted);font-size:12px;font-style:italic">— ยังไม่มีบันทึก (จะเริ่มบันทึกเมื่อมีการแก้ทีมครั้งถัดไป) —</div>`;
+    return `<div style="color:var(--muted);font-size:12px;font-style:italic">${t('audit.empty')}</div>`;
   }
   const rows = log.slice(-15).reverse().map(e => {
     const when = fmtUpdatedAt(e.at);
@@ -6530,7 +6566,7 @@ function buildAuditLogPanel() {
       <span style="font-weight:700;word-break:break-all">${who}</span>
     </div>`;
   }).join("");
-  return rows + `<div style="color:var(--muted);font-size:11px;margin-top:6px">แสดง ${Math.min(15, log.length)} รายการล่าสุด (เก็บสูงสุด ${AUDIT_LOG_MAX})</div>`;
+  return rows + `<div style="color:var(--muted);font-size:11px;margin-top:6px">${t('audit.footer', { shown: Math.min(15, log.length), max: AUDIT_LOG_MAX })}</div>`;
 }
 
 /* Legacy stubs (no-op) — kept so older calls don't crash */
