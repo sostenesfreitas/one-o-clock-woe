@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
 <meta name="theme-color" content="#0d0d0f" />
-<title>one o clock — ROOC · เครื่องมือจัดปาร์ตี้ WoE</title>
-<meta name="description" content="one o clock — เครื่องมือจัดปาร์ตี้ War of Emperium สำหรับกิลด์ Ragnarok Origin Classic: จัดตี้ League/Overrun, ประมูลของหลัง WoE, หน้าประมูลอัตโนมัติ และระบบขอประมูล" />
+<title>one o clock — ROOC · Organizador de Parties WoE</title>
+<meta name="description" content="one o clock — Ferramenta de parties de War of Emperium da guild Ragnarok Origin Classic: monte parties League/Overrun, divida o loot do leilão pós-WoE, e o sistema de pedidos, tudo em um lugar." />
 <link rel="icon" type="image/png" href="assets/one-o-clock.png" />
 <!-- Open Graph — link previews (Discord / LINE / FB) show the logo -->
 <meta property="og:type" content="website" />
-<meta property="og:title" content="one o clock — ROOC WoE Party Organizer" />
-<meta property="og:description" content="จัดตี้ War of Emperium, ประมูลของหลัง WoE, ระบบขอประมูล — สำหรับกิลด์ Ragnarok Origin Classic" />
+<meta property="og:title" content="one o clock — ROOC · Organizador de Parties WoE" />
+<meta property="og:description" content="Ferramenta de parties de War of Emperium da guild — monte parties League/Overrun, divida o loot do leilão pós-WoE e o sistema de pedidos, tudo em um lugar." />
 <meta property="og:image" content="https://cybodies.github.io/one-o-clock-woe/assets/one-o-clock.png" />
 <meta property="og:url" content="https://cybodies.github.io/one-o-clock-woe/" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -109,6 +109,15 @@
   footer .ver { font-family: ui-monospace, monospace; color: var(--gold-dim); }
   footer a { color: var(--gold); border-bottom: 1px dotted var(--gold-dim); }
 
+  /* ===== Language switcher ===== */
+  #langSwitch button {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 4px 8px; cursor: pointer; transition: color .12s, border-color .12s;
+  }
+  #langSwitch button:hover { color: var(--text); border-color: var(--gold-dim); }
+  #langSwitch button.on { color: var(--gold-2); border-color: var(--gold); }
+
   @media (max-width: 760px) {
     .features { grid-template-columns: 1fr; }
     .sched { grid-template-columns: repeat(2, 1fr); }
@@ -117,49 +126,54 @@
 </style>
 </head>
 <body>
+  <div id="langSwitch" style="position:fixed;top:12px;right:12px;display:flex;gap:2px;z-index:10">
+    <button type="button" data-loc="pt-BR" onclick="setLandingLocale('pt-BR')">PT</button>
+    <button type="button" data-loc="en" onclick="setLandingLocale('en')">EN</button>
+  </div>
+
   <header class="hero">
     <div class="wrap">
       <img src="assets/one-o-clock.png" alt="one o clock — Ragnarok Origin Classic" />
-      <p class="tagline">เครื่องมือจัดปาร์ตี้ War of Emperium ของกิลด์ — จัดตี้ League/Overrun, แบ่งของประมูลหลัง WoE และระบบขอประมูล ครบในที่เดียว</p>
+      <p class="tagline" data-i18n="tagline">Ferramenta de parties de War of Emperium da guild — monte parties League/Overrun, divida o loot do leilão pós-WoE e o sistema de pedidos, tudo em um lugar.</p>
       <div>
-        <a class="cta" href="app.html">⚔️ เข้าเครื่องมือจัดปาร์ตี้ →</a>
+        <a class="cta" href="app.html" data-i18n="cta">⚔️ Abrir o organizador →</a>
       </div>
-      <p class="cta-note">เข้าใช้งานประจำ? บุ๊กมาร์ก <a href="app.html">app.html</a> ไว้ข้ามหน้านี้ได้เลย</p>
+      <p class="cta-note"><span data-i18n="cta_note_pre">Usa sempre? Salve</span> <a href="app.html">app.html</a> <span data-i18n="cta_note_post">nos favoritos para pular esta página.</span></p>
     </div>
   </header>
 
   <main class="wrap">
     <section class="section">
-      <h2>ฟีเจอร์</h2>
+      <h2 data-i18n="feat_h">Recursos</h2>
       <div class="features">
-        <div class="feature"><span class="fi">⚔️</span><h3>League — 16 ตี้</h3><p>จัดตี้ 16 ปาร์ตี้ × 5 คน สนามหลัก/สนามรอง ลากวางง่าย พร้อมหมุดบนแผนที่</p></div>
-        <div class="feature"><span class="fi">🏰</span><h3>Overrun</h3><p>5 กลุ่มสี (Red/Yellow/Green/Blue/Purple) บนแผนที่ Overrun โดยเฉพาะ</p></div>
-        <div class="feature"><span class="fi">🎴</span><h3>ประมูลของ GL / Overrun</h3><p>แบ่งของหลัง WoE 70/30 หลัก/รอง + คำนวณ <b>หน้าประมูลจริง</b> ให้อัตโนมัติ (4 ชิ้น/หน้า)</p></div>
-        <div class="feature"><span class="fi">🙋</span><h3>ขอประมูล</h3><p>สมาชิกขอของได้เฉพาะวันกิจวันนั้น แอดมินอนุมัติเป็นคิว เรียลไทม์</p></div>
-        <div class="feature"><span class="fi">📋</span><h3>Roster</h3><p>ทะเบียนสมาชิก ชื่อ/อาชีพ/CP/Discord แก้ไขสด ซิงก์ทุกเครื่อง</p></div>
-        <div class="feature"><span class="fi">🌴</span><h3>ลา (Leave)</h3><p>ลงลาล่วงหน้า ระบบมาร์คในตี้ให้วันนั้น แล้วรีเซ็ตอัตโนมัติทุกสัปดาห์</p></div>
+        <div class="feature"><span class="fi">⚔️</span><h3 data-i18n="f_league_h">League — 16 parties</h3><p data-i18n="f_league_p">Monte 16 parties × 5 pessoas, campo principal/secundário, arrastar-e-soltar, com marcadores no mapa.</p></div>
+        <div class="feature"><span class="fi">🏰</span><h3 data-i18n="f_overrun_h">Overrun</h3><p data-i18n="f_overrun_p">5 grupos de cor (Red/Yellow/Green/Blue/Purple) no mapa exclusivo de Overrun.</p></div>
+        <div class="feature"><span class="fi">🎴</span><h3 data-i18n="f_auction_h">Leilão GL / Overrun</h3><p data-i18n="f_auction_p">Divide o loot pós-WoE 70/30 principal/secundário + calcula as páginas reais do leilão automaticamente (4 itens/página).</p></div>
+        <div class="feature"><span class="fi">🙋</span><h3 data-i18n="f_request_h">Pedir leilão</h3><p data-i18n="f_request_p">Membros pedem itens só no dia do evento; o admin aprova em fila, em tempo real.</p></div>
+        <div class="feature"><span class="fi">📋</span><h3 data-i18n="f_roster_h">Roster</h3><p data-i18n="f_roster_p">Cadastro de membros nome/classe/CP/Discord, edição ao vivo, sincroniza em todos os aparelhos.</p></div>
+        <div class="feature"><span class="fi">🌴</span><h3 data-i18n="f_leave_h">Folga (Leave)</h3><p data-i18n="f_leave_p">Marque folga com antecedência; o sistema marca na party naquele dia e reseta automático toda semana.</p></div>
       </div>
     </section>
 
     <section class="section">
-      <h2>ตารางกิจกรรม</h2>
+      <h2 data-i18n="sched_h">Agenda</h2>
       <div class="sched" id="sched">
-        <div class="day" data-dow="0"><div class="dn">อา</div><div class="ev or">Overrun</div></div>
-        <div class="day" data-dow="1"><div class="dn">จ</div><div class="ev off">—</div></div>
-        <div class="day" data-dow="2"><div class="dn">อ</div><div class="ev gl">GL</div></div>
-        <div class="day" data-dow="3"><div class="dn">พ</div><div class="ev off">—</div></div>
-        <div class="day" data-dow="4"><div class="dn">พฤ</div><div class="ev gl">GL</div></div>
-        <div class="day" data-dow="5"><div class="dn">ศ</div><div class="ev off">—</div></div>
-        <div class="day" data-dow="6"><div class="dn">ส</div><div class="ev off">—</div></div>
+        <div class="day" data-dow="0"><div class="dn">Dom</div><div class="ev or">Overrun</div></div>
+        <div class="day" data-dow="1"><div class="dn">Seg</div><div class="ev off">—</div></div>
+        <div class="day" data-dow="2"><div class="dn">Ter</div><div class="ev gl">GL</div></div>
+        <div class="day" data-dow="3"><div class="dn">Qua</div><div class="ev off">—</div></div>
+        <div class="day" data-dow="4"><div class="dn">Qui</div><div class="ev gl">GL</div></div>
+        <div class="day" data-dow="5"><div class="dn">Sex</div><div class="ev off">—</div></div>
+        <div class="day" data-dow="6"><div class="dn">Sáb</div><div class="ev off">—</div></div>
       </div>
-      <p class="sched-note">อังคาร / พฤหัส = GL · อาทิตย์ = Overrun · เวลากิจตามกิลด์ (เขตเวลาไทย)</p>
+      <p class="sched-note" data-i18n="sched_note">Terça / Quinta = GL · Domingo = Overrun · horários conforme a guild (fuso da Tailândia).</p>
     </section>
   </main>
 
   <footer>
     <div class="wrap">
       <div>🕐 <b style="color:var(--gold-2)">one o clock</b> · Ragnarok Origin Classic</div>
-      <div style="margin-top:6px">เครื่องมือภายในกิลด์ — <a href="app.html">เข้าเครื่องมือ</a> · <a href="https://github.com/Cybodies/one-o-clock-woe" target="_blank" rel="noopener">GitHub</a></div>
+      <div style="margin-top:6px"><span data-i18n="footer_tool">Ferramenta interna da guild —</span> <a href="app.html" data-i18n="footer_open">Abrir ferramenta</a> · <a href="https://github.com/Cybodies/one-o-clock-woe" target="_blank" rel="noopener">GitHub</a></div>
       <div style="margin-top:8px" class="ver" id="ver">v—</div>
     </div>
   </footer>
@@ -168,6 +182,78 @@
   /* Standalone BKK weekday (UTC+7) — landing is independent of the app.
      0=Sun … 6=Sat, matching the data-dow attributes above. */
   (function () {
+    var LANDING_I18N = {
+      "pt-BR": {
+        "tagline": "Ferramenta de parties de War of Emperium da guild — monte parties League/Overrun, divida o loot do leilão pós-WoE e o sistema de pedidos, tudo em um lugar.",
+        "cta": "⚔️ Abrir o organizador →",
+        "cta_note_pre": "Usa sempre? Salve",
+        "cta_note_post": "nos favoritos para pular esta página.",
+        "feat_h": "Recursos",
+        "f_league_h": "League — 16 parties",
+        "f_league_p": "Monte 16 parties × 5 pessoas, campo principal/secundário, arrastar-e-soltar, com marcadores no mapa.",
+        "f_overrun_h": "Overrun",
+        "f_overrun_p": "5 grupos de cor (Red/Yellow/Green/Blue/Purple) no mapa exclusivo de Overrun.",
+        "f_auction_h": "Leilão GL / Overrun",
+        "f_auction_p": "Divide o loot pós-WoE 70/30 principal/secundário + calcula as páginas reais do leilão automaticamente (4 itens/página).",
+        "f_request_h": "Pedir leilão",
+        "f_request_p": "Membros pedem itens só no dia do evento; o admin aprova em fila, em tempo real.",
+        "f_roster_h": "Roster",
+        "f_roster_p": "Cadastro de membros nome/classe/CP/Discord, edição ao vivo, sincroniza em todos os aparelhos.",
+        "f_leave_h": "Folga (Leave)",
+        "f_leave_p": "Marque folga com antecedência; o sistema marca na party naquele dia e reseta automático toda semana.",
+        "sched_h": "Agenda",
+        "sched_note": "Terça / Quinta = GL · Domingo = Overrun · horários conforme a guild (fuso da Tailândia).",
+        "footer_tool": "Ferramenta interna da guild —",
+        "footer_open": "Abrir ferramenta"
+      },
+      "en": {
+        "tagline": "Your guild's War of Emperium party tool — build League/Overrun parties, split post-WoE auction loot, and request items, all in one place.",
+        "cta": "⚔️ Open the party tool →",
+        "cta_note_pre": "Regular user? Bookmark",
+        "cta_note_post": "to skip this page.",
+        "feat_h": "Features",
+        "f_league_h": "League — 16 parties",
+        "f_league_p": "Build 16 parties × 5 people, main/sub field, easy drag-and-drop, with map markers.",
+        "f_overrun_h": "Overrun",
+        "f_overrun_p": "5 color groups (Red/Yellow/Green/Blue/Purple) on the dedicated Overrun map.",
+        "f_auction_h": "GL / Overrun Auction",
+        "f_auction_p": "Splits post-WoE loot 70/30 main/sub + computes the real auction pages automatically (4 items/page).",
+        "f_request_h": "Auction request",
+        "f_request_p": "Members request items only on the event day; admin approves in a queue, in real time.",
+        "f_roster_h": "Roster",
+        "f_roster_p": "Member registry name/job/CP/Discord, live editing, syncs across all devices.",
+        "f_leave_h": "Leave",
+        "f_leave_p": "Register leave in advance; the system marks it in the party that day and auto-resets every week.",
+        "sched_h": "Schedule",
+        "sched_note": "Tue / Thu = GL · Sun = Overrun · times per the guild (Thailand timezone).",
+        "footer_tool": "Internal guild tool —",
+        "footer_open": "Open tool"
+      }
+    };
+    var DOW_LANDING = {
+      "pt-BR": ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"],
+      "en": ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+    };
+    function landingLocale() {
+      try { var v = localStorage.getItem("woe_locale"); return (v === "en" || v === "pt-BR") ? v : "pt-BR"; } catch(e) { return "pt-BR"; }
+    }
+    function applyLandingI18n(loc) {
+      var d = LANDING_I18N[loc] || LANDING_I18N["pt-BR"];
+      document.documentElement.lang = (loc === "en") ? "en" : "pt-br";
+      document.querySelectorAll("[data-i18n]").forEach(function(el) { var k = el.getAttribute("data-i18n"); if (d[k] != null) el.textContent = d[k]; });
+      var days = DOW_LANDING[loc] || DOW_LANDING["pt-BR"];
+      document.querySelectorAll(".day .dn").forEach(function(el) { var dow = el.parentElement.getAttribute("data-dow"); if (dow != null) el.textContent = days[+dow]; });
+      var sw = document.getElementById("langSwitch");
+      if (sw) sw.querySelectorAll("button").forEach(function(b) { b.classList.toggle("on", b.getAttribute("data-loc") === loc); });
+    }
+    function setLandingLocale(loc) {
+      try { localStorage.setItem("woe_locale", loc); } catch(e) {}
+      applyLandingI18n(loc);
+    }
+    // Expose setLandingLocale for the inline onclick handlers
+    window.setLandingLocale = setLandingLocale;
+
+    // Today cell highlight (BKK UTC+7)
     var bkk = new Date(Date.now() + 7 * 60 * 60 * 1000);
     var dow = bkk.getUTCDay();
     var cell = document.querySelector('.day[data-dow="' + dow + '"]');
@@ -175,6 +261,8 @@
     // Footer build stamp — keep in sync with app.html's APP_VERSION manually.
     var v = document.getElementById("ver");
     if (v) v.textContent = "v2026.06.12.8";
+    // Apply i18n (runs last so DOM is already mutated above)
+    applyLandingI18n(landingLocale());
   })();
   </script>
 </body>
