@@ -6160,7 +6160,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.12.9";
+const APP_VERSION = "2026.06.13.1";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -6657,13 +6657,13 @@ async function initSync() {
  *   • Replace the Google Sheet as source of truth for state.members.
  * ===================================================================== */
 const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyDgMMw5_T_LaX297i0NyXdSZBfs06odDUQ",
-  authDomain:        "woe-party.firebaseapp.com",
-  databaseURL:       "https://woe-party-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:         "woe-party",
-  storageBucket:     "woe-party.firebasestorage.app",
-  messagingSenderId: "992111979010",
-  appId:             "1:992111979010:web:206138501fc4eb8a86d51b"
+  apiKey:            "AIzaSyDZWhV0CMorYlkUkdxBmCrXd0Av5qQG3A4",
+  authDomain:        "miojo-rooc.firebaseapp.com",
+  databaseURL:       "https://miojo-rooc-default-rtdb.firebaseio.com",
+  projectId:         "miojo-rooc",
+  storageBucket:     "miojo-rooc.firebasestorage.app",
+  messagingSenderId: "555657453408",
+  appId:             "1:555657453408:web:45b033fe6c3c1926038805"
 };
 
 // Bootstrap admin fallback. The first admin in this list is treated as

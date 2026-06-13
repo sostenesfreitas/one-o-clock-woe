@@ -10,6 +10,14 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.06.13.1]
+### Changed
+- **Backend movido para o projeto Firebase próprio `miojo-rooc`** (era `woe-party`/Cybodies).
+  `FIREBASE_CONFIG` repointado; admin bootstrap agora `sostenesfreitas@gmail.com` (em
+  `ADMIN_EMAILS` + `database.rules.json` + docs). Banco novo nasce vazio → novos players
+  entram do zero (sem necessidade de wipe). Rules publicadas no projeto novo (RTDB us-central1).
+  Deploy agora no repo próprio `sostenesfreitas/one-o-clock-woe` (GitHub Pages).
+
 ## [2026.06.12.9]
 ### Added
 - **i18n Fase 2 — tradução completa das telas secundárias + landing (pt-BR / English).**
