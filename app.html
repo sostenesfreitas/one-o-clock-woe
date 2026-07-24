@@ -3447,7 +3447,7 @@ const LOCALES = {
     "help.summary_step3": "O sistema mostra excesso/falta e sugere quem mover.",
     "help.auction_gl_title": "🎴 Leilão GL",
     "help.auction_gl_desc": "Admin informa as quantidades finais de itens; a divisão 70/30 principal/secundário (editável) é calculada automaticamente; arraste nomes para as colunas de itens.",
-    "help.auction_gl_step1": "Admin: preencha as quantidades de cada item (Card, Illusion, White, Black).",
+    "help.auction_gl_step1": "Admin: preencha as quantidades de cada item (Illusion, White, Black).",
     "help.auction_gl_step2": "Ajuste o % de divisão principal/secundário se necessário.",
     "help.auction_gl_step3": "Arraste nomes da sidebar para as colunas de cada item.",
     "help.auction_gl_step4": "O sistema calcula as páginas reais do leilão (4 itens/página).",
@@ -3994,7 +3994,7 @@ const LOCALES = {
     "help.summary_step3": "The system shows over/short counts and suggests who to move.",
     "help.auction_gl_title": "🎴 Auction GL",
     "help.auction_gl_desc": "Admin enters final item quantities; the 70/30 main/sub split (editable) is computed automatically; drag names into item columns.",
-    "help.auction_gl_step1": "Admin: fill in quantities for each item (Card, Illusion, White, Black).",
+    "help.auction_gl_step1": "Admin: fill in quantities for each item (Illusion, White, Black).",
     "help.auction_gl_step2": "Adjust the main/sub split % if needed.",
     "help.auction_gl_step3": "Drag names from the sidebar into each item column.",
     "help.auction_gl_step4": "The system computes the real auction pages (4 items/page).",
@@ -4572,8 +4572,8 @@ function findMember(id) { return state.members.find(m => m.id === id); }
 function isAssigned(memberId) {
   const inAuctionBuckets = (a) => {
     if (!a || !a.main || !a.sub) return false;
-    return a.main.cards.includes(memberId) || a.main.white.includes(memberId) || a.main.black.includes(memberId)
-        || a.sub.cards.includes(memberId)  || a.sub.white.includes(memberId)  || a.sub.black.includes(memberId);
+    return a.main.illusion.includes(memberId) || a.main.white.includes(memberId) || a.main.black.includes(memberId)
+        || a.sub.illusion.includes(memberId)  || a.sub.white.includes(memberId)  || a.sub.black.includes(memberId);
   };
   if (state.mode === "auction-gl")      return inAuctionBuckets(state.auctionGL && state.auctionGL.assignments);
   if (state.mode === "auction-overrun") return inAuctionBuckets(state.auctionOverrun && state.auctionOverrun.assignments);
@@ -4755,7 +4755,7 @@ async function refreshFromSheet() {
       if (!assignments) return;
       ["main", "sub"].forEach(field => {
         if (!assignments[field]) return;
-        ["cards", "white", "black"].forEach(key => {
+        ["illusion", "white", "black"].forEach(key => {
           if (!Array.isArray(assignments[field][key])) return;
           assignments[field][key] = assignments[field][key].map(oldId => {
             if (!oldId) return null;
@@ -5857,7 +5857,7 @@ function renderMembers() {
     let n = 0;
     ["main","sub"].forEach(f => {
       const ff = obj.assignments[f]; if (!ff) return;
-      ["cards","illusion","white","black"].forEach(k => {
+      ["illusion","white","black"].forEach(k => {
         if (Array.isArray(ff[k]) && ff[k].includes(mid)) n++;
       });
     });
@@ -6422,7 +6422,7 @@ function buildSummaryHtml() {
  * guild bug report maps to a deployed version and stale caches are visible.
  * (No build step, so this is a manually-bumped constant — see RUNBOOK.md.)
  * ===================================================================== */
-const APP_VERSION = "2026.06.13.3";
+const APP_VERSION = "2026.07.24.1";
 function buildVersionStamp() { return "v" + APP_VERSION; }
 function renderVersionStamp() {
   if (typeof document === "undefined" || !document.body) return;
@@ -8487,8 +8487,8 @@ function getAuctionAssignments(kind) {
   const obj = kind === "gl" ? state.auctionGL : state.auctionOverrun;
   if (!obj.assignments || !obj.assignments.main || !obj.assignments.sub) {
     obj.assignments = {
-      main: { cards: [], white: [], black: [] },
-      sub:  { cards: [], white: [], black: [] }
+      main: { illusion: [], white: [], black: [] },
+      sub:  { illusion: [], white: [], black: [] }
     };
   }
   return obj.assignments;
@@ -8545,7 +8545,7 @@ function computeAuction(kind) {
   if (assignmentsDirty) save();
 
   const src = kind === "gl" ? state.auctionGL : state.auctionOverrun;
-  const totals = { cards: src.cards|0, illusion: src.illusion|0, white: src.white|0, black: src.black|0 };
+  const totals = { illusion: src.illusion|0, white: src.white|0, black: src.black|0 };
 
   // GL splits each item between main+sub by an admin-editable percent (default
   // 70). The remainder on an uneven split goes to MAIN (ceil), so the leftover
@@ -8568,13 +8568,14 @@ function computeAuction(kind) {
     return { pool, count, need, diff, status, statusCls };
   };
 
+  // "cards" retired 2026-07 (item no longer drops in-game) — legacy state may
+  // still hold cards counts/assignments; they're simply not rendered/counted.
   const ITEM_META = {
-    cards:    { label: "🎴 Card",           rateKey: "card",     unit: "pcs" },
     illusion: { label: "🔮 Illusion Frag.", rateKey: "illusion", unit: "pcs" },
     white:    { label: "🪶 White",          rateKey: "white",    unit: "pcs" },
     black:    { label: "🪶 Black",          rateKey: "black",    unit: "pcs" }
   };
-  const items = ["cards","illusion","white","black"].map(key => {
+  const items = ["illusion","white","black"].map(key => {
     const total    = totals[key];
     const mainPool = splitMain(total);
     const subPool  = total - mainPool;
@@ -8823,17 +8824,15 @@ function buildAuctionView(kind) {
   // Item-count inputs (admin types the FINAL quantities — no multiplier)
   // per-person unit is one label in pt/en (the 3 Thai classifiers ใบ/ชิ้น/ขน collapse)
   const ppLbl = t('auction.per_person_unit');
-  const itemCountInputs = ["cards","illusion","white","black"].map(field => {
+  const itemCountInputs = ["illusion","white","black"].map(field => {
     const it = data.items.find(i => i.key === field);
     const labelMap = {
-      cards:    ["🎴","Card"],
       illusion: ["🔮","Illusion Frag."],
       white:    ["🪶","White"],
       black:    ["🪶","Black"]
     };
     const [icon, lbl] = labelMap[field];
-    // Map the item field → its rates key ("cards" item uses the "card" rate).
-    const RATE_KEY = { cards: "card", illusion: "illusion", white: "white", black: "black" };
+    const RATE_KEY = { illusion: "illusion", white: "white", black: "black" };
     return buildAuctionInputCard({
       icon, label: lbl,
       value: it.total,
@@ -9827,7 +9826,9 @@ function arBuildModal() {
   const field = arDetectField(memberId, mode);
   const fieldTxt = field === "main" ? `<b>${t('auction.field_main_short')}</b>` : field === "sub" ? `<b class="sub">${t('auction.field_sub_short')}</b>` : `<span style="color:var(--danger)">${t('ar.not_in_party')}</span>`;
 
-  const itemRows = ["cards","illusion","white","black"].map(k => {
+  // "cards" retired — no longer requestable (AR_ITEM_META keeps the label so
+  // old requests still render their chip).
+  const itemRows = ["illusion","white","black"].map(k => {
     const meta = AR_ITEM_META[k];
     const sel = items.has(k);
     return `<div class="ar-item-row ${sel ? "selected" : ""}" onclick="arToggleModalItem('${k}')">

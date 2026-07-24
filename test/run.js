@@ -182,7 +182,7 @@ t("GL splits 70/30; status 'Exato' (ok) when mainPool == need", () => {
 });
 t("Overrun has no sub field (single combined pool)", () => {
   reset(app, mkMembers(["p1"]));
-  app.state.auctionOverrun.assignments.main.cards = ["p1"];
+  app.state.auctionOverrun.assignments.main.illusion = ["p1"];
   const d = app.call("computeAuction", "overrun");
   eq(d.hasSubField, false);
 });
@@ -190,23 +190,23 @@ t("Overrun has no sub field (single combined pool)", () => {
 console.log("\n[auction-page CHAIN numbering — the rate↔chain interaction]");
 t("GL chain: page rolls over within a bucket (5 ppl, rate 1)", () => {
   reset(app, mkMembers(["c1", "c2", "c3", "c4", "c5"]));
-  app.state.auctionGL.assignments.main.cards = ["c1", "c2", "c3", "c4", "c5"];
+  app.state.auctionGL.assignments.main.illusion = ["c1", "c2", "c3", "c4", "c5"];
   const html = app.call("buildAuctionView", "gl");
   eq(badgesFor(html, "c4"), ["Pág. 1 · un. 4"], "4th on page 1");
   eq(badgesFor(html, "c5"), ["Pág. 2 · un. 1"], "5th rolls to page 2");
 });
-t("GL chain: white packs continuously right after cards (same page)", () => {
+t("GL chain: white packs continuously right after illusion (same page)", () => {
   reset(app, mkMembers(["c1", "c2", "w1"]));
   app.state.auctionGL.rates.white = 7;
-  app.state.auctionGL.cards = 2;                              // cards = page 1 slots 1-2
+  app.state.auctionGL.illusion = 2;                          // illusion = page 1 slots 1-2
   app.state.auctionGL.white = 10;                            // white continues page 1 slot 3 (NOT a fresh page)
-  app.state.auctionGL.assignments.main.cards = ["c1", "c2"];
+  app.state.auctionGL.assignments.main.illusion = ["c1", "c2"];
   app.state.auctionGL.assignments.main.white = ["w1"];
   const html = app.call("buildAuctionView", "gl");
-  eq(badgesFor(html, "c2"), ["Pág. 1 · un. 2"], "card chain");
+  eq(badgesFor(html, "c2"), ["Pág. 1 · un. 2"], "illusion chain");
   eq(badgesFor(html, "w1"),
      ["Pág. 1 · un. 3-4", "Pág. 2 · un. 1-4", "Pág. 3 · un. 1"],
-     "white rate7 starts page 1 slot 3 (continuous after cards), spans pages 1-3");
+     "white rate7 starts page 1 slot 3 (continuous after illusion), spans pages 1-3");
 });
 t("GL chain: editing the rate CHANGES the chain (regression guard)", () => {
   reset(app, mkMembers(["w1"]));
@@ -222,11 +222,11 @@ t("Overrun chain: independent per column with custom rate (4)", () => {
   reset(app, mkMembers(["x1", "x2", "oc1"]));
   app.state.auctionOverrun.rates.white = 4;
   app.state.auctionOverrun.assignments.main.white = ["x1", "x2"];
-  app.state.auctionOverrun.assignments.main.cards = ["oc1"];
+  app.state.auctionOverrun.assignments.main.illusion = ["oc1"];
   const html = app.call("buildAuctionView", "overrun");
   eq(badgesFor(html, "x1"), ["Pág. 1 · un. 1-4"], "white#1 fills page 1");
   eq(badgesFor(html, "x2"), ["Pág. 2 · un. 1-4"], "white#2 -> page 2");
-  eq(badgesFor(html, "oc1"), ["Pág. 1 · un. 1"], "cards column resets to page 1");
+  eq(badgesFor(html, "oc1"), ["Pág. 1 · un. 1"], "illusion column resets to page 1");
 });
 t("chain invariant: slots are 1..4 and total == count*rate", () => {
   reset(app, mkMembers(["a", "b", "c"]));
@@ -276,14 +276,13 @@ console.log("\n[auction page-map — supply-based real auction pages]");
 function pageMapOf(kind) { return app.call("computeAuction", kind).pageMap; }
 function typeRange(pm, key) { const t = pm.perType.find(x => x.key === key); return t ? [t.startPage, t.endPage] : null; }
 
-t("GL worked example: cards5 illu2 white10 black10 → per-type pages + total", () => {
+t("GL worked example: illu7 white10 black10 → per-type pages + total", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10 });
+  Object.assign(app.state.auctionGL, { illusion: 7, white: 10, black: 10 });
   const pm = pageMapOf("gl");
-  // Items pack CONTINUOUSLY (no fresh page per type): cards 5 → p1-2; illu 2
-  // continues p2; white 10 continues p2-5; black 10 continues p5-7. No gaps.
-  eq(typeRange(pm, "cards"), [1, 2], "cards p1-2");
-  eq(typeRange(pm, "illusion"), [2, 2], "illu continues page 2");
+  // Items pack CONTINUOUSLY (no fresh page per type): illu 7 → p1-2; white 10
+  // continues p2 s4 → p5 s1; black 10 continues p5 s2 → p7 s3. No gaps.
+  eq(typeRange(pm, "illusion"), [1, 2], "illu p1-2");
   eq(typeRange(pm, "white"), [2, 5], "white continues p2-5");
   eq(typeRange(pm, "black"), [5, 7], "black continues p5-7");
   eq(pm.totalItems, 27, "total items");
@@ -291,7 +290,7 @@ t("GL worked example: cards5 illu2 white10 black10 → per-type pages + total", 
 });
 t("GL invariant: totalPages === max endPage across all buckets", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10 });
+  Object.assign(app.state.auctionGL, { illusion: 7, white: 10, black: 10 });
   const d = app.call("computeAuction", "gl");
   let maxEnd = 0;
   d.items.forEach(it => {
@@ -302,13 +301,13 @@ t("GL invariant: totalPages === max endPage across all buckets", () => {
 });
 t("GL items pack continuously — next type shares the same page (no fresh-page gap)", () => {
   reset(app, []);
-  // cards 2 → page 1 slots 1-2; illu 2 must continue on page 1 slots 3-4 (same page),
+  // illu 2 → page 1 slots 1-2; white 2 must continue on page 1 slots 3-4 (same page),
   // NOT jump to a fresh page 2. (split 100 so each type is main-only for a clean check.)
-  Object.assign(app.state.auctionGL, { cards: 2, illusion: 2, white: 0, black: 0, splitMainPercent: 100 });
+  Object.assign(app.state.auctionGL, { illusion: 2, white: 2, black: 0, splitMainPercent: 100 });
   const d = app.call("computeAuction", "gl");
-  const cards = d.items.find(i => i.key === "cards"), illu = d.items.find(i => i.key === "illusion");
-  eq([cards.main.page.startPage, cards.main.page.endPage], [1, 1], "cards 2 → page 1");
-  eq([illu.main.page.startPage, illu.main.page.startSlot], [1, 3], "illu continues page 1 slot 3 (no gap)");
+  const illu = d.items.find(i => i.key === "illusion"), white = d.items.find(i => i.key === "white");
+  eq([illu.main.page.startPage, illu.main.page.endPage], [1, 1], "illu 2 → page 1");
+  eq([white.main.page.startPage, white.main.page.startSlot], [1, 3], "white continues page 1 slot 3 (no gap)");
 });
 t("GL 70/30 boundary: sub continues main's partial page (white=10)", () => {
   reset(app, []);
@@ -329,11 +328,11 @@ t("GL split @70 ceil-to-main: white=6 → main 5 (p1-2) / sub 1 (p2)", () => {
 });
 t("Overrun: items pack continuously across types (no fresh page per type)", () => {
   reset(app, []);
-  Object.assign(app.state.auctionOverrun, { cards: 5, illusion: 0, white: 10, black: 0 });
+  Object.assign(app.state.auctionOverrun, { illusion: 5, white: 10, black: 0 });
   const pm = pageMapOf("overrun");
-  // cards 5 → p1 s1-4, p2 s1; white continues p2 s2 → p4 (zero-item illusion skipped).
-  eq(typeRange(pm, "cards"), [1, 2], "cards p1-2");
-  eq(typeRange(pm, "white"), [2, 4], "white continues page 2 (right after cards, not a fresh page)");
+  // illu 5 → p1 s1-4, p2 s1; white continues p2 s2 → p4.
+  eq(typeRange(pm, "illusion"), [1, 2], "illu p1-2");
+  eq(typeRange(pm, "white"), [2, 4], "white continues page 2 (right after illusion, not a fresh page)");
 });
 t("page-map is RATE-INDEPENDENT (editing rate doesn't move pages)", () => {
   reset(app, []);
@@ -345,21 +344,22 @@ t("page-map is RATE-INDEPENDENT (editing rate doesn't move pages)", () => {
 });
 t("page-map: zero-item type skipped (no page consumed); all-zero → 0 pages", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 0, illusion: 0, white: 8, black: 0 });
+  Object.assign(app.state.auctionGL, { illusion: 0, white: 8, black: 0 });
   const pm = pageMapOf("gl");
-  eq(typeRange(pm, "cards"), [null, null], "no cards → null range");
+  eq(typeRange(pm, "illusion"), [null, null], "no illusion → null range");
+  eq(typeRange(pm, "cards"), null, "cards retired → absent from page map");
   eq(typeRange(pm, "white"), [1, 2], "white at page 1 (empty earlier types consume no page)");
   reset(app, []);
   eq(pageMapOf("gl").totalPages, 0, "all-zero → 0 pages");
 });
-t("badge re-anchor: white person shows real page with cards column empty of people", () => {
+t("badge re-anchor: white person shows real page with illusion column empty of people", () => {
   reset(app, mkMembers(["w1"]));
-  Object.assign(app.state.auctionGL, { cards: 5, illusion: 0, white: 10, black: 0 });
-  app.state.auctionGL.assignments.main.white = ["w1"]; // cards has 5 ITEMS but no people
+  Object.assign(app.state.auctionGL, { illusion: 5, white: 10, black: 0 });
+  app.state.auctionGL.assignments.main.white = ["w1"]; // illusion has 5 ITEMS but no people
   const html = app.call("buildAuctionView", "gl");
-  // cards 5 (main 4 + sub 1) consume cursor 1-5 → white main starts page 2 slot 2,
-  // anchored to the real pool position even though the cards column has no people.
-  eq(badgesFor(html, "w1"), ["Pág. 2 · un. 2-4"], "white anchored to real pool page (p2 s2) regardless of card people");
+  // illu 5 (main 4 + sub 1) consume cursor 1-5 → white main starts page 2 slot 2,
+  // anchored to the real pool position even though the illusion column has no people.
+  eq(badgesFor(html, "w1"), ["Pág. 2 · un. 2-4"], "white anchored to real pool page (p2 s2) regardless of illusion people");
 });
 
 console.log("\n[auction column coverage — fill progress vs pool pages]");
@@ -447,10 +447,10 @@ t("Overrun ignores the split (no sub field)", () => {
 });
 t("page ranges stay split-invariant at 70% (worked example)", () => {
   reset(app, []);
-  Object.assign(app.state.auctionGL, { cards: 5, illusion: 2, white: 10, black: 10 });
+  Object.assign(app.state.auctionGL, { illusion: 7, white: 10, black: 10 });
   const pm = pageMapOf("gl");
   eq(pm.perType.map(x => [x.key, x.startPage, x.endPage]),
-     [["cards",1,2],["illusion",2,2],["white",2,5],["black",5,7]], "per-type pages (continuous packing)");
+     [["illusion",1,2],["white",2,5],["black",5,7]], "per-type pages (continuous packing)");
   eq(pm.totalPages, 7, "total pages (continuous, no per-type gaps)");
 });
 t("GL view renders the editable split control + dynamic field labels", () => {
@@ -633,12 +633,12 @@ console.log("\n[search box scroll-jump guard]");
 console.log("\n[per-column page chip — slot range]");
 t("partial page shows slot range, not the whole page", function () {
   reset(app, mkMembers(["m1", "m2"]));
-  Object.assign(app.state.auctionOverrun, { cards: 20, illusion: 2, white: 0, black: 0 });
-  (function () { var A = app.state.auctionOverrun.assignments; if (A && A.main && A.main.illusion) A.main.illusion = ["m1", "m2"]; else if (A && A.illusion) A.illusion = ["m1", "m2"]; })();
+  Object.assign(app.state.auctionOverrun, { illusion: 20, white: 2, black: 0 });
+  (function () { var A = app.state.auctionOverrun.assignments; if (A && A.main && A.main.white) A.main.white = ["m1", "m2"]; })();
   const html = app.call("buildAuctionView", "overrun");
   const chips = [...html.matchAll(/ac-pagemap[^>]*>([^<]+)</g)].map(function (m) { return m[1]; });
   ok(chips.some(function (cc) { return cc.indexOf("Pág. 6") >= 0 && cc.indexOf("un. 1-2") >= 0; }),
-     "illusion=2 on page 6 must show page 6 slots 1-2; got: " + JSON.stringify(chips));
+     "white=2 on page 6 must show page 6 slots 1-2; got: " + JSON.stringify(chips));
 });
 t("single-item column shows a single slot", function () {
   reset(app, mkMembers(["w1"]));
@@ -1308,9 +1308,9 @@ console.log("\n[auction no-bonus]");
   const s = reset(app, mkMembers(["A", "B"]));
 
   t("no-bonus: GL totals are exactly the entered counts (no multiplier)", () => {
-    Object.assign(app.state.auctionGL, { cards: 7, illusion: 3, white: 10, black: 9 });
+    Object.assign(app.state.auctionGL, { illusion: 3, white: 10, black: 9 });
     const d = app.call("computeAuction", "gl");
-    eq(d.items.map(it => it.total), [7, 3, 10, 9], "entered counts pass through 1:1");
+    eq(d.items.map(it => it.total), [3, 10, 9], "entered counts pass through 1:1");
   });
 
   t("no-bonus: legacy bonusPercent in a saved state is stripped and ignored", () => {
@@ -1320,7 +1320,7 @@ console.log("\n[auction no-bonus]");
     ok(!("bonusCards" in legacy), "legacy bonusCards stripped");
     app.state.auctionGL = legacy;
     const d = app.call("computeAuction", "gl");
-    eq(d.items.find(i => i.key === "cards").total, 5, "no ×2 even from a legacy save");
+    ok(!d.items.some(i => i.key === "cards"), "retired cards item not resurrected by a legacy save");
     eq(d.items.find(i => i.key === "white").total, 4, "no ×(1+%) on feathers");
   });
 
@@ -1332,6 +1332,49 @@ console.log("\n[auction no-bonus]");
     ok(!appHtml.includes("auction-percent-btn"), "percent button CSS/markup gone");
     ok(!appHtml.replace(/delete obj\.bonusPercent;/g, "").includes("bonusPercent"),
        "no live bonusPercent reads/writes (only the normalize legacy-strip remains)");
+  });
+})();
+
+// Card item retired 2026-07 (no longer drops in-game): not rendered, not
+// requestable, doesn't consume auction pages. Legacy data stays untouched.
+console.log("\n[card item retired]");
+(() => {
+  t("computeAuction offers exactly illusion/white/black (GL + Overrun)", () => {
+    reset(app, []);
+    eq(app.call("computeAuction", "gl").items.map(i => i.key), ["illusion", "white", "black"]);
+    eq(app.call("computeAuction", "overrun").items.map(i => i.key), ["illusion", "white", "black"]);
+  });
+  t("auction views render no Card card, even for admin with legacy counts", () => {
+    reset(app, []);
+    app.setAdmin(true);
+    app.state.auctionGL.cards = 5;        // legacy count must not resurrect the card
+    app.state.auctionOverrun.cards = 5;
+    // (🎴 alone is still the Auction PAGE icon — assert the item label + key)
+    const gl = app.call("buildAuctionView", "gl"), ov = app.call("buildAuctionView", "overrun");
+    ok(!gl.includes("🎴 Card") && !gl.includes("'cards'"), "GL has no Card card/column");
+    ok(!ov.includes("🎴 Card") && !ov.includes("'cards'"), "Overrun has no Card card/column");
+    app.setAdmin(false);
+  });
+  t("request modal source no longer offers cards (label kept for old chips)", () => {
+    const appHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "app.html"), "utf8");
+    ok(appHtml.includes('const itemRows = ["illusion","white","black"].map(k => {'),
+       "modal item list excludes cards");
+    ok(appHtml.includes('cards:    { label: "🎴 Card"'), "AR_ITEM_META keeps legacy label");
+  });
+  t("isAssigned survives the getAuctionAssignments fallback (illusion bucket present)", () => {
+    reset(app, mkMembers(["m1"]));
+    app.state.mode = "auction-gl";
+    app.state.auctionGL.assignments = null;          // force the fallback shape
+    const a = app.call("getAuctionAssignments", "gl");
+    ok(Array.isArray(a.main.illusion) && Array.isArray(a.sub.illusion), "fallback has illusion buckets");
+    eq(app.call("isAssigned", "m1"), false, "no throw, not assigned");
+    app.state.mode = "league";
+  });
+  t("legacy cards count doesn't consume auction pages", () => {
+    reset(app, []);
+    Object.assign(app.state.auctionGL, { cards: 8, illusion: 0, white: 4, black: 0, splitMainPercent: 100 });
+    const w = app.call("computeAuction", "gl").items.find(i => i.key === "white");
+    eq([w.main.page.startPage, w.main.page.startSlot], [1, 1], "white starts page 1 slot 1 despite legacy cards=8");
   });
 })();
 

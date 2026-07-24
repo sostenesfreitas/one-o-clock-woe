@@ -10,6 +10,14 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 - _nothing yet_
 
+## [2026.07.24.1]
+### Removed
+- **Item 🎴 Card aposentado nos leilões (GL + Overrun).** O item não existe mais no jogo:
+  some do card de recebedores, dos inputs de quantidade do admin, do resumo/page-map e do
+  modal de pedido (ขอประมูล). Dados antigos (contagens/atribuições/pedidos com `cards`)
+  continuam válidos no Firebase — só não são renderizados nem contam páginas; chips de
+  pedidos antigos ainda mostram o rótulo. `rates.card` permanece nas rules por compat.
+
 ## [2026.06.13.3]
 ### Changed
 - **Fuso horário Bangkok → Brasília (UTC−3).** Toda a lógica de "hoje" / dia de evento /
