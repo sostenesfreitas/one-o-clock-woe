@@ -3059,6 +3059,7 @@ const LOCALES = {
     "roster.btn_import": "📥 Importar da Sheet",
     "roster.dedupe_tip": "Mesclar linhas duplicadas (mesmo Nome + Job)",
     "roster.btn_dedupe": "🧹 Limpar duplicados",
+    "roster.btn_migrate": "🔄 Migrar → Firebase",
     "roster.status_admin": "🟢 Admin · preenche todos os campos · salva em tempo real",
     "roster.status_member": "🔵 Membro · selecione seu nome → edite sua linha → clique 💾 Salvar",
     "common.status": "Status",
@@ -3605,6 +3606,7 @@ const LOCALES = {
     "roster.btn_import": "📥 Import from Sheet",
     "roster.dedupe_tip": "Merge duplicate rows (same Name + Job)",
     "roster.btn_dedupe": "🧹 Clean duplicates",
+    "roster.btn_migrate": "🔄 Migrate → Firebase",
     "roster.status_admin": "🟢 Admin · fill all fields · saves in realtime",
     "roster.status_member": "🔵 Member · select your name → edit your row → press 💾 Save",
     "common.status": "Status",
@@ -8447,6 +8449,7 @@ function buildRosterHtml() {
           <button class="primary" onclick="rosterAdd()">${t('roster.btn_add')}</button>
           <button onclick="rosterImportFromSheet()" title="${t('roster.import_tip')}">${t('roster.btn_import')}</button>
           <button onclick="rosterDedupe()" title="${t('roster.dedupe_tip')}">${t('roster.btn_dedupe')}</button>
+          <button onclick="migrateToFirebase()" title="Enviar localStorage → Firebase">${t('roster.btn_migrate')}</button>
         ` : buildRosterClaimHtml()}
       </div>
       <div class="roster-table-wrap">
