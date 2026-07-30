@@ -3,11 +3,12 @@
 Avisa no **grupo do WhatsApp da guild** (e opcionalmente no Discord) os eventos
 do dia do Ragnarok Origin Classic, em horário de Brasília:
 
-- **09:00** — resumo dos eventos de hoje (só em dias com evento)
-- **10 min antes** de cada evento — lembrete
+- **09:00** — resumo do dia (eventos + leilões de carta)
+- **10 min antes** de cada evento e de cada leilão (13h / 17h / 20h30) — lembrete
 
 O calendário do jogo (UTC-4) já está convertido para BRT em `EVENTS` no
-`index.js` — edite lá quando o jogo mudar a grade.
+`index.js`; os leilões diários ficam em `AUCTIONS` — edite lá quando o jogo
+mudar a grade.
 
 ## ⚠️ Aviso
 

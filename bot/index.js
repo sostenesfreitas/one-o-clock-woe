@@ -16,12 +16,15 @@
 // dia da semana (0=domingo) → [[HH:MM em BRT, nome do evento]]
 const EVENTS = {
   0: [["20:30", "Themed Party"], ["20:55", "Emperium Overrun"]],
-  1: [["01:00", "Extreme Challenge"], ["20:55", "Dimension Drill"]],
+  1: [["20:55", "Dimension Drill"]],
   2: [["20:55", "Guild League"]],
   3: [["20:55", "Dimension Drill"]],
   4: [["20:55", "Guild League"]],
-  // 5 (sexta) e 6 (sábado): sem eventos
+  // 5 (sexta) e 6 (sábado): sem eventos semanais
 };
+
+// leilões de carta — todos os dias, horário de Brasília
+const AUCTIONS = ["13:00", "17:00", "20:30"];
 
 const REMIND_MIN   = 10;      // avisa N minutos antes do evento
 const SUMMARY_AT   = "09:00"; // resumo diário dos eventos do dia
@@ -35,17 +38,21 @@ function hhmm(d) {
 }
 
 /* ---------- lógica pura (testável) ---------- */
-function todaysEvents(d) { return EVENTS[d.getUTCDay()] || []; }
+// eventos do dia + leilões diários, ordenados por horário
+function todaysEvents(d) {
+  return [...(EVENTS[d.getUTCDay()] || []), ...AUCTIONS.map((t) => [t, "🃏 Leilão de cartas"])]
+    .sort((a, b) => a[0].localeCompare(b[0]));
+}
 
 // mensagens que devem sair no minuto `d` (BRT). Lembrete dispara REMIND_MIN
-// antes do evento; eventos < REMIND_MIN após a meia-noite lembram no dia
-// anterior (ex.: Extreme Challenge 01:00 de segunda → lembrete 00:50 segunda).
+// antes; a checagem usa o dia de `d + REMIND_MIN`, então eventos logo após a
+// meia-noite lembrariam ainda no dia anterior, corretamente.
 function messagesFor(d) {
   const out = [];
   const now = hhmm(d);
   if (now === SUMMARY_AT && todaysEvents(d).length) {
     const lines = todaysEvents(d).map(([t, n]) => `• ${t} — ${n}`).join("\n");
-    out.push(`📅 *Eventos de hoje:*\n${lines}\n_(horário de Brasília)_`);
+    out.push(`📅 *Hoje tem:*\n${lines}\n_(horário de Brasília)_`);
   }
   const ahead = new Date(d.getTime() + REMIND_MIN * 60 * 1000);
   for (const [t, n] of todaysEvents(ahead)) {
@@ -62,17 +69,16 @@ if (process.argv.includes("--test")) {
   let m = messagesFor(at("2026-07-29T23:45:00Z"));
   assert.strictEqual(m.length, 1);
   assert.ok(m[0].includes("Dimension Drill") && m[0].includes("20:55"), m[0]);
-  // dom 20:20 BRT → lembrete do Themed Party 20:30
+  // dom 20:20 BRT → lembretes do Themed Party E do leilão, ambos 20:30
   m = messagesFor(at("2026-08-02T23:20:00Z"));
-  assert.ok(m.length === 1 && m[0].includes("Themed Party"), JSON.stringify(m));
-  // seg 00:50 BRT → lembrete do Extreme Challenge 01:00
-  m = messagesFor(at("2026-08-03T03:50:00Z"));
-  assert.ok(m.length === 1 && m[0].includes("Extreme Challenge"), JSON.stringify(m));
-  // seg 09:00 BRT → resumo com 2 eventos
+  assert.ok(m.length === 2 && m.some((x) => x.includes("Themed Party")) && m.some((x) => x.includes("Leilão")), JSON.stringify(m));
+  // qualquer dia 12:50 BRT → lembrete do leilão das 13:00
+  m = messagesFor(at("2026-07-31T15:50:00Z"));
+  assert.ok(m.length === 1 && m[0].includes("Leilão") && m[0].includes("13:00"), JSON.stringify(m));
+  // seg 09:00 BRT → resumo: Dimension Drill + 3 leilões, ordenado
   m = messagesFor(at("2026-08-03T12:00:00Z"));
-  assert.ok(m.length === 1 && m[0].includes("01:00") && m[0].includes("20:55"), JSON.stringify(m));
-  // sex 09:00 BRT → sem eventos, sem resumo
-  assert.strictEqual(messagesFor(at("2026-07-31T12:00:00Z")).length, 0);
+  assert.ok(m.length === 1 && m[0].includes("20:55") && m[0].split("Leilão").length === 4, JSON.stringify(m));
+  assert.ok(m[0].indexOf("13:00") < m[0].indexOf("17:00") && m[0].indexOf("17:00") < m[0].indexOf("20:30"), "ordenação");
   // qua 20:44 BRT → nada
   assert.strictEqual(messagesFor(at("2026-07-29T23:44:00Z")).length, 0);
   console.log("SELF-CHECK OK");
