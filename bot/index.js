@@ -106,7 +106,12 @@ const qrcode = require("qrcode-terminal");
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: __dirname + "/.wwebjs_auth" }),
-  puppeteer: { headless: true, args: ["--no-sandbox"] },
+  puppeteer: {
+    headless: true,
+    args: ["--no-sandbox"],
+    // usa o Chrome do sistema — evita o download do Chromium do puppeteer
+    executablePath: process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  },
 });
 
 let groupId = null;
@@ -118,18 +123,32 @@ client.on("qr", (qr) => {
 
 client.on("ready", async () => {
   console.log("[wa] conectado como", client.info.wid.user);
+  // 1º: grupo por nome (se o número já está nele); 2º: entrar pelo convite
+  const wantName = (process.env.WA_GROUP_NAME || "").toLowerCase();
+  try {
+    const groups = (await client.getChats()).filter((c) => c.isGroup);
+    console.log("[wa] grupos do número:", groups.map((g) => g.name).join(" | ") || "(nenhum)");
+    const hit = wantName
+      ? groups.find((g) => (g.name || "").toLowerCase().includes(wantName))
+      : groups.length === 1 ? groups[0] : null;
+    if (hit) {
+      groupId = hit.id._serialized;
+      console.log("[wa] grupo alvo:", hit.name);
+      return;
+    }
+  } catch (e) { console.error("[wa] falha listando chats:", e.message); }
   try {
     const info = await client.getInviteInfo(GROUP_INVITE);
     groupId = typeof info.id === "string" ? info.id : info.id._serialized;
-    const chats = await client.getChats();
-    if (!chats.some((c) => c.id._serialized === groupId)) {
-      await client.acceptInvite(GROUP_INVITE);
-      console.log("[wa] entrei no grupo via convite");
+    console.log("[wa] grupo alvo (convite):", info.subject || groupId);
+  } catch (_) {
+    try {
+      groupId = await client.acceptInvite(GROUP_INVITE);
+      console.log("[wa] entrei no grupo via convite:", groupId);
+    } catch (e2) {
+      console.error("[wa] não achei o grupo:", e2.message);
+      console.error("     defina WA_GROUP_NAME com parte do nome do grupo e reinicie.");
     }
-    console.log("[wa] grupo alvo:", info.subject || groupId);
-  } catch (e) {
-    console.error("[wa] não achei o grupo pelo convite:", e.message);
-    console.error("     confira WA_GROUP_INVITE ou se o número já está no grupo.");
   }
 });
 
