@@ -155,8 +155,18 @@ client.on("ready", async () => {
 async function broadcast(text) {
   console.log("[send]", text.split("\n")[0]);
   if (groupId) {
-    try { await client.sendMessage(groupId, text); }
-    catch (e) { console.error("[wa] envio falhou:", e.message); }
+    try {
+      // "@todos" visível + menção real de cada participante (senão ninguém
+      // é notificado — WhatsApp não tem @all nativo). Se a lib falhar ao
+      // listar participantes, manda sem menções mesmo.
+      let opts;
+      try {
+        const chat = await client.getChatById(groupId);
+        const ids = (chat.participants || []).map((p) => p.id._serialized);
+        if (ids.length) opts = { mentions: ids };
+      } catch (_) {}
+      await client.sendMessage(groupId, text + "\n@todos", opts);
+    } catch (e) { console.error("[wa] envio falhou:", e.message); }
   } else {
     console.error("[wa] sem grupo — mensagem não enviada no WhatsApp");
   }
