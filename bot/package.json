@@ -1,0 +1,14 @@
+{
+  "name": "woe-event-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bot de avisos de eventos WoE no WhatsApp (whatsapp-web.js, não-oficial) com espelho opcional no Discord. Roda separado do app — o app continua sem dependências.",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node index.js --test"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
+  }
+}

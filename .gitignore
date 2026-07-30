@@ -5,6 +5,10 @@
 node_modules/
 package-lock.json
 
+# WhatsApp bot — session credentials + browser cache (never commit)
+bot/.wwebjs_auth/
+bot/.wwebjs_cache/
+
 # Local RTDB backups exported before destructive ops (see RUNBOOK.md) — keep off-repo
 backups/
 
