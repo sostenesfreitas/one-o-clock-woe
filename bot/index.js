@@ -165,7 +165,7 @@ async function broadcast(text) {
         const ids = (chat.participants || []).map((p) => p.id._serialized);
         if (ids.length) opts = { mentions: ids };
       } catch (_) {}
-      await client.sendMessage(groupId, text + "\n@todos", opts);
+      await client.sendMessage(groupId, text + "\n@ll", opts);
     } catch (e) { console.error("[wa] envio falhou:", e.message); }
   } else {
     console.error("[wa] sem grupo — mensagem não enviada no WhatsApp");
