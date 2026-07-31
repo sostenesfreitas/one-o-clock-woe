@@ -172,13 +172,21 @@ async function broadcast(text) {
       // "@todos" visível + menção real de cada participante (senão ninguém
       // é notificado — WhatsApp não tem @all nativo). Se a lib falhar ao
       // listar participantes, manda sem menções mesmo.
+      // getChatById está quebrado nesta versão do WA Web (erro "r") — busca
+      // os participantes direto no Store da página via o module loader.
       let opts;
       try {
-        const chat = await client.getChatById(groupId);
-        const ids = (chat.participants || []).map((p) => p.id._serialized);
+        const ids = await client.pupPage.evaluate((gid) => {
+          const coll = window.require("WAWebCollections");
+          const chat = coll.Chat.get(gid);
+          return chat && chat.groupMetadata
+            ? chat.groupMetadata.participants.getModelsArray().map((p) => p.id._serialized)
+            : [];
+        }, groupId);
         if (ids.length) opts = { mentions: ids };
-      } catch (_) {}
-      await client.sendMessage(groupId, text + "\n@ll", opts);
+        else console.warn("[wa] 0 participantes — mandando sem menções");
+      } catch (e) { console.warn("[wa] falha buscando participantes:", e.message); }
+      await client.sendMessage(groupId, text + "\n@all", opts);
     } catch (e) { console.error("[wa] envio falhou:", e.message); }
   } else {
     console.error("[wa] sem grupo — mensagem não enviada no WhatsApp");
