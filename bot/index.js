@@ -47,13 +47,15 @@ function todaysEvents(d) {
 // mensagens que devem sair no minuto `d` (BRT). Lembrete dispara REMIND_MIN
 // antes; a checagem usa o dia de `d + REMIND_MIN`, então eventos logo após a
 // meia-noite lembrariam ainda no dia anterior, corretamente.
+function summaryText(d) {
+  const lines = todaysEvents(d).map(([t, n]) => `• ${t} — ${n}`).join("\n");
+  return `📅 *Hoje tem:*\n${lines}\n_(horário de Brasília)_`;
+}
+
 function messagesFor(d) {
   const out = [];
   const now = hhmm(d);
-  if (now === SUMMARY_AT && todaysEvents(d).length) {
-    const lines = todaysEvents(d).map(([t, n]) => `• ${t} — ${n}`).join("\n");
-    out.push(`📅 *Hoje tem:*\n${lines}\n_(horário de Brasília)_`);
-  }
+  if (now === SUMMARY_AT && todaysEvents(d).length) out.push(summaryText(d));
   const ahead = new Date(d.getTime() + REMIND_MIN * 60 * 1000);
   for (const [t, n] of todaysEvents(ahead)) {
     if (t === hhmm(ahead)) out.push(`⏰ *${n}* começa às ${t} — faltam ${REMIND_MIN} minutos!`);
@@ -151,6 +153,17 @@ client.on("ready", async () => {
     }
   }
 });
+
+// --summary-now: manda o resumo do dia e sai (reenvio manual; o bot normal
+// não pode rodar ao mesmo tempo — a sessão do WhatsApp é exclusiva)
+if (process.argv.includes("--summary-now")) {
+  client.on("ready", async () => {
+    await new Promise((r) => setTimeout(r, 3000)); // espera resolver o grupo
+    await broadcast(summaryText(brtNow()));
+    console.log("[summary-now] enviado, saindo");
+    setTimeout(() => process.exit(0), 3000);
+  });
+}
 
 async function broadcast(text) {
   console.log("[send]", text.split("\n")[0]);
